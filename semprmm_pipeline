@@ -323,9 +323,9 @@ def write_batch_files(data,study,type,block):
 	if study == "BaleenMM" and "stats" in type:
 		if block is None:
 			raise ProgrammerError("write_batch_files: no block specified for baleenmm stats")
-		f = open(os.path.join(batch_dir,study.lower()+"_"+good_type+"_block"+block+"_job.m"),"r")
+		f = open(os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_block"+block+"_job.m"),"r")
 	else:		
-		f = open(os.path.join(batch_dir,study.lower()+"_"+good_type+"_job.m"),"r")
+		f = open(os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_job.m"),"r")
 	all_lines = f.readlines()
 	f.close()
 	all_lines = replace_lines(all_lines,study_dict)	
@@ -349,7 +349,7 @@ def write_batch_files(data,study,type,block):
 
 
 def matlab_batch_lines(data,study,type,block):
-	with open(os.path.join(batch_dir,"spm_mfile.m"),"r") as f:
+	with open(os.path.join(batch_dir,data["stype"],"spm_mfile.m"),"r") as f:
 		all_lines = f.readlines()
 	replace_dict = dict({"[study]":study.lower(),"[type]":type,"[subject]":data["subject"]})
 	if block:
