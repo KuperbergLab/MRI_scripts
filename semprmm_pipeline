@@ -666,6 +666,20 @@ def second_level(data):
 	except IOError:
 		print("Cannot write full 2nd level script")
 		
+def subject_type(subjects):
+	# assume first is good
+	if len(subjects) == 1:
+		stype = subjects[0][:2]
+	else:
+		stype = subjects[0][:2]
+		match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
+		if not match:
+			print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
+			response = 'n'
+			response = input("Do you wish to continue? (y/n) : ")
+			if response != "y":
+				raise UserError("Try again with a better subject list")
+	return stype
 
 def main():
 	parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
@@ -731,6 +745,7 @@ def main():
 				"meg_preProc3":options.meg_preProc3,"meg_preAnat1":options.meg_preAnat1,
 				"meg_preAnat2":options.meg_preAnat2,"launchpad":options.launchpad,
 				"setup_second":options.setup_second})
+	data['stype'] = subject_type(args)
 	for subject in args:
 		data["subject"] = subject
 		set_paths(data)	
