@@ -597,7 +597,7 @@ def second_level(data):
 	else:
 		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
 	for study in studies:
-		new_dir = os.path.join(prefix,study,date_dir)
+		new_dir = os.path.join(prefix,study,data['stype'],date_dir)
 		#make the new dir
 		if not os.path.exists(new_dir):
 			os.mkdir(new_dir)
@@ -628,7 +628,7 @@ def second_level(data):
 			replace_dict[con_key] = images_str
 			script_commands.append("rm {0}/*".format(con_dir))
 			print("Contrast: {0}\t{1} subjects".format(contrast,n))
-		spec_batch_job = os.path.join(batch_dir, study.lower()+"_2nd_job.m")
+		spec_batch_job = os.path.join(batch_dir,data["stype"], study.lower()+"_2nd_job.m")
 		try:
 			with open(spec_batch_job,"r") as f:
 				all_lines = f.readlines()
@@ -641,7 +641,7 @@ def second_level(data):
 				f.writelines(all_lines)
 		except IOError:
 			print("Cannot write 2nd level batch file for {0}".format(study))
-		gen_mfile = os.path.join(batch_dir,"spm_2nd_mfile.m")
+		gen_mfile = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
 		try: 
 			with open(gen_mfile,"r") as f:
 				all_lines = f.readlines()
@@ -658,7 +658,7 @@ def second_level(data):
 		print("Wrote {0}_2nd_job.m and {0}_2nd.m\n".format(study.lower()))
 		log = os.path.join(new_dir,study.lower()+"_2nd.log")
 		script_commands.append("{0} < {1} > {2}".format(mlab_cmd,gen,log))
-	script_path = os.path.join(func_dir,"SecondLevelStats","all_studies.sh")
+	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	try:
 		with open(script_path,"w") as f:
 			f.write("\n".join(script_commands))
