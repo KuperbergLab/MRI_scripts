@@ -9,10 +9,10 @@
 %the dict for this needs to have the following keys:
 %new_dir
 %Nonwords_images
-%Nouns_images
+%WordLists_images
 %Sentences_images
-%NounsVNonwords_images
-%SentencesVNouns_images
+%WordListsVNonwords_images
+%SentencesVWordLists_images
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % One sample T Test Non-word 8mm outliers
@@ -54,11 +54,11 @@ matlabbatch{3}.spm.stats.con.delete = 1;
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% One sample T Test Nouns 8mm outliers
+% One sample T Test WordLists 8mm outliers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-matlabbatch{4}.spm.stats.factorial_design.dir = {'[new_dir]/Nouns/'};
+matlabbatch{4}.spm.stats.factorial_design.dir = {'[new_dir]/WordLists/'};
 %%
-matlabbatch{4}.spm.stats.factorial_design.des.t1.scans = {[Nouns_images]};
+matlabbatch{4}.spm.stats.factorial_design.des.t1.scans = {[WordLists_images]};
 %%
 matlabbatch{4}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
 matlabbatch{4}.spm.stats.factorial_design.masking.tm.tm_none = 1;
@@ -86,7 +86,7 @@ matlabbatch{6}.spm.stats.con.spmmat(1).tgt_spec{1}(2).value = 'e';
 matlabbatch{6}.spm.stats.con.spmmat(1).sname = 'Model estimation: SPM.mat File';
 matlabbatch{6}.spm.stats.con.spmmat(1).src_exbranch = substruct('.','val', '{}',{5}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{6}.spm.stats.con.spmmat(1).src_output = substruct('.','spmmat');
-matlabbatch{6}.spm.stats.con.consess{1}.tcon.name = 'Nouns';
+matlabbatch{6}.spm.stats.con.consess{1}.tcon.name = 'WordLists';
 matlabbatch{6}.spm.stats.con.consess{1}.tcon.convec = 1;
 matlabbatch{6}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{6}.spm.stats.con.delete = 1;
@@ -132,11 +132,11 @@ matlabbatch{9}.spm.stats.con.delete = 1;
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% One Sample T Test Nouns Vs Consonants 8mm Outliers
+% One Sample T Test WordLists Vs Consonants 8mm Outliers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-matlabbatch{10}.spm.stats.factorial_design.dir = {'[new_dir]/NounsVNonwords/'};
+matlabbatch{10}.spm.stats.factorial_design.dir = {'[new_dir]/WordListsVNonwords/'};
 %%
-matlabbatch{10}.spm.stats.factorial_design.des.t1.scans = {[NounsVNonwords_images]};
+matlabbatch{10}.spm.stats.factorial_design.des.t1.scans = {[WordListsVNonwords_images]};
 %%
 matlabbatch{10}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
 matlabbatch{10}.spm.stats.factorial_design.masking.tm.tm_none = 1;
@@ -171,11 +171,11 @@ matlabbatch{12}.spm.stats.con.delete = 1;
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% One Sample T Test Sentences Vs Nouns 8mm Outliers
+% One Sample T Test Sentences Vs WordLists 8mm Outliers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-matlabbatch{13}.spm.stats.factorial_design.dir = {'[new_dir]/SentencesVNouns/'};
+matlabbatch{13}.spm.stats.factorial_design.dir = {'[new_dir]/SentencesVWordLists/'};
 %%
-matlabbatch{13}.spm.stats.factorial_design.des.t1.scans = {[SentencesVNouns_images]};
+matlabbatch{13}.spm.stats.factorial_design.des.t1.scans = {[SentencesVWordLists_images]};
 %%
 matlabbatch{13}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
 matlabbatch{13}.spm.stats.factorial_design.masking.tm.tm_none = 1;
@@ -203,7 +203,7 @@ matlabbatch{15}.spm.stats.con.spmmat(1).tgt_spec{1}(2).value = 'e';
 matlabbatch{15}.spm.stats.con.spmmat(1).sname = 'Model estimation: SPM.mat File';
 matlabbatch{15}.spm.stats.con.spmmat(1).src_exbranch = substruct('.','val', '{}',{14}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{15}.spm.stats.con.spmmat(1).src_output = substruct('.','spmmat');
-matlabbatch{15}.spm.stats.con.consess{1}.tcon.name = 'SentencesVNouns';
+matlabbatch{15}.spm.stats.con.consess{1}.tcon.name = 'SentencesVWordLists';
 matlabbatch{15}.spm.stats.con.consess{1}.tcon.convec = 1;
 matlabbatch{15}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{15}.spm.stats.con.delete = 1;
