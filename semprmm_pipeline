@@ -168,12 +168,7 @@ def scan2cfg(data):
 		for line in good_lines:
 			print(line)
 	try:
-		with open(data["cfg_path"],"w") as f:
-			f.write("\n".join(good_lines))
-	except IOError:
-		print("ALERT: can not write cfg file. See below for contents to manually create file.")
-		for line in good_lines:
-			print(line)
+		write_file_with_list(data["cfg_path"],"\n".join(good_lines))
 	except:
 		print("Failure in scan2cfg")
 		raise
@@ -295,9 +290,7 @@ def write_shell_script(data,study,type):
 				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
 				commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,mlab_cmd,par))
 	try:
-		print("Writing {0}".format(shell_script))
-		with open(shell_script,"w") as f:
-			f.write("\n".join(commands))
+		write_file_with_list(shell_script,"\n".join(commands))
 	except IOError:
 		print(commands)
 		raise SystemError("Cannot write shell script. See text above traceback for shell commands.")
@@ -330,10 +323,8 @@ def write_batch_files(data,study,type,block):
 	f.close()
 	all_lines = replace_lines(all_lines,study_dict)	
 	specific_batch_file = specific_batch_path(data,study,type,block)
-	if data["verbose"]:
-		print("Writing specific batch file at {0}".format(specific_batch_file))
-	with open(specific_batch_file,"w") as f:
-		f.writelines(all_lines)
+	try:
+		write_file_with_list(specific_batch_file,all_lines)
 	matlab_batch = matlab_batch_lines(data,study,type,block)
 	if study == "BaleenMM" and "stats" in type:
 		if block is None:
@@ -344,9 +335,8 @@ def write_batch_files(data,study,type,block):
 		subject_batch = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
 	if data["verbose"]:
 		print("Writing {0}".format(subject_batch))
-	with open(subject_batch,"w") as f:
-		f.writelines(matlab_batch)
-
+	try:
+		write_file_with_list(subject_batch,matlab_batch)
 
 def matlab_batch_lines(data,study,type,block):
 	with open(os.path.join(batch_dir,data["stype"],"spm_mfile.m"),"r") as f:
@@ -636,11 +626,7 @@ def second_level(data):
 			print("Cannot find 2nd level batch file for {0}".format(study))
 		all_lines = replace_lines(all_lines,replace_dict)
 		spec_job = os.path.join(new_dir,study.lower()+"_2nd_job.m")
-		try:
-			with open(spec_job,"w") as f:
-				f.writelines(all_lines)
-		except IOError:
-			print("Cannot write 2nd level batch file for {0}".format(study))
+		write_file_with_list(spec_job,all_lines)
 		gen_mfile = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
 		try: 
 			with open(gen_mfile,"r") as f:
@@ -650,21 +636,11 @@ def second_level(data):
 		gen_replace_dict = dict({"[script]":spec_job,"[study]":study})
 		all_lines = replace_lines(all_lines,gen_replace_dict)
 		gen = os.path.join(new_dir,study.lower()+"_2nd.m")
-		try:
-			with open(gen,"w") as f:
-				f.writelines(all_lines)
-		except IOError:
-			print("Cannot write general batch file for {0}".format(study))
-		print("Wrote {0}_2nd_job.m and {0}_2nd.m\n".format(study.lower()))
+		write_file_with_list(gen,all_lines)
 		log = os.path.join(new_dir,study.lower()+"_2nd.log")
 		script_commands.append("{0} < {1} > {2}".format(mlab_cmd,gen,log))
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
-	try:
-		with open(script_path,"w") as f:
-			f.write("\n".join(script_commands))
-		print("\n\nWrote {0}\n".format(script_path))
-	except IOError:
-		print("Cannot write full 2nd level script")
+	write_file_with_list(script_path,"\n".join(script_commands))
 		
 def subject_type(subjects):
 	# assume first is good
@@ -680,6 +656,14 @@ def subject_type(subjects):
 			if response != "y":
 				raise UserError("Try again with a better subject list")
 	return stype
+
+def write_file_with_list(path,lines):
+	try:
+		with open(path,'w') as f:
+			f.writelines(lines)
+		print("Wrote {1} lines at {0}".format(path,len(lines)))
+	except IOError:
+		raise
 
 def main():
 	parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
