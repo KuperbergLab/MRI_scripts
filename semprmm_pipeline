@@ -460,8 +460,8 @@ def find_proc_studies(data):
 	if it"s already run), this doesn"t look for *_stats_run files (since stats jobs takes at most 5 
 	minutes)"""
 	run_studies = []
-	data["complete_studies"] = find_complete_studies(data)
-	for study in data["complete_studies"]:
+	possible = possible_studies.keys()
+	for study in possible:
 		run_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_preproc_run")
 		if data["verbose"]:
 			print("Found a run file at {0}".format(run_file))
