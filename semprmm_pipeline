@@ -339,6 +339,7 @@ def write_batch_files(data,study,type,block):
 	except : 
 		raise
 
+
 def matlab_batch_lines(data,study,type,block):
 	all_lines = list_from_file(os.path.join(batch_dir,data["stype"],"spm_mfile.m"))
 	replace_dict = dict({"[study]":study.lower(),"[type]":type,"[subject]":data["subject"]})
@@ -474,7 +475,8 @@ def find_complete_studies(data):
 	data["studies_run"] = find_studies_run(data)
 	for study in data["studies_run"]:
 		complete_file = os.path.join(data["mri_dir"],study,"complete")
-		if os.path.exists(complete_file):
+		nosetup_file = os.path.join(data["mri_dir"],study,"NO_SETUP")
+		if os.path.exists(complete_file) and not os.path.exists(nosetup_file):
 			complete_studies.append(study)
 	return complete_studies
 
