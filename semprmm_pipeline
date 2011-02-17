@@ -17,6 +17,7 @@ func_dir = "/cluster/kuperberg/SemPrMM/MRI/functionals/"
 dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
 meg_dir = "/cluster/kuperberg/SemPrMM/MEG/data/"
 meg_scripts = "/cluster/kuperberg/SemPrMM/MEG/scripts/"
+mri_scripts = "/cluster/kuperberg/SemPrMM/MRI/scripts/"
 running_jobs = [ ]
 
 
@@ -40,7 +41,7 @@ def archive_to_cluster(data):
 	"""
 	if data["verbose"]:
 		print("archive_to_cluster:")
-	data["archive_dir"] = pipeline.find_session(data["subject"])
+	data["archive_dir"] = pipeline.find_session([data["subject"],"-x","Kuperberg"])
 	if data["archive_dir"] is None:
 		print("ALERT:findsession returned nothing for {0}".format(data["subject"]))
 		return
@@ -123,7 +124,8 @@ def scan2cfg(data):
 	scan_list = [["MEMPRAGE_4e_p2_1mm_iso","ok","256","256","1"],
 				["ge_functionals_atlloc","ok","160"],["ge_functionals_maskmm","ok","148"],
 				["ge_functionals_baleen","ok","130"],["ge_functionals_axcpt","ok","240"],
-				["MEFLASH_8e_1mm_iso_5deg","256","256","ok","1"],["field_mapping","ok","1"]]
+				["MEFLASH_8e_1mm_iso_5deg","256","256","ok","1"],["field_mapping","ok","1"],
+				["ge_functionals_axcpt_sc","ok","160"]]
 	good_lines = pipeline.scan_to_cfg(dir_map,dir_map,scan_list,data["scan_path"])
 	good_lines.sort(key=lambda x:int(x.split()[0]))
 	if data["verbose"]:
@@ -294,9 +296,13 @@ def write_shell_script(data,study,type):
 	except IOError:
 		print(commands)
 		raise SystemError("Cannot write shell script. See text above traceback for shell commands.")
-	os.chmod(shell_script,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )		
+	make_file_exec(shell_script)		
 
 
+def make_file_exec(path):
+	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
+	
+	
 def specific_batch_path(data,study,type,block):
 	if study == "BaleenMM" and "stats" in type:
 		return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
@@ -447,6 +453,8 @@ def find_studies_run(data):
 			all_runs = find_all_runs(data,study)
 			if len(all_runs) == possible_studies[study]:
 				touch_file = os.path.join(data["mri_dir"],study,"complete")
+			if len(all_runs) == 3  and study == "AXCPT" and data["stype"] == "ac":
+				touch_file = os.path.join(data["mri_dir"],study,"complete")
 			else:
 				touch_file = os.path.join(data["mri_dir"],study,"incomplete")
 			open(touch_file,"w").close();
@@ -569,16 +577,85 @@ def set_paths(data):
 	data["meg_dir"] = os.path.join(meg_dir,data["subject"])+os.sep
 
 
-def second_level(data):
+def second_level(data,type):
 	prefix = os.path.join(func_dir,"SecondLevelStats")
-	date_dir = time.strftime("%Y%m%d")
-	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordList","0002"],["Sentences","0001"],
+	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
 		["SentencesVWordLists","0004"],["WordListsVNonwords","0008"]],"MaskedMM":[["Dir","0001"],["UnRel","0003"],
 		["UnRelVDir","0007"]],"BaleenLP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
 		"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],["UnRelFillvRelFill","0009"]],
 		"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
 	study_stats = dict({"ATLLoc":"stats_outliers","MaskedMM":"stats_outliers",
 		"BaleenLP":"stats_outliers1","BaleenHP":"stats_outliers2","AXCPT":"stats_outliers"})
+	if data["date"]:
+		date_dir = data["date"]
+	else:
+		date_dir = time.strftime("%Y%m%d")
+	
+	if type == "setup":
+		second_setup(data,prefix,date_dir,study_contrasts,study_stats)
+	if type == "surf":
+		second_surf(data,prefix,date_dir,study_contrasts,study_stats)
+	if type == "package":
+		second_package(data,prefix,data_dir,study_contrasts,study_stats)
+
+		
+def second_surf(data,prefix,date,study_contrasts,study_stats):
+	from scipy import stats
+	import shutil
+	print("We're going surfing....\n")
+	if data["single_study"]:
+		studies = [data["single_study"]]
+	else:
+		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
+	for study in studies:
+		date_dir = os.path.join(prefix,data["stype"],study,date)
+		for [contrast,XXXX] in study_contrasts[study]:
+			print("{0}:\t{1}...".format(study,contrast))
+			con_dir = os.path.join(date_dir,contrast)
+			#first, check that --setup_second has been run by looking for con_dir
+			if not os.path.exists(con_dir):
+				print("ERROR:--setup_second hasn't been run.")
+				print("Do this and try again or pass in a specific date by --date=YYYYMMDD")
+				break
+			#next, check that SPM has been run and that spmT_0001.img exists
+			t_img_exists = len(glob(os.path.join(con_dir,"spmT_0001.img"))) == 1
+			if not t_img_exists:
+				print("ERROR:SPM hasn't been run on {0}:{1}".format(study,contrast))
+				break
+			#spmT_0001.img exists, let's proceed
+			#let's find N
+			if "Baleen" in study:
+				real_study = "BaleenMM"
+			else:
+				real_study = study
+			search_term = os.path.join(func_dir,"*",real_study,study_stats[study],"8mm",
+				"con_"+XXXX+".img")
+			N = len(glob(search_term))
+			script_dict = dict({})
+			tvalue = stats.t.isf(data["pvalue"],N)
+			print("T-threshold at N={0} and p<{1} is {2}".format(N,data["pvalue"],tvalue))
+			script_dict['[tvalue]'] = str(tvalue)
+			make_images_script_path = os.path.join(mri_scripts,"surf_analysis","make_images.sh")
+			all_lines = list_from_file(make_images_script_path)
+			all_lines = replace_lines(all_lines,script_dict)
+			new_script_path = os.path.join(con_dir,"make_images.sh")
+			write_file_with_list(new_script_path,"\n".join(all_lines))
+			make_file_exec(new_script_path)
+			#copy lh_tiffs and rh_tiffs
+			for surf_script in ["lh_tiff","rh_tiff"]:
+				tiffs_path = os.path.join(mri_scripts,"surf_analysis",surf_script)
+				new_tiffs_path = os.path.join(con_dir,surf_script)
+				shutil.copyfile(tiffs_path,new_tiffs_path)
+			# all ready to run make_images.sh
+			os.chdir(con_dir)
+			try:
+				process = pipeline.run_process([new_script_path],sys.stdout)
+				output = process.communicate()[0]
+			except KeyboardInterrupt:
+				sys.exit("Surf canceled by user...Goodbye")
+
+			
+def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 	mlab_cmd = "matlab7.11 -nodisplay -nosplash -nodesktop "
 	script_commands = []
 	script_commands.append("#!/bin/sh")
@@ -588,7 +665,7 @@ def second_level(data):
 	else:
 		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
 	for study in studies:
-		new_dir = os.path.join(prefix,study,data['stype'],date_dir)
+		new_dir = os.path.join(prefix,data['stype'],study,date_dir)
 		#make the new dir
 		if not os.path.exists(new_dir):
 			os.mkdir(new_dir)
@@ -604,7 +681,6 @@ def second_level(data):
 				real_study = "BaleenMM"
 			else:
 				real_study = study
-			
 			search_term = os.path.join(func_dir,"*",real_study,study_stats[study],"8mm",
 				"con_"+XXXX+".img")
 			if data["verbose"]:
@@ -634,6 +710,7 @@ def second_level(data):
 		script_commands.append("{0} < {1} > {2}".format(mlab_cmd,gen,log))
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(script_path,"\n".join(script_commands))
+
 		
 def subject_type(subjects):
 	# assume first is good
@@ -650,6 +727,7 @@ def subject_type(subjects):
 				raise UserError("Try again with a better subject list")
 	return stype
 
+
 def write_file_with_list(path,lines):
 	try:
 		with open(path,'w') as f:
@@ -658,15 +736,18 @@ def write_file_with_list(path,lines):
 	except IOError:
 		raise
 
+
 def list_from_file(path):
 	try: 
 		with open(path,'r') as f:
 			all_lines = f.read()
 			all_lines = all_lines.splitlines()
+			print("Reading from {0}".format(path))
 	except IOError:
 		print("Cannot open {0}".path)
 		raise
 	return all_lines
+
 
 def main():
 	parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
@@ -718,6 +799,13 @@ def main():
 		help="Use with --run_*, pipeline only exits when all jobs finish")
 	parser.add_option("--setup_second",dest="setup_second",action="store_true",default=False,
 		help="Setup second level stats")
+	parser.add_option("--surf_second",dest="surf_second",action="store_true",default=False,
+		help="Analyze second level stats (that have been run) with Freesurfer")
+	parser.add_option("--package_second",dest="package_second",action="store_true",default=False,
+		help="Make analysis package (run after --surf_second)")
+	parser.add_option("--pvalue",dest="pvalue",type="float",default=0.001,help="Use with --surf_second")
+	parser.add_option("--date",dest="date",type="string",default=None,
+		help="Specify a previously run second level date in the form of YYYYMMDD")
 		
 	(options,args) = parser.parse_args() 
 	data = dict({"copy_dicom":options.copy_dicom,"unpack_all":options.unpack_all,
@@ -731,7 +819,10 @@ def main():
 				"parallel":options.parallel,"meg_preProc1":options.meg_preProc1,
 				"meg_preProc3":options.meg_preProc3,"meg_preAnat1":options.meg_preAnat1,
 				"meg_preAnat2":options.meg_preAnat2,"launchpad":options.launchpad,
-				"setup_second":options.setup_second})
+				"setup_second":options.setup_second,"surf_second":options.surf_second,
+				"package_second":options.package_second,"pvalue":options.pvalue,
+				"date":options.date})
+				
 	data['stype'] = subject_type(args)
 	for subject in args:
 		data["subject"] = subject
@@ -773,7 +864,9 @@ def main():
 		if data["meg_preAnat2"]:
 			meg_script(data,"preAnat2")
 	if data["setup_second"]:
-		second_level(data)
+		second_level(data,"setup")
+	if data["surf_second"]:
+		second_level(data,"surf")
 	if data["launchpad"]:
 		pipeline.wait_to_finish(running_jobs)
 

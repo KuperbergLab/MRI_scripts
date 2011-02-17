@@ -12,13 +12,15 @@ class ProgrammerError(Exception):
 
 def find_session(subject):
 	"""
-	subject: subject name (as input to scanner)
+	subject: list of arguments to findsession, typically [<subjectname>, "-x",<experimenter>] 
+	or something along those lines
 	Returns the path to the subject's dicom directory in the archives.
 	Will print a warning if more than two paths were found, but always uses the newest.
 	"""
 	if not subject:
 		raise ProgrammerError('pipeline:find_session - did not specify subject.')
-	args = ['findsession',subject]
+	args = ['findsession']
+	args.extend(subject)
 	if VERBOSE:
 		print('pipeline:find_session')
 		print(' '.join(args))		
