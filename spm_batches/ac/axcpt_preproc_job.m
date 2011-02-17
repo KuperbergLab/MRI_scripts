@@ -21,6 +21,7 @@ matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.defaults.defaultsval.mflag
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.defaults.defaultsval.mflags.reg = 0.02;
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.session(1).epi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,1'};
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.session(2).epi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,1'};
+matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.session(3).epi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,1'};
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.matchvdm = 1;
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.sessname = 'session';
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.writeunwarped = 1;
@@ -168,106 +169,6 @@ matlabbatch{2}.spm.spatial.realignunwarp.data(1).scans = {
                                                           '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,138'
                                                           '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,139'
                                                           '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,140'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,141'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,142'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,143'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,144'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,145'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,146'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,147'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,148'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,149'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,150'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,151'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,152'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,153'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,154'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,155'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,156'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,157'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,158'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,159'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,160'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,161'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,162'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,163'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,164'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,165'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,166'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,167'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,168'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,169'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,170'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,171'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,172'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,173'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,174'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,175'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,176'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,177'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,178'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,179'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,180'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,181'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,182'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,183'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,184'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,185'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,186'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,187'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,188'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,189'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,190'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,191'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,192'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,193'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,194'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,195'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,196'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,197'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,198'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,199'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,200'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,201'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,202'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,203'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,204'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,205'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,206'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,207'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,208'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,209'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,210'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,211'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,212'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,213'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,214'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,215'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,216'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,217'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,218'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,219'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,220'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,221'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,222'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,223'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,224'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,225'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,226'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,227'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,228'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,229'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,230'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,231'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,232'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,233'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,234'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,235'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,236'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,237'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,238'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,239'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run1XXX]/AXCPT1.nii,240'
                                                           };
 %%
 matlabbatch{2}.spm.spatial.realignunwarp.data(1).pmscan(1) = cfg_dep;
@@ -421,106 +322,6 @@ matlabbatch{2}.spm.spatial.realignunwarp.data(2).scans = {
                                                           '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,138'
                                                           '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,139'
                                                           '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,140'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,141'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,142'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,143'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,144'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,145'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,146'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,147'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,148'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,149'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,150'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,151'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,152'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,153'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,154'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,155'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,156'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,157'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,158'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,159'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,160'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,161'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,162'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,163'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,164'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,165'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,166'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,167'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,168'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,169'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,170'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,171'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,172'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,173'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,174'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,175'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,176'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,177'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,178'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,179'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,180'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,181'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,182'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,183'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,184'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,185'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,186'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,187'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,188'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,189'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,190'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,191'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,192'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,193'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,194'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,195'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,196'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,197'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,198'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,199'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,200'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,201'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,202'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,203'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,204'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,205'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,206'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,207'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,208'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,209'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,210'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,211'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,212'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,213'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,214'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,215'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,216'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,217'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,218'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,219'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,220'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,221'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,222'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,223'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,224'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,225'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,226'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,227'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,228'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,229'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,230'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,231'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,232'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,233'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,234'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,235'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,236'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,237'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,238'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,239'
-                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run2XXX]/AXCPT2.nii,240'
                                                           };
 %%
 matlabbatch{2}.spm.spatial.realignunwarp.data(2).pmscan(1) = cfg_dep;
@@ -532,6 +333,159 @@ matlabbatch{2}.spm.spatial.realignunwarp.data(2).pmscan(1).tgt_spec{1}(2).value 
 matlabbatch{2}.spm.spatial.realignunwarp.data(2).pmscan(1).sname = 'Presubtracted Phase and Magnitude Data: Voxel displacement map (Subj 1, Session 2)';
 matlabbatch{2}.spm.spatial.realignunwarp.data(2).pmscan(1).src_exbranch = substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{2}.spm.spatial.realignunwarp.data(2).pmscan(1).src_output = substruct('()',{1}, '.','vdmfile', '{}',{2});
+%%
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).scans = {
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,1'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,2'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,3'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,4'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,5'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,6'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,7'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,8'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,9'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,10'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,11'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,12'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,13'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,14'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,15'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,16'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,17'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,18'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,19'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,20'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,21'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,22'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,23'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,24'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,25'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,26'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,27'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,28'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,29'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,30'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,31'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,32'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,33'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,34'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,35'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,36'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,37'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,38'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,39'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,40'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,41'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,42'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,43'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,44'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,45'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,46'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,47'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,48'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,49'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,50'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,51'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,52'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,53'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,54'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,55'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,56'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,57'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,58'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,59'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,60'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,61'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,62'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,63'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,64'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,65'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,66'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,67'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,68'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,69'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,70'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,71'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,72'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,73'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,74'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,75'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,76'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,77'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,78'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,79'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,80'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,81'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,82'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,83'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,84'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,85'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,86'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,87'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,88'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,89'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,90'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,91'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,92'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,93'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,94'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,95'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,96'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,97'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,98'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,99'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,100'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,101'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,102'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,103'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,104'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,105'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,106'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,107'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,108'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,109'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,110'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,111'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,112'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,113'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,114'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,115'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,116'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,117'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,118'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,119'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,120'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,121'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,122'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,123'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,124'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,125'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,126'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,127'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,128'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,129'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,130'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,131'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,132'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,133'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,134'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,135'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,136'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,137'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,138'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,139'
+                                                          '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/AXCPT/[Run3XXX]/AXCPT3.nii,140'
+                                                          };
+%%
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1) = cfg_dep;
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).tname = 'Phase map (vdm* file)';
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).tgt_spec{1}(1).name = 'filter';
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).tgt_spec{1}(1).value = 'image';
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).tgt_spec{1}(2).name = 'strtype';
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).sname = 'Presubtracted Phase and Magnitude Data: Voxel displacement map (Subj 1, Session 3)';
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).src_exbranch = substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1});
+matlabbatch{2}.spm.spatial.realignunwarp.data(3).pmscan(1).src_output = substruct('()',{1}, '.','vdmfile', '{}',{3});
 matlabbatch{2}.spm.spatial.realignunwarp.eoptions.quality = 0.9;
 matlabbatch{2}.spm.spatial.realignunwarp.eoptions.sep = 4;
 matlabbatch{2}.spm.spatial.realignunwarp.eoptions.fwhm = 5;
@@ -572,6 +526,15 @@ matlabbatch{3}.spm.temporal.st.scans{2}(1).tgt_spec{1}(2).value = 'e';
 matlabbatch{3}.spm.temporal.st.scans{2}(1).sname = 'Realign & Unwarp: Unwarped Images (Sess 2)';
 matlabbatch{3}.spm.temporal.st.scans{2}(1).src_exbranch = substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{3}.spm.temporal.st.scans{2}(1).src_output = substruct('.','sess', '()',{2}, '.','uwrfiles');
+matlabbatch{3}.spm.temporal.st.scans{3}(1) = cfg_dep;
+matlabbatch{3}.spm.temporal.st.scans{3}(1).tname = 'Session';
+matlabbatch{3}.spm.temporal.st.scans{3}(1).tgt_spec{1}(1).name = 'filter';
+matlabbatch{3}.spm.temporal.st.scans{3}(1).tgt_spec{1}(1).value = 'image';
+matlabbatch{3}.spm.temporal.st.scans{3}(1).tgt_spec{1}(2).name = 'strtype';
+matlabbatch{3}.spm.temporal.st.scans{3}(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{3}.spm.temporal.st.scans{3}(1).sname = 'Realign & Unwarp: Unwarped Images (Sess 3)';
+matlabbatch{3}.spm.temporal.st.scans{3}(1).src_exbranch = substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1});
+matlabbatch{3}.spm.temporal.st.scans{3}(1).src_output = substruct('.','sess', '()',{3}, '.','uwrfiles');
 matlabbatch{3}.spm.temporal.st.nslices = 36;
 matlabbatch{3}.spm.temporal.st.tr = 2;
 matlabbatch{3}.spm.temporal.st.ta = 1.94444444444444;
@@ -599,10 +562,7 @@ matlabbatch{4}.spm.spatial.coreg.estwrite.roptions.mask = 0;
 matlabbatch{4}.spm.spatial.coreg.estwrite.roptions.prefix = 'c';
 matlabbatch{5}.spm.spatial.preproc.data(1) = cfg_dep;
 matlabbatch{5}.spm.spatial.preproc.data(1).tname = 'Data';
-matlabbatch{5}.spm.spatial.preproc.data(1).tgt_spec{1}(1).name = 'filter';
-matlabbatch{5}.spm.spatial.preproc.data(1).tgt_spec{1}(1).value = 'image';
-matlabbatch{5}.spm.spatial.preproc.data(1).tgt_spec{1}(2).name = 'strtype';
-matlabbatch{5}.spm.spatial.preproc.data(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{5}.spm.spatial.preproc.data(1).tgt_spec = {};
 matlabbatch{5}.spm.spatial.preproc.data(1).sname = 'Coreg: Estimate & Reslice: Coregistered Images';
 matlabbatch{5}.spm.spatial.preproc.data(1).src_exbranch = substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{5}.spm.spatial.preproc.data(1).src_output = substruct('.','cfiles');
@@ -629,10 +589,7 @@ matlabbatch{5}.spm.spatial.preproc.opts.samp = 3;
 matlabbatch{5}.spm.spatial.preproc.opts.msk = {''};
 matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1) = cfg_dep;
 matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).tname = 'Parameter File';
-matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).tgt_spec{1}(1).name = 'filter';
-matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).tgt_spec{1}(1).value = 'mat';
-matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).tgt_spec{1}(2).name = 'strtype';
-matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).tgt_spec = {};
 matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).sname = 'Segment: Norm Params Subj->MNI';
 matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).src_exbranch = substruct('.','val', '{}',{5}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{6}.spm.spatial.normalise.write.subj.matname(1).src_output = substruct('()',{1}, '.','snfile', '()',{':'});
@@ -654,6 +611,15 @@ matlabbatch{6}.spm.spatial.normalise.write.subj.resample(2).tgt_spec{1}(2).value
 matlabbatch{6}.spm.spatial.normalise.write.subj.resample(2).sname = 'Slice Timing: Slice Timing Corr. Images (Sess 2)';
 matlabbatch{6}.spm.spatial.normalise.write.subj.resample(2).src_exbranch = substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{6}.spm.spatial.normalise.write.subj.resample(2).src_output = substruct('()',{2}, '.','files');
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3) = cfg_dep;
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).tname = 'Images to Write';
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).tgt_spec{1}(1).name = 'filter';
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).tgt_spec{1}(1).value = 'image';
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).tgt_spec{1}(2).name = 'strtype';
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).tgt_spec{1}(2).value = 'e';
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).sname = 'Slice Timing: Slice Timing Corr. Images (Sess 3)';
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).src_exbranch = substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1});
+matlabbatch{6}.spm.spatial.normalise.write.subj.resample(3).src_output = substruct('()',{3}, '.','files');
 matlabbatch{6}.spm.spatial.normalise.write.roptions.preserve = 0;
 matlabbatch{6}.spm.spatial.normalise.write.roptions.bb = [-78 -112 -70
                                                           78 76 85];
@@ -663,10 +629,7 @@ matlabbatch{6}.spm.spatial.normalise.write.roptions.wrap = [0 0 0];
 matlabbatch{6}.spm.spatial.normalise.write.roptions.prefix = 'w';
 matlabbatch{7}.spm.spatial.smooth.data(1) = cfg_dep;
 matlabbatch{7}.spm.spatial.smooth.data(1).tname = 'Images to Smooth';
-matlabbatch{7}.spm.spatial.smooth.data(1).tgt_spec{1}(1).name = 'filter';
-matlabbatch{7}.spm.spatial.smooth.data(1).tgt_spec{1}(1).value = 'image';
-matlabbatch{7}.spm.spatial.smooth.data(1).tgt_spec{1}(2).name = 'strtype';
-matlabbatch{7}.spm.spatial.smooth.data(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{7}.spm.spatial.smooth.data(1).tgt_spec = {};
 matlabbatch{7}.spm.spatial.smooth.data(1).sname = 'Normalise: Write: Normalised Images (Subj 1)';
 matlabbatch{7}.spm.spatial.smooth.data(1).src_exbranch = substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{7}.spm.spatial.smooth.data(1).src_output = substruct('()',{1}, '.','files');
@@ -674,13 +637,9 @@ matlabbatch{7}.spm.spatial.smooth.fwhm = [6 6 6];
 matlabbatch{7}.spm.spatial.smooth.dtype = 0;
 matlabbatch{7}.spm.spatial.smooth.im = 0;
 matlabbatch{7}.spm.spatial.smooth.prefix = 's6';
-% new smooth
 matlabbatch{8}.spm.spatial.smooth.data(1) = cfg_dep;
 matlabbatch{8}.spm.spatial.smooth.data(1).tname = 'Images to Smooth';
-matlabbatch{8}.spm.spatial.smooth.data(1).tgt_spec{1}(1).name = 'filter';
-matlabbatch{8}.spm.spatial.smooth.data(1).tgt_spec{1}(1).value = 'image';
-matlabbatch{8}.spm.spatial.smooth.data(1).tgt_spec{1}(2).name = 'strtype';
-matlabbatch{8}.spm.spatial.smooth.data(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{8}.spm.spatial.smooth.data(1).tgt_spec = {};
 matlabbatch{8}.spm.spatial.smooth.data(1).sname = 'Normalise: Write: Normalised Images (Subj 1)';
 matlabbatch{8}.spm.spatial.smooth.data(1).src_exbranch = substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{8}.spm.spatial.smooth.data(1).src_output = substruct('()',{1}, '.','files');
