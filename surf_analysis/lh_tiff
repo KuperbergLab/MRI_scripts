@@ -1,0 +1,23 @@
+resize_window 1024;redraw
+
+make_lateral_view;redraw
+save_tiff "img/LH_Lateral.tiff"
+
+rotate_brain_y 180;redraw
+save_tiff "img/LH_Medial.tiff"
+
+make_lateral_view;redraw
+rotate_brain_y 90;redraw
+save_tiff "img/LH_Posterior.tiff"
+
+rotate_brain_y -180;redraw
+save_tiff "img/LH_Anterior.tiff"
+
+make_lateral_view;redraw
+rotate_brain_x -90;redraw
+save_tiff "img/LH_Superior.tiff"
+
+rotate_brain_x -180;redraw
+save_tiff "img/LH_Inferior.tiff"
+
+exit
