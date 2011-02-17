@@ -52,14 +52,14 @@ for ii = 1:length(allCodeData)
     switch exname
         case 'BaleenMM'
             condName = BaleenMMCondNames{allCodeData(ii).code};
-        case 'MaskedMM'
+        case {'MaskedMM','MaskedMM_SC'}
             condName = MaskedMMCondNames{allCodeData(ii).code};
-        case 'ATLLoc'
+        case {'ATLLoc','ATLLoc_SC'}
             condName = ATLLocCondNames{allCodeData(ii).code};
         case {'AXCPT','AXCPT_SC'}
             condName = AXCPTCondNames{allCodeData(ii).code};
         otherwise
-            error(['No condition name mapping in Log2MultCond for' exname]);
+            error(['No condition name mapping in Log2MultCond for ' exname]);
     end
     if ~isempty(condName)
         allCodeData(ii).name = condName;
