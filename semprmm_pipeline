@@ -596,9 +596,62 @@ def second_level(data,type):
 	if type == "surf":
 		second_surf(data,prefix,date_dir,study_contrasts,study_stats)
 	if type == "package":
-		second_package(data,prefix,data_dir,study_contrasts,study_stats)
+		second_package(data,prefix,date_dir,study_contrasts,study_stats)
 
 		
+def second_package(data,prefix,date,study_contrasts,study_stats):
+	import shutil
+	print("Packaging second level surf analysis....\n")
+	package_dir = os.path.join(prefix,"surf_analysis_"+date)
+	surf_dir = os.path.join(mri_scripts,"surf_analysis")
+	if not os.path.exists(package_dir):
+		os.mkdir(package_dir)
+	if data["single_study"]:
+		studies = [data["single_study"]]
+	else:
+		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
+	#copy index.html
+	shutil.copyfile(os.path.join(surf_dir,"index.html"),
+		os.path.join(package_dir,"index.html"))
+	for study in studies:
+		date_dir = os.path.join(prefix,data["stype"],study,date)
+		#copy <study>.html
+		shutil.copyfile(os.path.join(surf_dir,study+".html"),
+			os.path.join(package_dir,study+".html"))
+		#within package_dir, make study/
+		study_dir = os.path.join(package_dir,study)
+		if not os.path.exists(study_dir):
+			os.mkdir(study_dir)
+		for [contrast,XXXX] in study_contrasts[study]:
+			print("{0}:\t{1}...".format(study,contrast))
+			#within study_dir, make con/
+			res_con_dir = os.path.join(study_dir,contrast+"_img")
+			if not os.path.exists(res_con_dir):
+				os.mkdir(res_con_dir)
+			#data_con_dir points to data contrast directory
+			img_con_dir = os.path.join(date_dir,contrast,"img")
+			#within every data_con_dir is which holds all jpgs
+			#we want to copy these jpgs to res_con_dir
+			print("Copying images...")
+			jpgs = glob(os.path.join(img_con_dir,"*.jpg"))
+			for jpg in jpgs:
+				shutil.copy(jpg,res_con_dir)
+			#let's find N
+			if "Baleen" in study:
+				real_study = "BaleenMM"
+			else:
+				real_study = study
+			search_term = os.path.join(func_dir,"*",real_study,study_stats[study],"8mm",
+				"con_"+XXXX+".img")
+			N = len(glob(search_term))
+			#now, make the <con>.html file
+			html_lines = list_from_file(os.path.join(surf_dir,"contrast.html"))
+			replace_dict = dict({"[N]":str(N),"[pvalue]":str(data["pvalue"]),
+				"[contrast]":contrast,"[study]":study,"[stype]":data["stype"]})
+			html_lines = replace_lines(html_lines,replace_dict)
+			con_html = os.path.join(study_dir,contrast+".html")
+			write_file_with_list(con_html,"\n".join(html_lines))
+			
 def second_surf(data,prefix,date,study_contrasts,study_stats):
 	from scipy import stats
 	import shutil
@@ -728,21 +781,23 @@ def subject_type(subjects):
 	return stype
 
 
-def write_file_with_list(path,lines):
+def write_file_with_list(path,lines,verbose=None):
 	try:
 		with open(path,'w') as f:
 			f.writelines(lines)
-		print("Wrote {0}".format(path))
+		if verbose:
+			print("Wrote {0}".format(path))
 	except IOError:
 		raise
 
 
-def list_from_file(path):
+def list_from_file(path,verbose=None):
 	try: 
 		with open(path,'r') as f:
 			all_lines = f.read()
 			all_lines = all_lines.splitlines()
-			print("Reading from {0}".format(path))
+			if verbose:
+				print("Reading from {0}".format(path))
 	except IOError:
 		print("Cannot open {0}".path)
 		raise
@@ -867,6 +922,8 @@ def main():
 		second_level(data,"setup")
 	if data["surf_second"]:
 		second_level(data,"surf")
+	if data["package_second"]:
+		second_level(data,"package")
 	if data["launchpad"]:
 		pipeline.wait_to_finish(running_jobs)
 
