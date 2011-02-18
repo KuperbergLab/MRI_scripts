@@ -933,6 +933,7 @@ def main():
 			if data["makeInv"]:
 				meg_script(data,"makeInv")
 		except:
+			print("Something happened for {0}".format(data["subject"]))
 			pass
 	if data["setup_second"]:
 		second_level(data,"setup")
