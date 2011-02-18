@@ -507,8 +507,7 @@ def meg_script(data,type,extra=None):
 		#look for fif
 		fif = glob(os.path.join(data["meg_dir"],"*_raw.fif"))
 		#filter our blink and emptyroom
-		fif = [x for x in fif if x.find("Blink") == -1]
-		fif = [x for x in fif if x.find("emptyroom") == -1]
+		fif = [x for x in fif if x.find("Blink") == -1 and x.find("emtpyroom") == -1]
 		N_fif = len(fif)
 		N_icamat = len(glob(os.path.join(data["meg_dir"],"*_raw_ica.mat")))
 		N_blinks = len(glob(os.path.join(data["meg_dir"],"*.blinks")))
@@ -577,6 +576,7 @@ def setup_bem(data):
 				pass
 	else:
 		print("NO Flash DCM...")
+
 
 def set_paths(data):
 	"""Fairly self-explanatory.  Adds keys to the dictionary for "mri_dir","subject_dir",
@@ -874,7 +874,9 @@ def main():
 		help="If passed with --surf_second, tksurfer will load aparc annotations")
 	parser.add_option("--dry",dest="dry",action="store_true",default=False,
 		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
-	
+	parser.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
+		help="Run the MEG makeInv script")
+		
 	(options,args) = parser.parse_args()
 	data = dict({})
 	#add options to data
@@ -928,6 +930,8 @@ def main():
 				meg_script(data,"preProc")
 			if data["preAnat"]:
 				meg_script(data,"preAnat")
+			if data["makeInv"]:
+				meg_script(data,"makeInv")
 		except:
 			pass
 	if data["setup_second"]:
