@@ -4,7 +4,7 @@
 
 
 function Log2MultCond_v4(logfile)
-
+disp(logfile)
 % Log2MultCond('~/Documents/MATLAB/vtsd_logs/MRI/ya1/ATLLoc_ya1_List201_Run1.vstd_log')
 % Log2MultCond('~/Documents/MATLAB/vtsd_logs/MRI/ya1/MaskedMM_ya1_List101_Run1.vstd_log')
 % Log2MultCond('~/Documents/MATLAB/vtsd_logs/MRI/ya1/BaleenMM_ya1_List202_Run1.vstd_log')
@@ -15,11 +15,22 @@ A = importdata(logfile);
 
 % Unpack A
 
-% textdata exname,subject,scanner,list,run,timetolog,trial#,(variable # of
+% textdata exname,scanner,subject,list,run,timetolog,trial#,(variable # of
 % stimuli)
 % data is code, item#, iti,responsetime 
 exname = A.textdata{1,1};
-
+subject = A.textdata{1,3};
+list = A.textdata{1,4};
+run = A.textdata{1,5};
+%normalize exname
+switch exname
+	case 'MaskedMM_SC'
+		exname = 'MaskedMM';
+	case 'ATLLoc_SC'
+		exname = 'ATLLoc';
+	case 'AXCPT_SC'
+		exname = 'AXCPT';
+end
 % don't need to do blink
 if strcmp(exname,'Blink')
     return;
@@ -44,7 +55,7 @@ BaleenMMCondNames = {'LP:Related Target','LP:Unrelated Target','','LP:Unrelated 
     'HP:Unrelated Filler','HP:Animal Target', 'LP:Animal Prime','HP:Animal Prime'};
 MaskedMMCondNames = {'Directly Related','Indirectly Related','Unrelated',...
     'Insect Prime','Insect Target'};
-ATLLocCondNames = {'Sentences','Nouns','Consonant Strings'};
+ATLLocCondNames = {'Sentences','WordList','Consonant Strings'};
 AXCPTCondNames = {'AY','BX','BY','AX'};
 
 for ii = 1:length(allCodeData)
@@ -102,14 +113,15 @@ end
 
 % Build file name
 [pathToLogFile prefix ext ver] = fileparts(logfile);
-underscores = find(prefix == '_');
-study = prefix(1:underscores(1)-1);
-if strcmp(study,'AXCPT')
-    study = 'AXCPT';
-end
-subject = prefix(underscores(1)+1:underscores(2)-1);
-run = prefix(underscores(3)+4:end);
-matfilename = fullfile(pathToLogFile,['MultCond_' study run '_' subject '.mat']);
+%underscores = find(prefix == '_');
+%study = prefix(1:underscores(1)-1);
+%if strcmp(study,'AXCPT')
+%    study = 'AXCPT';
+%end
+%subject = prefix(underscores(1)+1:underscores(2)-1);
+%run = prefix(underscores(3)+4:end);
+
+matfilename = fullfile(pathToLogFile,['MultCond_' exname run '_' subject '.mat']);
 
 
 
