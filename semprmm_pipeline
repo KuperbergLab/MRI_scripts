@@ -502,11 +502,33 @@ def meg_script(data,type,extra=None):
 	script_path = os.path.join(meg_scripts,type)
 	if not os.path.exists(script_path):
 		raise UserError("meg_script: can not locate {0}".format(type))
-	args = [type,data["subject"]]
+	my_args = [script_path,data["subject"]]
+	if type == "preProc":
+		#look for fif
+		fif = glob(os.path.join(data["meg_dir"],"*_raw.fif"))
+		#filter our blink and emptyroom
+		fif = [x for x in fif if x.find("Blink") == -1]
+		fif = [x for x in fif if x.find("emptyroom") == -1]
+		N_fif = len(fif)
+		N_icamat = len(glob(os.path.join(data["meg_dir"],"*_raw_ica.mat")))
+		N_blinks = len(glob(os.path.join(data["meg_dir"],"*.blinks")))
+		if (N_fif == 0):
+			raise UserError("No fif files found for this subject")
+		if not (N_fif == N_icamat == N_blinks):
+			raise UserError("Unequal amount of fif,ica.mat,and blink files.\nTry Again")
+		# DEFAULT EYE BLINK ARGUMENTS FOR PREPROC1
+		extra = ["0.1","0.3"]
+	if type == "preAnat":
+		setup_bem(data)
+		#check that flash was unpacked
+		if os.path.exists(os.path.join(data["mri_dir"],"MEFLASH")):
+			extra = ["FLASH"]
+		else:
+			extra = ["WATER"]
 	if extra:
-		args.extend(extra)
+		my_args.extend(extra)
 	#start the process 
-	process = pipeline.run_process(args,output=sys.stdout)
+	process = pipeline.run_process(my_args,output=sys.stdout)
 	output = process.communicate()[0]
 	print(output)
 
@@ -534,23 +556,27 @@ def setup_bem(data):
 		all_lines = list_from_file(scanlog_path,data["verbose"])
 		dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line and " err " not in line]
 		if len(dcm) > 1:
-			ProgrammerError("For some reason, there was more than one MEFLASH5 with 8 frames...check scan.log")
+			ProgrammerError("More than one MEFLASH5 with 8 frames...check scan.log")
+		elif len(dcm) == 0:
+			dcm = None;		
 		else:
 			dcm = dcm[0]
-	except:
+	except IOError:
 		raise ProgrammerError("Could not open scan.log file")
-	(sub_dcm,dash,after) = dcm.rpartition("-")
-	search_dir = os.path.join(data["dicom_dir"],sub_dcm+"*.dcm")
-	flash_dcms = glob(search_dir)
-	flash_dcms.sort()
-	for flash_dcm in flash_dcms:
-		(path,slash,filename) = flash_dcm.rpartition("/")
-		try:
-			sympath = os.path.join(flash_dcm_dir,filename)
-			os.symlink(flash_dcm,sympath)
-		except OSError:
-			pass
-
+	if dcm:
+		(sub_dcm,dash,after) = dcm.rpartition("-")
+		search_dir = os.path.join(data["dicom_dir"],sub_dcm+"*.dcm")
+		flash_dcms = glob(search_dir)
+		flash_dcms.sort()
+		for flash_dcm in flash_dcms:
+			(path,slash,filename) = flash_dcm.rpartition("/")
+			try:
+				sympath = os.path.join(flash_dcm_dir,filename)
+				os.symlink(flash_dcm,sympath)
+			except OSError:
+				pass
+	else:
+		print("NO Flash DCM...")
 
 def set_paths(data):
 	"""Fairly self-explanatory.  Adds keys to the dictionary for "mri_dir","subject_dir",
@@ -564,10 +590,10 @@ def set_paths(data):
 def second_level(data,type):
 	prefix = os.path.join(func_dir,"SecondLevelStats")
 	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
-		["SentencesVWordLists","0004"],["WordListsVNonwords","0008"]],"MaskedMM":[["Dir","0001"],["UnRel","0003"],
-		["UnRelVDir","0007"]],"BaleenLP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
-		"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],["UnRelFillvRelFill","0009"]],
-		"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
+		["SentencesVWordLists","0004"],["WordListsVNonwords","0008"]],"MaskedMM":[["Dir","0001"],
+		["UnRel","0003"],["UnRelVDir","0007"]],"BaleenLP":[["Rel","0001"],["UnRel","0002"],
+		["UnRelVRel","0007"]],"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
+		["UnRelFillvRelFill","0009"]],"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
 	study_stats = dict({"ATLLoc":"stats_outliers","MaskedMM":"stats_outliers",
 		"BaleenLP":"stats_outliers1","BaleenHP":"stats_outliers2","AXCPT":"stats_outliers"})
 	if data["date"]:
@@ -749,6 +775,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(script_path,"\n".join(script_commands),data["verbose"])
 	make_file_exec(script_path)
+
 		
 def subject_type(subjects):
 	# assume first is good
@@ -827,13 +854,9 @@ def main():
 		action="store_true",default=False)
 	parser.add_option("--parallel",dest="parallel",help="Make the script so jobs run in parallel",
 		action="store_true",default=False)
-	parser.add_option("--meg_preProc1",dest="meg_preProc1",help="Run the preProc1 script for meg",
+	parser.add_option("--preProc",dest="preProc",help="Run the preProc script for meg",
 		action="store_true",default=False)
-	parser.add_option("--meg_preProc3",dest="meg_preProc3",help="Run the preProc3 script for meg",
-		action="store_true",default=False)
-	parser.add_option("--meg_preAnat1",dest="meg_preAnat1",help="Run the preAnat1 script for meg",
-		action="store_true",default=False)
-	parser.add_option("--meg_preAnat2",dest="meg_preAnat2",help="Run the preAnat1 script for meg",
+	parser.add_option("--preAnat",dest="preAnat",help="Run the preAnat script for meg",
 		action="store_true",default=False)
 	parser.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
 		help="Use with --run_*, pipeline only exits when all jobs finish")
@@ -843,7 +866,8 @@ def main():
 		help="Analyze second level stats (that have been run) with Freesurfer")
 	parser.add_option("--package_second",dest="package_second",action="store_true",default=False,
 		help="Make analysis package (run after --surf_second)")
-	parser.add_option("--pvalue",dest="pvalue",type="float",default=0.001,help="Use with --surf_second")
+	parser.add_option("--pvalue",dest="pvalue",type="float",default=0.001,
+		help="Use with --surf_second")
 	parser.add_option("--date",dest="date",type="string",default=None,
 		help="Specify a previously run second level date in the form of YYYYMMDD")
 	parser.add_option("--aparc",dest="aparc",action="store_true", default=False,
@@ -869,44 +893,43 @@ def main():
 		data["aparc"] = ""
 	data['stype'] = subject_type(args)
 	for subject in args:
-		data["subject"] = subject
-		set_paths(data)	
-		if data["copy_dicom"]:		
-			archive_to_cluster(data)
-		if data["scan_only"]:
-			scan_only(data)
-		if data["scan2cfg"]:
-			scan2cfg(data)
-		if data["unpack"]:
-			unpack(data)
-		if data["unpack_all"]:
-			unpack_all(data)
-		if data["setup_preproc"]:
-			setup_spm(data,"preproc")
-		if data["setup_stats"]:
-			setup_spm(data,"stats")
-		if data["setup_outliers"]:
-			setup_spm(data,"stats_outliers")
-		if data["setup_recon"]:
-			setup_recon(data)
-		if data["run_preproc"]:
-			run_mri_script(data,"preproc")
-		if data["run_stats"]:
-			run_mri_script(data,"stats")
-		if data["run_outliers"]:
-			run_mri_script(data,"stats_outliers")
-		if data["run_recon"]:
-			run_mri_script(data,"recon")
-		if data["setup_bem"]:
-			setup_bem(data)
-		if data["meg_preProc1"]:
-			meg_script(data,"preProc1")
-		if data["meg_preProc3"]:
-			meg_script(data,"preProc3",["-0.2","0.4"])
-		if data["meg_preAnat1"]:
-			meg_script(data,"preAnat1")
-		if data["meg_preAnat2"]:
-			meg_script(data,"preAnat2")
+		try:
+			data["subject"] = subject
+			set_paths(data)	
+			if data["copy_dicom"]:		
+				archive_to_cluster(data)
+			if data["scan_only"]:
+				scan_only(data)
+			if data["scan2cfg"]:
+				scan2cfg(data)
+			if data["unpack"]:
+				unpack(data)
+			if data["unpack_all"]:
+				unpack_all(data)
+			if data["setup_preproc"]:
+				setup_spm(data,"preproc")
+			if data["setup_stats"]:
+				setup_spm(data,"stats")
+			if data["setup_outliers"]:
+				setup_spm(data,"stats_outliers")
+			if data["setup_recon"]:
+				setup_recon(data)
+			if data["run_preproc"]:
+				run_mri_script(data,"preproc")
+			if data["run_stats"]:
+				run_mri_script(data,"stats")
+			if data["run_outliers"]:
+				run_mri_script(data,"stats_outliers")
+			if data["run_recon"]:
+				run_mri_script(data,"recon")
+			if data["setup_bem"]:
+				setup_bem(data)
+			if data["preProc"]:
+				meg_script(data,"preProc")
+			if data["preAnat"]:
+				meg_script(data,"preAnat")
+		except:
+			pass
 	if data["setup_second"]:
 		second_level(data,"setup")
 	if data["surf_second"]:
