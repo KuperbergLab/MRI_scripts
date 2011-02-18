@@ -752,7 +752,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 		script_commands.append("{0} < {1} > {2}".format(mlab_cmd,gen,log))
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(script_path,"\n".join(script_commands),data["verbose"])
-
+	make_file_exec(script_path)
 		
 def subject_type(subjects):
 	# assume first is good
