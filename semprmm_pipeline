@@ -245,10 +245,6 @@ def shell_script_path(data,study,type):
 def write_shell_script(data,study,type):
 	shell_script = shell_script_path(data,study,type)
 	commands = []
-	if data["parallel"]:
-		par = " & "
-	else:
-		par = ""
 	commands.append("#!/bin/sh")
 	if "recon" in type:
 		setup_recon = "recon-all -s " + data["subject"]
@@ -271,16 +267,16 @@ def write_shell_script(data,study,type):
 					type+"_block1.m")
 				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
 					type+"_block1.log")
-				commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,mlab_cmd,par))
+				commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,mlab_cmd,data["parallel"]))
 				job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
 					type+"_block2.m")
 				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
 					type+"_block2.log")
-				commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,mlab_cmd,par))
+				commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,mlab_cmd,data["parllalel"]))
 			else:
 				job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
 				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
-				commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,mlab_cmd,par))
+				commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,mlab_cmd,data["parallel"]))
 	try:
 		write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
 	except IOError:
@@ -729,8 +725,6 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 				print("Searching with {0}\n".format(search_term))
 			con_key = "["+contrast+"_images]"
 			raw_images = glob(search_term)
-			if data["verbose"]:
-				print("Found these files {0}\n".format(raw_images))
 			raw_images[:] = ["'"+x+"'" for x in raw_images]
 			n = len(raw_images)
 			images_str = "\n".join(raw_images)
@@ -749,7 +743,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 		gen = os.path.join(new_dir,study.lower()+"_2nd.m")
 		write_file_with_list(gen,"\n".join(all_lines),data["verbose"])
 		log = os.path.join(new_dir,study.lower()+"_2nd.log")
-		script_commands.append("{0} < {1} > {2}".format(mlab_cmd,gen,log))
+		script_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,gen,log,data["parallel"]))
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(script_path,"\n".join(script_commands),data["verbose"])
 	make_file_exec(script_path)
@@ -866,7 +860,11 @@ def main():
 				"setup_second":options.setup_second,"surf_second":options.surf_second,
 				"package_second":options.package_second,"pvalue":options.pvalue,
 				"date":options.date})
-				
+	
+	if data["parallel"]:
+		data["parallel"] = "&"
+	else:
+		data["parallel"] = ""
 	data['stype'] = subject_type(args)
 	for subject in args:
 		data["subject"] = subject
