@@ -1,5 +1,3 @@
-resize_window 1024;redraw
-
 make_lateral_view;redraw
 save_tiff "img/LH_Lateral.tiff"
 

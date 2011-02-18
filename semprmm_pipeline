@@ -672,7 +672,8 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			script_dict = dict({})
 			tvalue = stats.t.isf(data["pvalue"],N)
 			print("T-threshold at N={0} and p<{1} is {2}".format(N,data["pvalue"],tvalue))
-			script_dict['[tvalue]'] = str(tvalue)
+			script_dict["[tvalue]"] = str(tvalue)
+			script_dict["[aparc]"] = data["aparc"]
 			make_images_script_path = os.path.join(mri_scripts,"surf_analysis","make_images.sh")
 			all_lines = list_from_file(make_images_script_path,data["verbose"])
 			all_lines = replace_lines(all_lines,script_dict)
@@ -684,13 +685,14 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 				tiffs_path = os.path.join(mri_scripts,"surf_analysis",surf_script)
 				new_tiffs_path = os.path.join(con_dir,surf_script)
 				shutil.copyfile(tiffs_path,new_tiffs_path)
-			# all ready to run make_images.sh
-			os.chdir(con_dir)
-			try:
-				process = pipeline.run_process([new_script_path],sys.stdout)
-				output = process.communicate()[0]
-			except KeyboardInterrupt:
-				sys.exit("Surf canceled by user...Goodbye")
+			if not data["dry"]:
+				# all ready to run make_images.sh
+				os.chdir(con_dir)
+				try:
+					process = pipeline.run_process([new_script_path],sys.stdout)
+					output = process.communicate()[0]
+				except KeyboardInterrupt:
+					sys.exit("Surf canceled by user...Goodbye")
 
 			
 def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
@@ -844,27 +846,27 @@ def main():
 	parser.add_option("--pvalue",dest="pvalue",type="float",default=0.001,help="Use with --surf_second")
 	parser.add_option("--date",dest="date",type="string",default=None,
 		help="Specify a previously run second level date in the form of YYYYMMDD")
-		
-	(options,args) = parser.parse_args() 
-	data = dict({"copy_dicom":options.copy_dicom,"unpack_all":options.unpack_all,
-				"verbose":options.verbose,"setup_preproc":options.setup_preproc,
-				"setup_recon":options.setup_recon,"setup_stats":options.setup_stats,
-				"setup_outliers":options.setup_outliers,"single_study":options.single_study,
-				"run_outliers":options.run_outliers,"run_preproc":options.run_preproc,
-				"run_stats":options.run_stats,"run_recon":options.run_recon,
-				"setup_bem":options.setup_bem,"scan_only":options.scan_only,
-				"scan2cfg":options.scan2cfg,"unpack":options.unpack,
-				"parallel":options.parallel,"meg_preProc1":options.meg_preProc1,
-				"meg_preProc3":options.meg_preProc3,"meg_preAnat1":options.meg_preAnat1,
-				"meg_preAnat2":options.meg_preAnat2,"launchpad":options.launchpad,
-				"setup_second":options.setup_second,"surf_second":options.surf_second,
-				"package_second":options.package_second,"pvalue":options.pvalue,
-				"date":options.date})
+	parser.add_option("--aparc",dest="aparc",action="store_true", default=False,
+		help="If passed with --surf_second, tksurfer will load aparc annotations")
+	parser.add_option("--dry",dest="dry",action="store_true",default=False,
+		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
 	
+	(options,args) = parser.parse_args()
+	data = dict({})
+	#add options to data
+	for opt,value in options.__dict__.items():
+		data[opt] = value
+	
+	#transform parallel
 	if data["parallel"]:
 		data["parallel"] = "&"
 	else:
 		data["parallel"] = ""
+	#transform aparc
+	if data["aparc"]:
+		data["aparc"] = "-aparc"
+	else:
+		data["aparc"] = ""
 	data['stype'] = subject_type(args)
 	for subject in args:
 		data["subject"] = subject
