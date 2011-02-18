@@ -128,10 +128,6 @@ def scan2cfg(data):
 				["ge_functionals_axcpt_sc","ok","160"]]
 	good_lines = pipeline.scan_to_cfg(dir_map,dir_map,scan_list,data["scan_path"])
 	good_lines.sort(key=lambda x:int(x.split()[0]))
-	if data["verbose"]:
-		print("pipeline.scan_to_cfg found these lines")
-		for line in good_lines:
-			print(line)
 	fieldmaps = [v for v in good_lines if v.split()[1] == "FieldMap"]
 	if len(fieldmaps) % 2 == 1:
 		print("Odd amount of fieldmaps. --scan2cfg cannot continue. Copy/paste/edit as needed.")
@@ -165,12 +161,8 @@ def scan2cfg(data):
 		not_fieldmaps.append(fm)
 	good_lines = not_fieldmaps
 	good_lines.sort(key=lambda x:int(x.split()[0]))
-	if data["verbose"]:
-		print("After cleaning up...")
-		for line in good_lines:
-			print(line)
 	try:
-		write_file_with_list(data["cfg_path"],"\n".join(good_lines))
+		write_file_with_list(data["cfg_path"],"\n".join(good_lines),data["verbose"])
 	except:
 		print("Failure in scan2cfg")
 		raise
@@ -211,8 +203,6 @@ def studies_to_setup(data,type):
 
 
 def setup_spm(data,type):
-	if data["verbose"]:
-		print("setup_spm: {0}".format(type))
 	data["studies_to_setup"] = studies_to_setup(data,type)
 	for study in data["studies_to_setup"]:
 		job_dir = os.path.join(data["mri_dir"],study,"jobs")
@@ -292,7 +282,7 @@ def write_shell_script(data,study,type):
 				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
 				commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,mlab_cmd,par))
 	try:
-		write_file_with_list(shell_script,"\n".join(commands))
+		write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
 	except IOError:
 		print(commands)
 		raise SystemError("Cannot write shell script. See text above traceback for shell commands.")
@@ -313,8 +303,6 @@ def specific_batch_path(data,study,type,block):
 
 def write_batch_files(data,study,type,block):
 	study_dict = build_funcdir_info(data,study,type,block)
-	if data["verbose"]:
-		print("study dict: {0}".format(study_dict))
 	if "stats_outliers" in type:
 		good_type = "stats"
 	else:
@@ -325,11 +313,11 @@ def write_batch_files(data,study,type,block):
 		path_to_batch = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_block"+block+"_job.m")
 	else:		
 		path_to_batch =os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_job.m")
-	all_lines = list_from_file(path_to_batch)
+	all_lines = list_from_file(path_to_batch,data["verbose"])
 	all_lines = replace_lines(all_lines,study_dict)	
 	specific_batch_file = specific_batch_path(data,study,type,block)
 	try :
-		write_file_with_list(specific_batch_file,"\n".join(all_lines))
+		write_file_with_list(specific_batch_file,"\n".join(all_lines),data["verbose"])
 	except :
 		raise
 	matlab_batch = matlab_batch_lines(data,study,type,block)
@@ -341,13 +329,13 @@ def write_batch_files(data,study,type,block):
 	else:
 		subject_batch = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
 	try:
-		write_file_with_list(subject_batch,"\n".join(matlab_batch))
+		write_file_with_list(subject_batch,"\n".join(matlab_batch),data["verbose"])
 	except : 
 		raise
 
 
 def matlab_batch_lines(data,study,type,block):
-	all_lines = list_from_file(os.path.join(batch_dir,data["stype"],"spm_mfile.m"))
+	all_lines = list_from_file(os.path.join(batch_dir,data["stype"],"spm_mfile.m"),data["verbose"])
 	replace_dict = dict({"[study]":study.lower(),"[type]":type,"[subject]":data["subject"]})
 	if block:
 		replace_dict["[block]"] = "_block"+block
@@ -547,7 +535,7 @@ def setup_bem(data):
 		os.mkdir(flash_org_dir)
 	try:
 		scanlog_path = scan_path(data)
-		all_lines = list_from_file(scanlog_path)
+		all_lines = list_from_file(scanlog_path,data["verbose"])
 		dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line and " err " not in line]
 		if len(dcm) > 1:
 			ProgrammerError("For some reason, there was more than one MEFLASH5 with 8 frames...check scan.log")
@@ -645,12 +633,13 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 				"con_"+XXXX+".img")
 			N = len(glob(search_term))
 			#now, make the <con>.html file
-			html_lines = list_from_file(os.path.join(surf_dir,"contrast.html"))
+			html_lines = list_from_file(os.path.join(surf_dir,"contrast.html"),data["verbose"])
 			replace_dict = dict({"[N]":str(N),"[pvalue]":str(data["pvalue"]),
 				"[contrast]":contrast,"[study]":study,"[stype]":data["stype"]})
 			html_lines = replace_lines(html_lines,replace_dict)
 			con_html = os.path.join(study_dir,contrast+".html")
-			write_file_with_list(con_html,"\n".join(html_lines))
+			write_file_with_list(con_html,"\n".join(html_lines),data["verbose"])
+
 			
 def second_surf(data,prefix,date,study_contrasts,study_stats):
 	from scipy import stats
@@ -689,10 +678,10 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			print("T-threshold at N={0} and p<{1} is {2}".format(N,data["pvalue"],tvalue))
 			script_dict['[tvalue]'] = str(tvalue)
 			make_images_script_path = os.path.join(mri_scripts,"surf_analysis","make_images.sh")
-			all_lines = list_from_file(make_images_script_path)
+			all_lines = list_from_file(make_images_script_path,data["verbose"])
 			all_lines = replace_lines(all_lines,script_dict)
 			new_script_path = os.path.join(con_dir,"make_images.sh")
-			write_file_with_list(new_script_path,"\n".join(all_lines))
+			write_file_with_list(new_script_path,"\n".join(all_lines),data["verbose"])
 			make_file_exec(new_script_path)
 			#copy lh_tiffs and rh_tiffs
 			for surf_script in ["lh_tiff","rh_tiff"]:
@@ -749,20 +738,20 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			script_commands.append("rm {0}/SPM.mat".format(con_dir))
 			print("Contrast: {0}\t{1} subjects".format(contrast,n))
 		spec_batch_job = os.path.join(batch_dir,data["stype"], study.lower()+"_2nd_job.m")
-		all_lines = list_from_file(spec_batch_job)
+		all_lines = list_from_file(spec_batch_job,data["verbose"])
 		all_lines = replace_lines(all_lines,replace_dict)
 		spec_job = os.path.join(new_dir,study.lower()+"_2nd_job.m")
-		write_file_with_list(spec_job,"\n".join(all_lines))
+		write_file_with_list(spec_job,"\n".join(all_lines),data["verbose"])
 		gen_mfile = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
-		all_lines = list_from_file(gen_mfile)
+		all_lines = list_from_file(gen_mfile,data["verbose"])
 		gen_replace_dict = dict({"[script]":spec_job,"[study]":study})
 		all_lines = replace_lines(all_lines,gen_replace_dict)
 		gen = os.path.join(new_dir,study.lower()+"_2nd.m")
-		write_file_with_list(gen,"\n".join(all_lines))
+		write_file_with_list(gen,"\n".join(all_lines),data["verbose"])
 		log = os.path.join(new_dir,study.lower()+"_2nd.log")
 		script_commands.append("{0} < {1} > {2}".format(mlab_cmd,gen,log))
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
-	write_file_with_list(script_path,"\n".join(script_commands))
+	write_file_with_list(script_path,"\n".join(script_commands),data["verbose"])
 
 		
 def subject_type(subjects):
