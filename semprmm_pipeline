@@ -168,29 +168,6 @@ def scan2cfg(data):
 		raise
 
 
-# def fix_line(line,study_dict):
-# 	"""
-# 	line: string with (possible) tokens to replace
-# 	study_dict: keys of which, if found in line, are replaced with the corresponding value
-# 	Returns a line that has been fixed.
-# 	"""
-# 	for key,value in study_dict.iteritems():
-# 		if key in line:				
-# 			line = line.replace(key,value)
-# 	return line
-# 
-# 
-# def replace_lines(all_lines,replace_dict):
-# 	"""
-# 	all_lines: list of strings containing tokens that need replacement
-# 	replace_dict: contains keys representing tokens that are found throughout strings in all_lines
-# 	The value of the key is what the token is replaced with.
-# 	"""
-# 	for i,line in enumerate(all_lines[:]):
-# 		all_lines[i] = fix_line(line,replace_dict)
-# 	return all_lines
-
-
 def studies_to_setup(data,type):
 	studies = []
 	if "stats" in type:
