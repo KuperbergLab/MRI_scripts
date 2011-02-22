@@ -17,127 +17,225 @@
 		<h3>Preprocessing</h3>
 		<ul>
 			<li>Presubtracted Phase and Magnitude Data</li>
-				<ul>
-					<li>Phase Image: FieldMapping produces two images, this is the second.</li>
-					<li>Magnitude Image: FieldMapping produces two images, this is the first.</li>
-					<li>Echo Times: 4.92 7.38</li>
-					<li>Mask Brain: No masking</li>
-					<li>Blip Direction: 1 (Siemens value)</li>
-					<li>Total EPI Readout Time: 32</li>
-					<li>EPI-based field map? non-EPI</li>
-					<li>Jacobian Modulation: Do not use</li>
-					<li>Unwrapping Method: Mark3d</li>
-					<li>FWHM: 10</li>
-					<li>pad: 0</li>
-					<li>Weighted Smoothing: Weighted Smoothing</li>
-					<li>Template Image for brain masking: /cluster/kuperberg/Software/spm/templates/T1.nii</li>
-					<li>FWHM: 5</li>
-					<li># of Erosions: 2</li>
-					<li># of dilations: 4</li>
-					<li>Threshold: 0.5</li>
-					<li>Regularization: 0.02</li>
-					<li>(Amount of sessions depends on paradigm)</li>
-					<li>Match VDM to EPI? match vdm</li>
-					<li>Name extension for session specific vdm files: session</li>
-					<li>Write unwarped EPI? write unwarped EPI</li>
-					<li>Select anatomical image for comparison: (MPRAGE)</li>
-					<li>Match anatomical image to EPI? match anat</li>
-				</ul>
+			<ul>
+				<li>Phase Image: FieldMapping produces two images, this is the second.</li>
+				<li>Magnitude Image: FieldMapping produces two images, this is the first.</li>
+				<li>Echo Times: 4.92 7.38</li>
+				<li>Mask Brain: No masking</li>
+				<li>Blip Direction: 1 (Siemens value)</li>
+				<li>Total EPI Readout Time: 32</li>
+				<li>EPI-based field map? non-EPI</li>
+				<li>Jacobian Modulation: Do not use</li>
+				<li>Unwrapping Method: Mark3d</li>
+				<li>FWHM: 10</li>
+				<li>pad: 0</li>
+				<li>Weighted Smoothing: Weighted Smoothing</li>
+				<li>Template Image for brain masking: /cluster/kuperberg/Software/spm/templates/T1.nii</li>
+				<li>FWHM: 5</li>
+				<li># of Erosions: 2</li>
+				<li># of dilations: 4</li>
+				<li>Threshold: 0.5</li>
+				<li>Regularization: 0.02</li>
+				<li>(Amount of sessions depends on paradigm)</li>
+				<li>Match VDM to EPI? match vdm</li>
+				<li>Name extension for session specific vdm files: session</li>
+				<li>Write unwarped EPI? write unwarped EPI</li>
+				<li>Select anatomical image for comparison: (MPRAGE)</li>
+				<li>Match anatomical image to EPI? match anat</li>
+			</ul>
 			<li>Realign and Unwarp</li>
-				<ul>
-					<li>Amount of sessions will depend on pardigm, but images are the functional volumes and the Phase Map is from the previous step.</li>
-					<li>Estimation - Quality: 0.9</li>
-					<li>Estimation - Separation: 4</li>
-					<li>Estimation - Smoothing (FWHM): 5</li>
-					<li>Estimation - Num passes: Register to first</li>
-					<li>Estimation - Inerpolation: 4th Degree B-spline</li>
-					<li>Estimation - Wrapping: No wrap</li>
-					<li>Estimation - Weighting: [none]</li>
-					<li>Unwarp Estimation - Basis Functions : 12x12x*</li>
-					<li>Unwarp Estimation - Regularisation: 1</li>
-					<li>Unwarp Estimation - Reg. Factor: Medium</li>
-					<li>Unwarp Estimation - Jacobian deformations: No</li>
-					<li>Unwarp Estimation - First-order effets: [4 5]</li>
-					<li>Unwarp Estimation - Second-order effects: []</li>
-					<li>Unwarp Estimation - Smoothing for unwarp (FWHM): 4</li>
-					<li>Unwarp Estimation - Re-estimate movement params: Yes</li>
-					<li>Unwarp Estimation - Number of iterations: 5</li>
-					<li>Unwarp Estimation - Taylor expansion point: Average</li>
-					<li>Unwarp Reslicing - Resliced Images (unwarp)?: All images + Mean image</li>
-					<li>Unwarp Reslicing - Interpolation: 4th Degree B-spline</li>
-					<li>Unwarp Reslicing - Wrapping: No wrap</li>
-					<li>Unwarp Reslicing - Masking: Mask images</li>
-					<li>Unwarp Reslicing - Filename prefix: ur</li>
-				</ul>
+			<ul>
+				<li>Amount of sessions will depend on pardigm, but images are the functional volumes and the Phase Map is from the previous step.</li>
+				<li>Estimation - Quality: 0.9</li>
+				<li>Estimation - Separation: 4</li>
+				<li>Estimation - Smoothing (FWHM): 5</li>
+				<li>Estimation - Num passes: Register to first</li>
+				<li>Estimation - Inerpolation: 4th Degree B-spline</li>
+				<li>Estimation - Wrapping: No wrap</li>
+				<li>Estimation - Weighting: [none]</li>
+				<li>Unwarp Estimation - Basis Functions : 12x12x*</li>
+				<li>Unwarp Estimation - Regularisation: 1</li>
+				<li>Unwarp Estimation - Reg. Factor: Medium</li>
+				<li>Unwarp Estimation - Jacobian deformations: No</li>
+				<li>Unwarp Estimation - First-order effets: [4 5]</li>
+				<li>Unwarp Estimation - Second-order effects: []</li>
+				<li>Unwarp Estimation - Smoothing for unwarp (FWHM): 4</li>
+				<li>Unwarp Estimation - Re-estimate movement params: Yes</li>
+				<li>Unwarp Estimation - Number of iterations: 5</li>
+				<li>Unwarp Estimation - Taylor expansion point: Average</li>
+				<li>Unwarp Reslicing - Resliced Images (unwarp)?: All images + Mean image</li>
+				<li>Unwarp Reslicing - Interpolation: 4th Degree B-spline</li>
+				<li>Unwarp Reslicing - Wrapping: No wrap</li>
+				<li>Unwarp Reslicing - Masking: Mask images</li>
+				<li>Unwarp Reslicing - Filename prefix: ur</li>
+			</ul>
 			<li>Slice Timing</li>
-				<ul>
-					<li>Data: # of sessions depends on paradigm, but images come from Realign and Unwarp stage.</li>
-					<li>Number of slices: 36</li>
-					<li>TR: 2</li>
-					<li>TA: 1.9444</li>
-					<li>Slice Order: [1 3 5 7 9 11 13 15 17 19 21 23 25 27 29 31 33 35 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36]</li>
-					<li>Reference Slice: 1</li>
-					<li>Filename prefix: a</li>
-				</ul>
+			<ul>
+				<li>Data: # of sessions depends on paradigm, but images come from Realign and Unwarp stage.</li>
+				<li>Number of slices: 36</li>
+				<li>TR: 2</li>
+				<li>TA: 1.9444</li>
+				<li>Slice Order: [1 3 5 7 9 11 13 15 17 19 21 23 25 27 29 31 33 35 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36]</li>
+				<li>Reference Slice: 1</li>
+				<li>Filename prefix: a</li>
+			</ul>
 			<li>Coregister: Estimate and Reslice</li>
-				<ul>
-					<li>Reference Image: Unwarped Mean image from Realign and Unwarp</li>
-					<li>Source Image: MPRAGE</li>
-					<li>Other images: none</li>
-					<li>Estimation - Objective Function: Normalised Mutual Information</li>
-					<li>Estimation - Separation: [4 2]</li>
-					<li>Estimation - Tolerances: [7 7]</li>
-					<li>Estimation - Histogram smoothing: none</li>
-					<li>Reslice - Interpolation: Trilinear</li>
-					<li>Reslice - Wrapping: no wrap</li>
-					<li>Reslice - Masking: Don't mask images</li>
-					<li>Reslice - Filename prefix: c</li>
-				</ul>
+			<ul>
+				<li>Reference Image: Unwarped Mean image from Realign and Unwarp</li>
+				<li>Source Image: MPRAGE</li>
+				<li>Other images: none</li>
+				<li>Estimation - Objective Function: Normalised Mutual Information</li>
+				<li>Estimation - Separation: [4 2]</li>
+				<li>Estimation - Tolerances: [7 7]</li>
+				<li>Estimation - Histogram smoothing: none</li>
+				<li>Reslice - Interpolation: Trilinear</li>
+				<li>Reslice - Wrapping: no wrap</li>
+				<li>Reslice - Masking: Don't mask images</li>
+				<li>Reslice - Filename prefix: c</li>
+			</ul>
 			<li>Segment</li>
-				<ul>
-					<li>Data: Coregistered images from Coreg stage.</li>
-					<li>Output files - Grey Matter: native space</li>
-					<li>Output files - White matter: Native space</li>
-					<li>Output files - Cerebro-spinal Fluid: None</li>
-					<li>Output files - Bias Corrected: Save bias corrected</li>
-					<li>Output files - Clean up any partitions: don't do cleanup</li>
-					<li>Custom - Tissue Probability Maps: 3 files (this is a default)</li>
-					<li>Custom - Gaussians per class: [2 2 2 4]</li>
-					<li>Custom - Affine Regularisation: ICBM space template: European Brains</li>
-					<li>Custom - Warping Regularisation: 1</li>
-					<li>Custom - Warp Frequency cutoff: 25</li>
-					<li>Custom - Bias regularisation: very light (0.0001)</li>
-					<li>Custom - Bias FWHM: 60mm</li>
-					<li>Custom - Sampling distance: 3</li>
-					<li>Custom - Masking image: none</li>
-				</ul>
+			<ul>
+				<li>Data: Coregistered images from Coreg stage.</li>
+				<li>Output files - Grey Matter: native space</li>
+				<li>Output files - White matter: Native space</li>
+				<li>Output files - Cerebro-spinal Fluid: None</li>
+				<li>Output files - Bias Corrected: Save bias corrected</li>
+				<li>Output files - Clean up any partitions: don't do cleanup</li>
+				<li>Custom - Tissue Probability Maps: 3 files (this is a default)</li>
+				<li>Custom - Gaussians per class: [2 2 2 4]</li>
+				<li>Custom - Affine Regularisation: ICBM space template: European Brains</li>
+				<li>Custom - Warping Regularisation: 1</li>
+				<li>Custom - Warp Frequency cutoff: 25</li>
+				<li>Custom - Bias regularisation: very light (0.0001)</li>
+				<li>Custom - Bias FWHM: 60mm</li>
+				<li>Custom - Sampling distance: 3</li>
+				<li>Custom - Masking image: none</li>
+			</ul>
 			<li>Normalize: Write</li>
-				<ul>
-					<li>Data - Subject: Parameter File: Norm Params Subj -> MNI (from Segment)</li>
-					<li>Data - Subject: Images to write: Slice Timing correc. images</li>
-					<li>Writing - Preserve: Preserve Concentrations:</li>
-					<li>Writing - Bounding Box: [-78 -112 -70],[78 76 85]</li>
-					<li>Writing - Voxel Sizes: [2 2 2]</li>
-					<li>Writing - Interpolation: 4th Degree B-spline</li>
-					<li>Writing - Wrapping: No warp</li>
-					<li>Writing - Filename Prefix: w</li>
-				</ul>
+			<ul>
+				<li>Data - Subject: Parameter File: Norm Params Subj -> MNI (from Segment)</li>
+				<li>Data - Subject: Images to write: Slice Timing correc. images</li>
+				<li>Writing - Preserve: Preserve Concentrations:</li>
+				<li>Writing - Bounding Box: [-78 -112 -70],[78 76 85]</li>
+				<li>Writing - Voxel Sizes: [2 2 2]</li>
+				<li>Writing - Interpolation: 4th Degree B-spline</li>
+				<li>Writing - Wrapping: No warp</li>
+				<li>Writing - Filename Prefix: w</li>
+			</ul>
 			<li>Smooth</li>
-				<ul>
-					<li>Images to smooth: Normalized images</li>
-					<li>FWHM: [6 6 6]</li>
-					<li>Data type: same</li>
-					<li>Implicit masking: No</li>
-					<li>Filename prefix: s6</li>
-				</ul>
+			<ul>
+				<li>Images to smooth: Normalized images</li>
+				<li>FWHM: [6 6 6]</li>
+				<li>Data type: same</li>
+				<li>Implicit masking: No</li>
+				<li>Filename prefix: s6</li>
+			</ul>
 			<li>Smooth</li>
-				<ul>
-					<li>Images to smooth: Normalized images</li>
-					<li>FWHM: [8 8 8]</li>
-					<li>Data type: same</li>
-					<li>Implicit masking: No</li>
-					<li>Filename prefix: s8</li>
-				</ul>
+			<ul>
+				<li>Images to smooth: Normalized images</li>
+				<li>FWHM: [8 8 8]</li>
+				<li>Data type: same</li>
+				<li>Implicit masking: No</li>
+				<li>Filename prefix: s8</li>
+			</ul>
+		</ul>
+		<h3>First-Level Estimation</h3>
+		<ul>
+			<li>fMRI Model Specification (6mm images)</li>
+			<ul>
+				<li>Directory: Along the lines of (subject)/(paradigm)/stats_outliers/6mm/</li>
+				<li>Timing - Units for design: Seconds</li>
+				<li>Timing - Interscan Interval: 2</li>
+				<li>Timing - Microtime Resolution: 16</li>
+				<li>Timing - Microtime onset: 1</li>
+				<li>Data & Design - Subject/Session (amount will depend on pardigm)</li>
+				<li>Data & Design - Subject/Session - Scans: s6 images</li>
+				<li>Data & Design - Subject/Session - Conditions: None</li>
+				<li>Data & Design - Subject/Session - Multiple Conditions: This .mat file is made with MakeMultCond.m and is located in the image directory</li>
+				<li>Data & Design - Subject/Session - Regressors: none</li>
+				<li>Data & Design - Subject/Session - Multiple Regressors: This .mat file is made with Sue Gabrieli's ART program and is located in the image directory</li>
+				<li>Data & Design - Subject/Session - High pass filter: 128</li>
+				<li>Factorial Design: None</li>
+				<li>Basis Functions - Canonical HRF: No derivatives</li>
+				<li>Model Interactions (Volterra): Do not model interactions</li>
+				<li>Global normalisation: None</li>
+				<li>Explicit mask: none</li>
+				<li>Serial Correlations: AR(1)</li>
+			</ul>
+			<li>Model estimation</li>
+			<ul>
+				<li>Select SPM.mat: SPM.mat from model specification</li>
+				<li>Method: classical</li>
+			</ul>
+			<li>Contrast Manager</li>
+			<ul>
+				<li>SPM.mat: SPM.mat from model estimation</li>
+				<li>Contrast sessions will depend on paradigm</li>
+				<li>Delete existing contrasts: yes</li>
+			</ul>
+		</ul>
+		<ul>
+			<li>fMRI Model Specification (8mm images)</li>
+			<ul>
+				<li>Directory: Along the lines of (subject)/(paradigm)/stats_outliers/8mm/</li>
+				<li>Timing - Units for design: Seconds</li>
+				<li>Timing - Interscan Interval: 2</li>
+				<li>Timing - Microtime Resolution: 16</li>
+				<li>Timing - Microtime onset: 1</li>
+				<li>Data & Design - Subject/Session (amount will depend on pardigm)</li>
+				<li>Data & Design - Subject/Session - Scans: s6 images</li>
+				<li>Data & Design - Subject/Session - Conditions: None</li>
+				<li>Data & Design - Subject/Session - Multiple Conditions: This .mat file is made with MakeMultCond.m and is located in the image directory</li>
+				<li>Data & Design - Subject/Session - Regressors: none</li>
+				<li>Data & Design - Subject/Session - Multiple Regressors: This .mat file is made with Sue Gabrieli's ART program and is located in the image directory</li>
+				<li>Data & Design - Subject/Session - High pass filter: 128</li>
+				<li>Factorial Design: None</li>
+				<li>Basis Functions - Canonical HRF: No derivatives</li>
+				<li>Model Interactions (Volterra): Do not model interactions</li>
+				<li>Global normalisation: None</li>
+				<li>Explicit mask: none</li>
+				<li>Serial Correlations: AR(1)</li>
+			</ul>
+			<li>Model estimation</li>
+			<ul>
+				<li>Select SPM.mat: SPM.mat from model specification</li>
+				<li>Method: classical</li>
+			</ul>
+			<li>Contrast Manager</li>
+			<ul>
+				<li>SPM.mat: SPM.mat from model estimation</li>
+				<li>Contrast sessions will depend on paradigm</li>
+				<li>Delete existing contrasts: yes</li>
+			</ul>
+		</ul>
+		<h3>Second Level Estimation</h3>
+		<ul>
+			<p>(One of these three stages for each contrast...)</p>
+			<li>Factorial Design Specification</li>
+			<ul>
+				<li>Directory: directory in which files will be written to</li>
+				<li>Design - One sample T Test</li>
+				<li>Scans: (one con_XXXX.img from each subject)</li>
+				<li>Covariates: none</li>
+				<li>Masking: No threshold masking</li>
+				<li>Masking - Implicit Mask: yes</li>
+				<li>Masking - Explicit Mask: no</li>
+				<li>Global calculation: omit</li>
+				<li>Global normalisation - Overall grand mean scaling: No</li>
+				<li>Global normalisation - Normalisation: None</li>
+			</ul>
+			<li>Model estimation</li>
+			<ul>
+				<li>Select SPM.mat: SPM.mat from model specification</li>
+				<li>Method: classical</li>
+			</ul>
+			<li>Contrast Manager</li>
+			<ul>
+				<li>SPM.mat: SPM.mat from Model estimation</li>
+				<li>Contrasts - name: (name)</li>
+				<li>Contrasts - Vector: [1]</li>
+				<li>Contrasts - Sesssion replication: Replicate and Scale</li>
+			</ul>
 		</ul>
 	</body>
 </html>
