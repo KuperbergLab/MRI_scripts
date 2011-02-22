@@ -152,7 +152,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=None):
 		print("Cannot write {0}".format(outgoing))
 		raise
 	
-def run_process(args,output=None):
+def run_process(args,output=None,error=None):
 	"""
 	args: list of string tokens that make up command to run
 	E.G. to run something like 'ls -l .' at the commandline, args should be ['ls','-l','.']
@@ -165,7 +165,9 @@ def run_process(args,output=None):
 		print(' '.join(args))
 	if not output:
 		output=PIPE
-	return Popen(args,stdout=output,close_fds=True)
+	if not output:
+		error=PIPE
+	return Popen(args,stdout=output,stderr=error,close_fds=True)
 
 def wait_to_finish(running_jobs):
 	"""

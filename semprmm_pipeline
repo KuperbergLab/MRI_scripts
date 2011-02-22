@@ -500,12 +500,14 @@ def meg_script(data,type,extra=None):
 	if extra:
 		my_args.extend(extra)
 	#start the process 
-	log_file = data["meg_dir"]+"_"+type+".log"
+	log_file = "{0}{1}_{2}.log".format(data["meg_dir"],data["subject"],type)
+	print("Logging to {0}".format(log_file))
 	f = open(log_file,"w")
-	print("Logging {0} {1} to {2}".format(data["subject"],type,log_file))
-	process = pipeline.run_process(my_args,output=f)
-	output = process.communicate()[0]
-	print(output)
+	process = pipeline.run_process(my_args,output=f,error=f)
+	if data["parallel"]:
+		running_jobs.append(process)	
+	else:
+		process.communicate()[0]
 
 
 def setup_bem(data):
@@ -907,7 +909,6 @@ def main():
 		second_level(data,"package")
 	if data["launchpad"]:
 		pipeline.wait_to_finish(running_jobs)
-
 
 if __name__ == "__main__":
 	main()
