@@ -309,8 +309,7 @@ def write_batch_files(data,study,type,block):
 		path_to_batch = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_block"+block+"_job.m")
 	else:		
 		path_to_batch =os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_job.m")
-	all_lines = list_from_file(path_to_batch,data["verbose"])
-	all_lines = replace_lines(all_lines,study_dict)	
+	all_lines = replace_lines(list_from_file(path_to_batch,data["verbose"]),study_dict)	
 	specific_batch_file = specific_batch_path(data,study,type,block)
 	try :
 		write_file_with_list(specific_batch_file,"\n".join(all_lines),data["verbose"])
@@ -331,7 +330,6 @@ def write_batch_files(data,study,type,block):
 
 
 def matlab_batch_lines(data,study,type,block):
-	all_lines = list_from_file(os.path.join(batch_dir,data["stype"],"spm_mfile.m"),data["verbose"])
 	replace_dict = dict({"[study]":study.lower(),"[type]":type,"[subject]":data["subject"]})
 	if block:
 		replace_dict["[block]"] = "_block"+block
@@ -347,7 +345,8 @@ def matlab_batch_lines(data,study,type,block):
 		replace_dict["[8mmDir]"] = ""
 	replace_dict["[script]"] = specific_batch_path(data,study,type,block)
 	replace_dict["[working_dir]"] = os.path.join(data["mri_dir"],study,"jobs")
-	all_lines = replace_lines(all_lines,replace_dict)
+	all_lines = replace_lines(list_from_file(os.path.join(batch_dir,data["stype"],"spm_mfile.m"),data["verbose"]),
+		replace_dict)
 	return all_lines
 
 
@@ -655,10 +654,10 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 				"con_"+XXXX+".img")
 			N = len(glob(search_term))
 			#now, make the <con>.html file
-			html_lines = list_from_file(os.path.join(surf_dir,"contrast.html"),data["verbose"])
 			replace_dict = dict({"[N]":str(N),"[pvalue]":str(data["pvalue"]),
 				"[contrast]":contrast,"[study]":study,"[stype]":data["stype"]})
-			html_lines = replace_lines(html_lines,replace_dict)
+			html_lines = replace_lines(list_from_file(os.path.join(surf_dir,"contrast.html"),
+				data["verbose"]),replace_dict)
 			con_html = os.path.join(study_dir,contrast+".html")
 			write_file_with_list(con_html,"\n".join(html_lines),data["verbose"])
 
@@ -701,8 +700,8 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			script_dict["[tvalue]"] = str(tvalue)
 			script_dict["[aparc]"] = data["aparc"]
 			make_images_script_path = os.path.join(mri_scripts,"surf_analysis","make_images.sh")
-			all_lines = list_from_file(make_images_script_path,data["verbose"])
-			all_lines = replace_lines(all_lines,script_dict)
+			all_lines = replace_lines(list_from_file(make_images_script_path,data["verbose"]),
+				script_dict)
 			new_script_path = os.path.join(con_dir,"make_images.sh")
 			write_file_with_list(new_script_path,"\n".join(all_lines),data["verbose"])
 			make_file_exec(new_script_path)
@@ -760,14 +759,12 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			script_commands.append("rm {0}/SPM.mat".format(con_dir))
 			print("Contrast: {0}\t{1} subjects".format(contrast,n))
 		spec_batch_job = os.path.join(batch_dir,data["stype"], study.lower()+"_2nd_job.m")
-		all_lines = list_from_file(spec_batch_job,data["verbose"])
-		all_lines = replace_lines(all_lines,replace_dict)
+		all_lines = replace_lines(list_from_file(spec_batch_job,data["verbose"]),replace_dict)
 		spec_job = os.path.join(new_dir,study.lower()+"_2nd_job.m")
 		write_file_with_list(spec_job,"\n".join(all_lines),data["verbose"])
 		gen_mfile = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
-		all_lines = list_from_file(gen_mfile,data["verbose"])
 		gen_replace_dict = dict({"[script]":spec_job,"[study]":study})
-		all_lines = replace_lines(all_lines,gen_replace_dict)
+		all_lines = replace_lines(list_from_file(gen_mfile,data["verbose"]),gen_replace_dict)
 		gen = os.path.join(new_dir,study.lower()+"_2nd.m")
 		write_file_with_list(gen,"\n".join(all_lines),data["verbose"])
 		log = os.path.join(new_dir,study.lower()+"_2nd.log")
