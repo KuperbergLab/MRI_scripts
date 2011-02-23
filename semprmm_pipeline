@@ -677,8 +677,9 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			print("T-threshold at N={0} and p<{1} is {2}".format(N,data["pvalue"],tvalue))
 			script_dict["[tvalue]"] = str(tvalue)
 			script_dict["[aparc]"] = data["aparc"]
+			new_script_path = os.path.join(con_dir,"make_images.sh")
 			pipeline.f2f_replace(os.path.join(mri_scripts,"surf_analysis","make_images.sh"),
-				os.path.join(con_dir,"make_images.sh"),script_dict,data["verbose"])
+				new_script_path,script_dict,data["verbose"])
 			make_file_exec(new_script_path)
 			#copy lh_tiffs and rh_tiffs
 			for surf_script in ["lh_tiff","rh_tiff"]:
