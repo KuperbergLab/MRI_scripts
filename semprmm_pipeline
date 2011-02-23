@@ -568,9 +568,10 @@ def set_paths(data):
 def second_level(data,type):
 	prefix = os.path.join(func_dir,"SecondLevelStats")
 	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
-		["SentencesVWordLists","0004"],["WordListsVNonwords","0008"]],"MaskedMM":[["Dir","0001"],
-		["UnRel","0003"],["UnRelVDir","0007"]],"BaleenLP":[["Rel","0001"],["UnRel","0002"],
-		["UnRelVRel","0007"]],"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
+		["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
+		"MaskedMM":[["Dir","0001"],["UnRel","0003"],["UnRelVDir","0007"]],
+		"BaleenLP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
+		"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
 		["UnRelFillvRelFill","0009"]],"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
 	study_stats = dict({"ATLLoc":"stats_outliers","MaskedMM":"stats_outliers",
 		"BaleenLP":"stats_outliers1","BaleenHP":"stats_outliers2","AXCPT":"stats_outliers"})
@@ -732,12 +733,16 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			replace_dict[con_key] = images_str
 			script_commands.append("rm {0}/SPM.mat".format(con_dir))
 			print("Contrast: {0}\t{1} subjects".format(contrast,n))
+		batch = os.path.join(new_dir,study.lower()+"_2nd_job.m")	
 		pipeline.f2f_replace(os.path.join(batch_dir,data["stype"], study.lower()+"_2nd_job.m"),
-			os.path.join(new_dir,study.lower()+"_2nd_job.m"),replace_dict,data["verbose"])
+			batch,replace_dict,data["verbose"])
+		script = os.path.join(new_dir,study.lower()+"_2nd.m")
+		replace_dict["[batch]"] = batch
+		replace_dict["[study]"] = study
 		pipeline.f2f_replace(os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m"),
-			os.path.join(new_dir,study.lower()+"_2nd.m"),gen_replace_dict,data["verbose"])
+			script,replace_dict,data["verbose"])
 		log = os.path.join(new_dir,study.lower()+"_2nd.log")
-		script_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,gen,log,data["parallel"]))
+		script_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,script,log,data["parallel"]))
 	script_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(script_path,"\n".join(script_commands),data["verbose"])
 	make_file_exec(script_path)
