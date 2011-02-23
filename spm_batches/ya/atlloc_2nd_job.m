@@ -207,3 +207,41 @@ matlabbatch{15}.spm.stats.con.consess{1}.tcon.name = 'SentencesVWordLists';
 matlabbatch{15}.spm.stats.con.consess{1}.tcon.convec = 1;
 matlabbatch{15}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{15}.spm.stats.con.delete = 1;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% One Sample T Test Sentences Vs Nonwords 8mm Outliers
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+matlabbatch{16}.spm.stats.factorial_design.dir = {'[new_dir]/SentencesVNonwords/'};
+%%
+matlabbatch{16}.spm.stats.factorial_design.des.t1.scans = {[SentencesVNonwords_images]};
+%%
+matlabbatch{16}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{16}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{16}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{16}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{16}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{16}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{16}.spm.stats.factorial_design.globalm.glonorm = 1;
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1) = cfg_dep;
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).tname = 'Select SPM.mat';
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).tgt_spec{1}(1).name = 'filter';
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).tgt_spec{1}(1).value = 'mat';
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).tgt_spec{1}(2).name = 'strtype';
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).sname = 'Factorial design specification: SPM.mat File';
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).src_exbranch = substruct('.','val', '{}',{16}, '.','val', '{}',{1}, '.','val', '{}',{1});
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1).src_output = substruct('.','spmmat');
+matlabbatch{17}.spm.stats.fmri_est.method.Classical = 1;
+matlabbatch{18}.spm.stats.con.spmmat(1) = cfg_dep;
+matlabbatch{18}.spm.stats.con.spmmat(1).tname = 'Select SPM.mat';
+matlabbatch{18}.spm.stats.con.spmmat(1).tgt_spec{1}(1).name = 'filter';
+matlabbatch{18}.spm.stats.con.spmmat(1).tgt_spec{1}(1).value = 'mat';
+matlabbatch{18}.spm.stats.con.spmmat(1).tgt_spec{1}(2).name = 'strtype';
+matlabbatch{18}.spm.stats.con.spmmat(1).tgt_spec{1}(2).value = 'e';
+matlabbatch{18}.spm.stats.con.spmmat(1).sname = 'Model estimation: SPM.mat File';
+matlabbatch{18}.spm.stats.con.spmmat(1).src_exbranch = substruct('.','val', '{}',{17}, '.','val', '{}',{1}, '.','val', '{}',{1});
+matlabbatch{18}.spm.stats.con.spmmat(1).src_output = substruct('.','spmmat');
+matlabbatch{18}.spm.stats.con.consess{1}.tcon.name = 'SentencesVNonwords';
+matlabbatch{18}.spm.stats.con.consess{1}.tcon.convec = 1;
+matlabbatch{18}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{18}.spm.stats.con.delete = 1;
