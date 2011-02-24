@@ -36,6 +36,7 @@ The general way to use this script is:
 You can specify multiple subjects in one call, but at least one. Whatever option(s) you pass will be
 applied to all.
 
+
 ### Options
 Note the following conventions:
 
@@ -58,6 +59,7 @@ This transforms the scan.log file into cfg.txt that is useful for --unpack.
 
 ##### Notes
 Currently, these MRI runs are unpacked into the FUNCTIONALS\_DIR/[subject] folder:
+
 -	MEMPRAGE\_4e\_p2\_1mm\_iso scans unpack into MPRAGE/
 	-	Only the rms image (which has 1 frame and is the best image) is unpacked, not the 4 frame
 MEMPRAGE
