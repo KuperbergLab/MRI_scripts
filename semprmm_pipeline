@@ -570,7 +570,7 @@ def second_level(data,type):
 	prefix = os.path.join(func_dir,"SecondLevelStats")
 	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
 		["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
-		"MaskedMM":[["Rel","0001"],["UnRel","0003"],["UnRelVrel","0007"]],
+		"MaskedMM":[["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
 		"BaleenLP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
 		"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
 		["UnRelFillvRelFill","0009"]],"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
@@ -615,28 +615,31 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 		for [contrast,XXXX] in study_contrasts[study]:
 			print("{0}:\t{1}...".format(study,contrast))
 			#within study_dir, make con/
+			con_dir = os.path.join(date_dir,contrast)
 			res_con_dir = os.path.join(study_dir,contrast+"_img")
 			if not os.path.exists(res_con_dir):
 				os.mkdir(res_con_dir)
 			#data_con_dir points to data contrast directory
-			img_con_dir = os.path.join(date_dir,contrast,"img")
+			img_con_dir = os.path.join(con_dir,"img")
 			#within every data_con_dir is which holds all jpgs
 			#we want to copy these jpgs to res_con_dir
 			print("Copying images...")
 			jpgs = glob(os.path.join(img_con_dir,"*.jpg"))
 			for jpg in jpgs:
 				shutil.copy(jpg,res_con_dir)
-			#let's find N
-			if "Baleen" in study:
-				real_study = "BaleenMM"
+			info_fname = os.path.join(con_dir,"info.txt")
+			if os.path.exists(info_fname):
+				with open(info_fname,"r") as f:
+					info = pickle.load(f)
+					print("Loaded pickle file")
 			else:
-				real_study = study
-			search_term = os.path.join(func_dir,"*",real_study,study_stats[study],"8mm",
-				"con_"+XXXX+".img")
-			N = len(glob(search_term))
+				print("Cannot open pickle file at {0}".format(info_fname))
+				break
 			#now, make the <con>.html file
-			replace_dict = dict({"[N]":str(N),"[pvalue]":str(data["pvalue"]),
-				"[contrast]":contrast,"[study]":study,"[stype]":data["stype"]})
+			replace_dict = dict({"[N]":str(info["N"]),"[pvalue]":str(info["pvalue"]),
+				"[contrast]":info["contrast"],"[study]":study,"[stype]":info["stype"],
+				"[images]":"\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
+				"[mask]":info["mask"]})
 			pipeline.f2f_replace(os.path.join(surf_dir,"contrast.html"),
 				os.path.join(study_dir,contrast+".html"),replace_dict,data["verbose"])
 
@@ -652,7 +655,7 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 	for study in studies:
 		date_dir = os.path.join(prefix,data["stype"],study,date)
 		for [contrast,XXXX] in study_contrasts[study]:
-			print("{0}:\t{1}...".format(study,contrast))
+			print("\n{0}:\t{1}...".format(study,contrast))
 			con_dir = os.path.join(date_dir,contrast)
 			#first, check that --setup_second has been run by looking for con_dir
 			if not os.path.exists(con_dir):
@@ -665,17 +668,21 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 				print("ERROR:SPM hasn't been run on {0}:{1}".format(study,contrast))
 				break
 			#spmT_0001.img exists, let's proceed
-			#let's find N
-			if "Baleen" in study:
-				real_study = "BaleenMM"
+			#look for the pickled data
+			info_fname = os.path.join(con_dir,"info.txt")
+			if os.path.exists(info_fname):
+				with open(info_fname,"r") as f:
+					info = pickle.load(f)
+					print("Loaded pickle file")
 			else:
-				real_study = study
-			search_term = os.path.join(func_dir,"*",real_study,study_stats[study],"8mm",
-				"con_"+XXXX+".img")
-			N = len(glob(search_term))
+				print("Uh oh, no info.txt in {0}, quitting".format(con_dir))
+				break
 			script_dict = dict({})
-			tvalue = stats.t.isf(data["pvalue"],N)
-			print("T-threshold at N={0} and p<{1} is {2}".format(N,data["pvalue"],tvalue))
+			pvalue = data["pvalue"]
+			info["pvalue"] = pvalue
+			tvalue = stats.t.isf(pvalue,info["N"])
+			info["tvalue"] = tvalue
+			print("T-threshold at N={0} and p<{1} is {2}".format(info["N"],pvalue,tvalue))
 			script_dict["[tvalue]"] = str(tvalue)
 			script_dict["[aparc]"] = data["aparc"]
 			new_script_path = os.path.join(con_dir,"make_images.sh")
@@ -687,7 +694,9 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 				tiffs_path = os.path.join(mri_scripts,"surf_analysis",surf_script)
 				new_tiffs_path = os.path.join(con_dir,surf_script)
 				shutil.copyfile(tiffs_path,new_tiffs_path)
-				
+			with open(info_fname,"w") as f:
+				pickle.dump(info,f)
+				print("Saved new pickle file")
 			if not data["dry"]:
 				# all ready to run make_images.sh
 				os.chdir(con_dir)
@@ -730,10 +739,12 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			search_term = os.path.join(func_dir,data["stype"]+"*",real_study,study_stats[study],"8mm",
 				"con_"+XXXX+".img")
 			all_img = glob(search_term)
+			#add included subjecdt images
 			if data["good_sub"]:
 				for sub in data["good_sub"]:
 					all_img.extend(glob(os.path.join(func_dir,sub,real_study,study_stats[study],
 						"8mm","con_"+XXXX+".img")))
+			#remove excluded subject images
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
 			good_img[:] = ["'"+x+"'" for x in good_img]
 			N = len(good_img)
@@ -741,9 +752,11 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			#are we masking?
 			match = [x for x in data["mask"] if x[0] == study and x[1] == contrast]
 			if match:
-				replace_dict["[mask]"] = match[2]
+				mask = match[0][2]
+				print("Using mask at {0}".format(mask))
 			else:
-				replace_dict["[mask]"] = ""
+				mask = ""
+			replace_dict["[mask]"] = mask
 			ibatch = os.path.join(batch_dir,data["stype"],"generic_2nd_batch.m")
 			obatch = os.path.join(job_dir,contrast+"_job.m")
 			iscript = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
@@ -758,9 +771,13 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			log = os.path.join(job_dir,contrast+".log")
 			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,oscript,log,data["parallel"]))
 			info_fname = os.path.join(con_dir,"info.txt")
-			dat_to_save = dict({"N":N,"images":good_img,"stype":data["stype"],"contrast":contrast})
+			info = dict({"N":N,"images":good_img,"stype":data["stype"],"contrast":contrast})
+			if mask:
+				info["mask"] = mask
+			else:
+				info["mask"] = "No mask used"
 			with open(info_fname,"w") as f:
-				pickle.dump(dat_to_save,f)
+				pickle.dump(info,f)
 			print("{0} -> {1} subjects".format(contrast,N))	
 	shell_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(shell_path,"\n".join(shell_commands),data["verbose"])
