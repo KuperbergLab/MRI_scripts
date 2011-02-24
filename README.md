@@ -139,7 +139,7 @@ Finally, all matlab commands are written to a script at [subject]/scripts/all\_p
 
 This options merely executes the all_preproc.sh script
 
-####--study=<STUDY>
+####--study=STUDY
 
 If you need to preprocess single paradigms individually for whatever reason, use this option with --setup\_preproc and --run\_preproc to specifiy a paradigm/study.
 If you do this, the script file made will be called [study]\_preproc.sh.
@@ -170,4 +170,76 @@ _Make sure you've done the following two things before using this option:_
 -	Run art (Sue Gabrieli's artifact detection tool) and created art\_regression\_outliers\_and\_movement\_[RUN NAME].mat
 -	Make the multiple condition file for each run using `(matlab prompt)>> MakeMultCond({'(subject)'})`
 
+###Second Level Options
 
+####--setup_second
+
+####--surf_second
+
+####--package_second
+
+####--aparc
+
+####--pvalue = PVALUE
+
+####--dry
+
+####--mask = STUDY,CONTRAST,MASK_IMG
+
+####--exc SUBJECT
+
+####--inc SUBJECT
+
+###Surface Reconstruction Options
+
+####--setup_recon
+
+This writes out a script that will execute FreeSurfer's full cortical reconstruction pipeline. The script it makes looks like this:
+
+	#!/bin/sh
+	recon-all -s [subject] -i [MPRAGE1] -i [MPRAGE2] > /cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/scripts/setup_recon.log
+	nohup recon-all -all -s [subject] -mail sburns >& /dev/null &
+
+This is written to [subject]/scripts/recon.sh.
+
+####--run_recon
+
+Executes the [subject]/scripts/recon.sh script.
+
+###Miscellaneous options concerning how jobs are run...
+
+####--parallel
+
+I ended up using this command in a lot of places so here's what it means when used with the following commands:
+
+#####--setup_preproc,--setup_outliers,--setup_second
+
+The script file that's made will contain '&' at the end of each matlab line.  This will effectively run all matlab processes in the background and in parallel.
+
+#####--preProc,--preAnat,--makeInv
+
+These MEG scripts are called in parallel, i.e. the script doesn't wait for the script to finish per subject.
+
+####--launchpad
+
+Use this option when you need the pipeline script to wait to return only when all jobs have finished. It's named --launchpad because the Martinos Center's compute cluster is called that.
+
+See [this page](https://gate.nmr.mgh.harvard.edu/wiki/kuperberg-lab/index.php/Launchpad) for more information.
+
+###Tips
+
+####Unpacking abnormal sessions
+
+Let's say that for whatever reason, your MRI session proceeded abnormally. All is not lost, and you can still use most pieces of the pipeline. You can still copy the dicoms normally using the --copy\_dicom option. Next, I would run the --scan_only option and take a look at the scan.log file to see what the scanner made. Depending on how normal the scan.log file looks, you may be able to call --scan2cfg and --unpack together, but here are some examples when you might not want to do that:
+
+-	There are an abnormal amount of functional runs. If your study calls for 8 runs, and there happen to be 11 good runs because the subject couldn't see the projector for the first three.
+-	Field maps don't explicitly follow the functional runs they correspond to or you're missing field maps. (more on this later)
+
+In these instances (and other undocumented cases), you'll want to make the cfg file by hand because --scan2cfg is not robust enough. Some rules to follow:
+
+-	The file should be called 'cfg' and located at FUNCTIONAL\_DIR/[subject]/cfg.txt
+-	For each run you want to unpack, there should be a line. The first column is the run number (the first column of scan.log). The second is the folder you want to unpack into (this folder will be a subfolder of FUNCTIONAL_DIR/[subject]/. The third column is the file type and unless you have an extremely good reason otherwise, should be nii (Note, if it's not nii, the preprocessing/inference/estimation machinery will NOT work). The last is the filename and this should make sense, e.g. 'MaskedMM2.nii' or 'ATLLoc1.nii'.
+
+If you didn't collect a field map for a functional run but want to use a prior field map in the realign/unwarp stage, you could unpack the same run twice into different filenames. Remember, the first fieldmap run is the magnitude and the second is the phase map.
+
+So, if you make a custom cfg file, then you can skip running --scan2cfg and run --unpack. unpacksdcmdir will use your newly minted cfg file to really unpack the dicoms and you'll know that everything is going to the correct place. Crisis averted!
