@@ -9,6 +9,7 @@ import stat
 import pipeline as pipeline
 import sys
 import time
+import pickle
 
 VER = "1.0"
 possible_studies = dict({"ATLLoc":1,"MaskedMM":2,"BaleenMM":8,"AXCPT":2}) 
@@ -686,6 +687,7 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 				tiffs_path = os.path.join(mri_scripts,"surf_analysis",surf_script)
 				new_tiffs_path = os.path.join(con_dir,surf_script)
 				shutil.copyfile(tiffs_path,new_tiffs_path)
+				
 			if not data["dry"]:
 				# all ready to run make_images.sh
 				os.chdir(con_dir)
@@ -727,13 +729,17 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			if data["verbose"]:
 				print("Searching with {0}\n".format(search_term))
 			con_key = "["+contrast+"_images]"
-			raw_images = glob(search_term)
-			raw_images[:] = ["'"+x+"'" for x in raw_images]
-			n = len(raw_images)
-			images_str = "\n".join(raw_images)
-			replace_dict[con_key] = images_str
+			all_img = glob(search_term)
+			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
+			good_img[:] = ["'"+x+"'" for x in good_img]
+			N = len(good_img)
+			replace_dict[con_key] = "\n".join(good_img)
 			script_commands.append("rm {0}/SPM.mat".format(con_dir))
-			print("Contrast: {0}\t{1} subjects".format(contrast,n))
+			print("Contrast: {0}\t{1} subjects, saving data".format(contrast,N))
+			info_fname = os.path.join(con_dir,"info.txt")
+			dat_to_save = dict({"N":N,"images":good_img})
+			with open(info_fname,"w") as f:
+				pickle.dump(dat_to_save,f)
 		batch = os.path.join(new_dir,study.lower()+"_2nd_job.m")	
 		pipeline.f2f_replace(os.path.join(batch_dir,data["stype"], study.lower()+"_2nd_job.m"),
 			batch,replace_dict,data["verbose"])
@@ -848,6 +854,9 @@ def main():
 		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
 	parser.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
 		help="Run the MEG makeInv script")
+	parser.add_option("--bad",dest="bad_sub",action="append",default=[],
+		help="Exclude subjects, for use with --setup_second")
+		
 		
 	(options,args) = parser.parse_args()
 	data = dict({})
