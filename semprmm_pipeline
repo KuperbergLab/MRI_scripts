@@ -727,15 +727,19 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 				real_study = "BaleenMM"
 			else:
 				real_study = study
-			search_term = os.path.join(func_dir,"*",real_study,study_stats[study],"8mm",
+			search_term = os.path.join(func_dir,data["stype"]+"*",real_study,study_stats[study],"8mm",
 				"con_"+XXXX+".img")
 			all_img = glob(search_term)
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
 			good_img[:] = ["'"+x+"'" for x in good_img]
 			N = len(good_img)
 			replace_dict["[contrast_images]"] = "\n".join(good_img)
-			#for now
-			replace_dict["[mask]"] = ""
+			#are we masking?
+			match = [x for x in data["mask"] if x[0] == study and x[1] == contrast]
+			if match:
+				replace_dict["[mask]"] = match[2]
+			else:
+				replace_dict["[mask]"] = ""
 			ibatch = os.path.join(batch_dir,data["stype"],"generic_2nd_batch.m")
 			obatch = os.path.join(job_dir,contrast+"_job.m")
 			iscript = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
@@ -752,7 +756,8 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			info_fname = os.path.join(con_dir,"info.txt")
 			dat_to_save = dict({"N":N,"images":good_img,"stype":data["stype"],"contrast":contrast})
 			with open(info_fname,"w") as f:
-				pickle.dump(dat_to_save,f)				
+				pickle.dump(dat_to_save,f)
+			print("{0} -> {1} subjects".format(contrast,N))	
 	shell_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(shell_path,"\n".join(shell_commands),data["verbose"])
 	make_file_exec(shell_path)
@@ -879,6 +884,13 @@ def main():
 		data["aparc"] = "-aparc"
 	else:
 		data["aparc"] = ""
+	#transform mask(s)
+	if data["mask"]:
+		masks = []
+		for mask_str in data["mask"]:
+			parts = mask_str.split(",")
+			masks.append(parts)
+		data["mask"] = masks
 	data['stype'] = subject_type(args)
 	for subject in args:
 		try:
