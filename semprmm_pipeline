@@ -315,8 +315,8 @@ def matlab_batch_dict(data,study,type,block):
 		replace_dict["[block]"] = block
 	if "stats" in type:
 		replace_dict["[rm]"] = "1"
-		replace_dict["[6mmDir]"] = os.path.join(data["mri_dir"],study,type+block,"6mm","*")
-		replace_dict["[8mmDir]"] = os.path.join(data["mri_dir"],study,type+block,"8mm","*")
+		replace_dict["[6mmDir]"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
+		replace_dict["[8mmDir]"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
 	else:
 		replace_dict["[rm]"] = "0"
 		replace_dict["[6mmDir]"] = ""
@@ -715,7 +715,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 		job_dir = os.path.join(new_dir,"jobs")
 		if not os.path.exists(job_dir):
 			os.mkdir(job_dir)
-		print("{0}:\t{1} contrasts".format(study,len(study_contrasts[study])))
+		print("\n{0}:\t{1} contrasts".format(study,len(study_contrasts[study])))
 		for [contrast,XXXX] in study_contrasts[study]:
 			replace_dict = dict()
 			replace_dict["[contrast]"] = contrast
@@ -730,6 +730,10 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			search_term = os.path.join(func_dir,data["stype"]+"*",real_study,study_stats[study],"8mm",
 				"con_"+XXXX+".img")
 			all_img = glob(search_term)
+			if data["good_sub"]:
+				for sub in data["good_sub"]:
+					all_img.extend(glob(os.path.join(func_dir,sub,real_study,study_stats[study],
+						"8mm","con_"+XXXX+".img")))
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
 			good_img[:] = ["'"+x+"'" for x in good_img]
 			N = len(good_img)
@@ -770,12 +774,12 @@ def subject_type(subjects):
 	else:
 		stype = subjects[0][:2]
 		match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
-		if not match:
-			print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
-			response = 'n'
-			response = input("Do you wish to continue? (y/n) : ")
-			if response != "y":
-				raise UserError("Try again with a better subject list")
+# 		if not match:
+# 			print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
+# 			response = 'n'
+# 			response = input("Do you wish to continue? (y/n) : ")
+# 			if response != "y":
+# 				raise UserError("Try again with a better subject list")
 	return stype
 
 
@@ -862,11 +866,12 @@ def main():
 		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
 	parser.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
 		help="Run the MEG makeInv script")
-	parser.add_option("--bad",dest="bad_sub",action="append",default=[],
+	parser.add_option("--exc",dest="bad_sub",action="append",default=[],
 		help="Exclude subjects, for use with --setup_second")
 	parser.add_option("--mask",dest="mask",action="append",default=[],
 		help="At the second level, mask certain contrasts. Pass in <study>,<contrast>,<pathtomaskimage>")
-		
+	parser.add_option("--inc",dest="good_sub",action="append",default=[],
+		help="At the second level, include subjects, use with --setup_second")
 		
 	(options,args) = parser.parse_args()
 	data = dict({})
