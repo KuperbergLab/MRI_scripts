@@ -8,27 +8,27 @@ most important file is semprmm_pipeline, a python script that steers all process
 
 Other interesting files include:
 
-*	MakeMultCond.m that, along with Log2MultCond\_v4.m, transforms .vtsd\_log files to multiple
+-	MakeMultCond.m that, along with Log2MultCond\_v4.m, transforms .vtsd\_log files to multiple
 condition files for use with SPM.
-*	spm\_batches/ includes all the spm batch files (for all types of subjects)
-*	surf\_analysis/ contains the things for 
-*	pipeline.py provides basic functionality to semprmm\_pipeline and can be used in other
+-	spm\_batches/ includes all the spm batch files (for all types of subjects)
+-	surf\_analysis/ contains the things for 
+-	pipeline.py provides basic functionality to semprmm\_pipeline and can be used in other
 Kuperberg MRI pipelines.
 
 ## semprmm\_pipeline
 This script facilitates the following processing steps:
 
-*	MRI Processing (using SPM and FreeSurfer)
-	*	Copying DICOM images from the archives to our cluster
-	*	Unpacking/transforming the DICOM images to usable NiFTi files.
-	*	Setting up and running preprocessing
-	*	Setting up and running first-level statistics 
-	*	Setting up and running second-level statistics
-	*	Using FreeSurfer to project activity onto the surface and packaging these results into an
+-	MRI Processing (using SPM and FreeSurfer)
+	-	Copying DICOM images from the archives to our cluster
+	-	Unpacking/transforming the DICOM images to usable NiFTi files.
+	-	Setting up and running preprocessing
+	-	Setting up and running first-level statistics 
+	-	Setting up and running second-level statistics
+	-	Using FreeSurfer to project activity onto the surface and packaging these results into an
 easy to browse archive.
-*	MEG Processing (using MNE)
-	*	Running preprocessing and anatomical processing
-	* 	Computing the forward/inverse solution
+-	MEG Processing (using MNE)
+	-	Running preprocessing and anatomical processing
+	- 	Computing the forward/inverse solution
 	
 ### Usage
 The general way to use this script is:
@@ -39,8 +39,8 @@ applied to all.
 ### Options
 Note the following conventions:
 
-*	DICOM\_DIR is /cluster/kuperberg/SemPrMM/MRI/dicoms/
-*	FUNCTIONALS\_DIR is /cluster/kuperberg/SemPrMM/MRI/functionals
+-	DICOM\_DIR is /cluster/kuperberg/SemPrMM/MRI/dicoms/
+-	FUNCTIONALS\_DIR is /cluster/kuperberg/SemPrMM/MRI/functionals
 
 ####-d,--copy\_dicom
 This option copies all the dicom images that were produced by the scanner into your study directory.
@@ -58,26 +58,26 @@ This transforms the scan.log file into cfg.txt that is useful for --unpack.
 
 ##### Notes
 Currently, these MRI runs are unpacked into the FUNCTIONALS\_DIR/[subject] folder:
-*	MEMPRAGE\_4e\_p2\_1mm\_iso scans unpack into MPRAGE/
-	*	Only the rms image (which has 1 frame and is the best image) is unpacked, not the 4 frame
+-	MEMPRAGE\_4e\_p2\_1mm\_iso scans unpack into MPRAGE/
+	-	Only the rms image (which has 1 frame and is the best image) is unpacked, not the 4 frame
 MEMPRAGE
-*	ge\_functionals\_atlloc scans unpack into ATLLoc/
-*	field\_mapping scans unpack into FieldMap/
-	*	These scans are named FieldMap\_[study after which they were run]\_Phase.nii and
+-	ge\_functionals\_atlloc scans unpack into ATLLoc/
+-	field\_mapping scans unpack into FieldMap/
+	-	These scans are named FieldMap\_[study after which they were run]\_Phase.nii and
 FieldMap\_[study after which they were run]\_Mag.nii
-	*	_If you didn't collect a FieldMap after a particular study:_
-		*	After you run this step, copy the closest matching FieldMaps into two XXX directories
+	-	If you didn't collect a FieldMap after a particular study:
+		-	After you run this step, copy the closest matching FieldMaps into two XXX directories
 (the XXX's don't matter but is some three digit string) and rename them according to the above
 format. The rest of the pipeline will fail if this isn't done.
-*	ge\_functionals\_maskmm scans unpack into MaskedMM/
-*	ge\_functionals\_baleen scans unpack into BaleenMM/
-*	MEFLASH\_8e\_1mm\_iso\_5deg scans unpack into MEFLASH/
-*	Only the rms scan (which has 1 frame) is unpacked, as opposed to the first MEFLASH scan which
+-	ge\_functionals\_maskmm scans unpack into MaskedMM/
+-	ge\_functionals\_baleen scans unpack into BaleenMM/
+-	MEFLASH\_8e\_1mm\_iso\_5deg scans unpack into MEFLASH/
+-	Only the rms scan (which has 1 frame) is unpacked, as opposed to the first MEFLASH scan which
 has 8 frames
-*	ge\_functionals\_axcpt and ge\_functionals\_axcpt_\sc scans unpack into AXCPT/
-*	Any scan in which an error occured (the third column in scan.log) will not be unpacked
-*	If this doesn't make sense, see the scan.log file
-*	The .nii files are sequentially numbered, e.g. the 5th run of Baleen is named BaleenMM5.nii
+-	ge\_functionals\_axcpt and ge\_functionals\_axcpt_\sc scans unpack into AXCPT/
+-	Any scan in which an error occured (the third column in scan.log) will not be unpacked
+-	If this doesn't make sense, see the scan.log file
+-	The .nii files are sequentially numbered, e.g. the 5th run of Baleen is named BaleenMM5.nii
 
 ####--unpack
 This option runs `unpacksdcmdir -src DICOM_DIR/subject/ -targ FUNCTIONALS_DIR/[subject]/ -fsfast -cfg FUNCTIONALS_DIR/[subject]/cfg.txt`
@@ -85,9 +85,9 @@ This actually does the major DICOM -> Nifti conversion (and renaming).
 
 #####Notes
 
-*	Because the -fsfast option is used, the .nii files wind up in a directory called 'XXX' where
+-	Because the -fsfast option is used, the .nii files wind up in a directory called 'XXX' where
 XXX is a zero-padded number that corresponds to the run number.
-*	This (and --scan_only) take a very long time, so try to do this only once.
+-	This (and --scan_only) take a very long time, so try to do this only once.
 
 ####-u,--unpack\_all
 This options wraps up --scan\_only,--scan2cfg, and --unpack into one easy call. Use this when you're
