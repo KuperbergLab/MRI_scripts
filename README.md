@@ -172,23 +172,123 @@ _Make sure you've done the following two things before using this option:_
 
 ###Second Level Options
 
-####--setup_second
+####--setup_second SUBJECT_TYPE
+
+This setups a generic 2nd-level one-sample T test for all contrasts of interest:
+
+-	ATLLoc
+	-	Nonwords
+	-	Wordlists
+	-	Sentences
+	-	Sentences Vs. Nonwords
+	-	Sentences Vs. Wordlists
+	-	Wordlists Vs. Nonwords
+-	MaskedMM
+	-	Related
+	-	Unrelated
+	-	Unrelated Vs. Related
+-	Baleen LP and HP
+	-	Related
+	-	Unrelated
+	-	Unrelated Vs. Related
+-	AXCPT
+	-	AY Vs. BY
+	-	BX Vs. BY
+
+A script to process all these contrasts is written to functionals/SecondLevelStats/ya/all\_studies.sh
+
+_You must pass into a subject type (ya,ac,sc) with this option_
 
 ####--surf_second
 
-####--package_second
+With the second level statistics processed (after executing all\_studies.sh), it's time to display the results nicely.
+
+Using FreeSurfer, the functional data is painted on fsaverage, thresholded at an appropriate value corresponding to N and the p-value.
+
+In each contrast directory, make\_images.sh is created. This looks like:
+
+	#!/bin/sh
+	mkdir img
+	tksurfer fsaverage rh inflated -overlay spmT_0001.img -mni152reg -fthresh [tvalue] -tcl rh_tiff	[aparc]
+	tksurfer fsaverage lh inflated -overlay spmT_0001.img -mni152reg -fthresh [tvalue] -tcl lh_tiff [aparc] 
+	cd img
+	for side in RH LH ; do 
+		for view in Anterior Posterior Medial Lateral Superior Inferior ; do
+			convert $side"_"$view.tiff $side"_"$view.jpg
+			rm $side"_"$view.tiff
+		done
+	done
+	cd ..
+
+You may notice that in the tksurfer command, the -tcl option is used.  That option provides a way to "batch process" tksurfer. Here's what the lh_tiffs script looks like:
+
+	make_lateral_view;redraw
+	save_tiff "img/LH_Lateral.tiff"
+	
+	rotate_brain_y 180;redraw
+	save_tiff "img/LH_Medial.tiff"
+	
+	make_lateral_view;redraw
+	rotate_brain_y 90;redraw
+	save_tiff "img/LH_Posterior.tiff"
+	
+	rotate_brain_y -180;redraw
+	save_tiff "img/LH_Anterior.tiff"
+	
+	make_lateral_view;redraw
+	rotate_brain_x -90;redraw
+	save_tiff "img/LH_Superior.tiff"
+	
+	rotate_brain_x -180;redraw
+	save_tiff "img/LH_Inferior.tiff"
+	
+	exit
+
+See [this page](http://surfer.nmr.mgh.harvard.edu/fswiki/TkSurferGuide/TkSurferScripting) for more information on scripting TkSurfer.
+
+The loop at the end of the make\_images.sh command just converts the tiff images to jpgs (which are more browser friendly).
+
+####--package\_second
+
+With --surf_second done, we can now package everything up into a nice bundle of HTML pages. See the surf\_analysis folder in this repo for the HTML templates.
 
 ####--aparc
 
+If you use this option with --surf_second, TkSurfer will load the automatic parcellation file.
+
 ####--pvalue = PVALUE
+
+You can specifiy a pvalue with --surf_second. The pipeline script converts this to a tvalue with which to threshold the images.
 
 ####--dry
 
+When used with --surf_second, this does everything except execute the make\_images.sh script.  It's a good way to make sure files are written properly.
+
 ####--mask = STUDY,CONTRAST,MASK_IMG
+
+Sometimes we'd like to mask the 2nd-level statistics with an image. Using this option, this is possible.
+It takes a little bit of knowledge about the contrasts, but here's how.
+
+The string you pass into must confrom to this specification:
+
+STUDY,CONTRAST,PATH/TO/MASK/IMAGE
+
+For example, to mask BaleenLP:UnRelVRel with /cluster/kuperberg/SemPrMM/MRI/functionals/SecondLevelStats/ya/ATLLoc/ATLLoc\_SentVNon\_mask.img then pass this as the option:
+`--mask BaleenLP,UnRelVRel,/cluster/kuperberg/SemPrMM/MRI/functionals/SecondLevelStats/ya/ATLLoc/ATLLoc\_SentVNon\_mask.img`
+
 
 ####--exc SUBJECT
 
+If you'd like to exclude subjects from analysis, pass them in with this option when using --setup_second.
+
 ####--inc SUBJECT
+
+If you'd like to include subjects in this analysis, pass them in with this option when using --setup_second.
+
+####--date = DATE
+
+By default, --setup_second makes a new directory under each paradigm in functionals/SecondLevelStats/[subject type]/[paradigms]/.
+This corresponds to the current date in YYYYMMDD format.  If you'd like to --package\_second or --surf\_second with analysis you completed yesterday (or any day that's not today), use this option and pass in the YYYYMMDD string.
 
 ###Surface Reconstruction Options
 
@@ -243,3 +343,11 @@ In these instances (and other undocumented cases), you'll want to make the cfg f
 If you didn't collect a field map for a functional run but want to use a prior field map in the realign/unwarp stage, you could unpack the same run twice into different filenames. Remember, the first fieldmap run is the magnitude and the second is the phase map.
 
 So, if you make a custom cfg file, then you can skip running --scan2cfg and run --unpack. unpacksdcmdir will use your newly minted cfg file to really unpack the dicoms and you'll know that everything is going to the correct place. Crisis averted!
+
+###MEG Processing Options
+
+####--preProc
+
+####--preAnat
+
+####--makeInv
