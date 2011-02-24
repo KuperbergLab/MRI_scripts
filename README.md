@@ -37,7 +37,7 @@ You can specify multiple subjects in one call, but at least one. Whatever option
 applied to all.
 
 
-### Options
+### Copying/Unpacking Options
 Note the following conventions:
 
 -	DICOM\_DIR is /cluster/kuperberg/SemPrMM/MRI/dicoms/
@@ -95,6 +95,8 @@ XXX is a zero-padded number that corresponds to the run number.
 This options wraps up --scan\_only,--scan2cfg, and --unpack into one easy call. Use this when you're
 confident scan.log will turn out nice (i.e. the scanning session went normal).
 
+###Preprocessing Options
+
 ####-p,--setup\_preproc
 With the images unpacked and converted, it's time to start processing them. The first processing
 that occurs is called preprocessing and we use SPM to do this. I've set up a generic batch script
@@ -115,6 +117,57 @@ FUNCTIONALS\_DIR/[subject]/[study]/jobs/[study]\_preproc\_job.m
 The batches themselves are useless without a script to run them, though. A matlab script called
 FUNCTIONALS\_DIR/[subject]/[study]/jobs/[study]\_preproc.m is created that looks like this :
 
+	warning off all;
+	try
+		spm('defaults','fmri');
+		spm_jobman('initcfg');
+		if [rm]
+			delete('[6mmDir]');
+			delete('[8mmDir]');
+		end
+		fclose(fopen('[working_dir]/[study]_[type][block]_start','w'));
+		output = spm_jobman('run_nogui','[script]');
+		fclose(fopen('[working_dir]/[study]_[type][block]_run','w'));
+	catch ME
+		sendmail('sburns@nmr.mgh.harvard.edu','[subject] [study] [type] [block] failed.');
+	end
+	exit;
+
+Finally, all matlab commands are written to a script at [subject]/scripts/all\_preproc.sh
+
+####--run_preproc
+
+This options merely executes the all_preproc.sh script
+
+####--study=<STUDY>
+
+If you need to preprocess single paradigms individually for whatever reason, use this option with --setup\_preproc and --run\_preproc to specifiy a paradigm/study.
+If you do this, the script file made will be called [study]\_preproc.sh.
+
+###First-Level Statistical Processing Options
 
 ####-o,--setup\_outliers
 This option does the same --setup\_preproc except first-level statistics scripts are setup.
+
+The files of interest are :
+
+-	atlloc\_stats\_job.m
+-	maskedmm\_stats\_job.m
+-	baleenmm\_stats\_block1\_job.m
+-	baleenmm\_stats\_block2\_job.m
+-	axcpt\_stats\_job.m
+
+These files define SPM batches for first-level statistical processing.
+
+BaleenMM is broken into blocks (1 is low proportion, 2 is high proportion) because the models are different (different events occur).
+
+
+####--run_outliers
+Executes the [subject]/scripts/all\_stats\_outliers.sh script.
+
+_Make sure you've done the following two things before using this option:_
+
+-	Run art (Sue Gabrieli's artifact detection tool) and created art\_regression\_outliers\_and\_movement\_[RUN NAME].mat
+-	Make the multiple condition file for each run using `(matlab prompt)>> MakeMultCond({'(subject)'})`
+
+
