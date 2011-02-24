@@ -609,7 +609,14 @@ matlabbatch{3}.spm.stats.con.consess{8}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{9}.tcon.name = 'HP:Unrelated filler vs. HP:Related Filler';
 matlabbatch{3}.spm.stats.con.consess{9}.tcon.convec = [0 0 -1 1 0 0];
 matlabbatch{3}.spm.stats.con.consess{9}.tcon.sessrep = 'replsc';
+matlabbatch{3}.spm.stats.con.consess{10}.tcon.name = 'HP:AnimalTarget vs HP:Unrelated';
+matlabbatch{3}.spm.stats.con.consess{10}.tcon.convec = [0 -1 0 0 1 0];
+matlabbatch{3}.spm.stats.con.consess{10}.tcon.sessrep = 'replsc';
+matlabbatch{3}.spm.stats.con.consess{11}.tcon.name = 'HP:Unrelated vs HP:AnimalTarget';
+matlabbatch{3}.spm.stats.con.consess{11}.tcon.convec = [0 1 0 0 -1 0];
+matlabbatch{3}.spm.stats.con.consess{11}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.delete = 1;
+
 % 8mm
 matlabbatch{4}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/BaleenMM/[stat_folder]/8mm'};
 matlabbatch{4}.spm.stats.fmri_spec.timing.units = 'secs';
@@ -1218,6 +1225,12 @@ matlabbatch{6}.spm.stats.con.consess{8}.tcon.sessrep = 'replsc';
 matlabbatch{6}.spm.stats.con.consess{9}.tcon.name = 'HP:Unrelated filler vs. HP:Related Filler';
 matlabbatch{6}.spm.stats.con.consess{9}.tcon.convec = [0 0 -1 1 0 0];
 matlabbatch{6}.spm.stats.con.consess{9}.tcon.sessrep = 'replsc';
+matlabbatch{6}.spm.stats.con.consess{10}.tcon.name = 'HP:AnimalTarget vs HP:Unrelated';
+matlabbatch{6}.spm.stats.con.consess{10}.tcon.convec = [0 -1 0 0 1 0];
+matlabbatch{6}.spm.stats.con.consess{10}.tcon.sessrep = 'replsc';
+matlabbatch{6}.spm.stats.con.consess{11}.tcon.name = 'HP:Unrelated vs HP:AnimalTarget';
+matlabbatch{6}.spm.stats.con.consess{11}.tcon.convec = [0 1 0 0 -1 0];
+matlabbatch{6}.spm.stats.con.consess{11}.tcon.sessrep = 'replsc';
 matlabbatch{6}.spm.stats.con.delete = 1;
 matlabbatch{7}.spm.tools.sendmail.recipient = 'sburns@nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.subject = '[email_message]';
