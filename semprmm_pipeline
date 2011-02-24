@@ -570,7 +570,7 @@ def second_level(data,type):
 	prefix = os.path.join(func_dir,"SecondLevelStats")
 	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
 		["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
-		"MaskedMM":[["Dir","0001"],["UnRel","0003"],["UnRelVDir","0007"]],
+		"MaskedMM":[["Rel","0001"],["UnRel","0003"],["UnRelVrel","0007"]],
 		"BaleenLP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
 		"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
 		["UnRelFillvRelFill","0009"]],"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
@@ -859,6 +859,8 @@ def main():
 		help="Run the MEG makeInv script")
 	parser.add_option("--bad",dest="bad_sub",action="append",default=[],
 		help="Exclude subjects, for use with --setup_second")
+	parser.add_option("--mask",dest="mask",action="append",default=[],
+		help="At the second level, mask certain contrasts. Pass in <study>,<contrast>,<pathtomaskimage>")
 		
 		
 	(options,args) = parser.parse_args()
