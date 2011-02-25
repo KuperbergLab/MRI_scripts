@@ -442,6 +442,7 @@ def find_proc_studies(data):
 			run_studies.append(study)
 			if data["verbose"]:
 				print("Found a run file at {0}".format(run_file))
+
 	return run_studies
 
 
