@@ -308,21 +308,21 @@ def write_batch_files(data,study,type,block):
 
 
 def matlab_batch_dict(data,study,type,block):
-	replace_dict = dict({"[study]":study.lower(),"[type]":type,"[subject]":data["subject"]})
+	replace_dict = dict({"study":study.lower(),"type":type,"subject":data["subject"]})
 	if block:
-		replace_dict["[block]"] = "_block"+block
+		replace_dict["block"] = "_block"+block
 	else:
-		replace_dict["[block]"] = block
+		replace_dict["block"] = block
 	if "stats" in type:
-		replace_dict["[rm]"] = "1"
-		replace_dict["[6mmDir]"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
-		replace_dict["[8mmDir]"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
+		replace_dict["rm"] = "1"
+		replace_dict["6mmDir"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
+		replace_dict["8mmDir"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
 	else:
-		replace_dict["[rm]"] = "0"
-		replace_dict["[6mmDir]"] = ""
-		replace_dict["[8mmDir]"] = ""
-	replace_dict["[script]"] = specific_batch_path(data,study,type,block)
-	replace_dict["[working_dir]"] = os.path.join(data["mri_dir"],study,"jobs")
+		replace_dict["rm"] = "0"
+		replace_dict["6mmDir"] = ""
+		replace_dict["8mmDir"] = ""
+	replace_dict["script"] = specific_batch_path(data,study,type,block)
+	replace_dict["working_dir"] = os.path.join(data["mri_dir"],study,"jobs")
 	return replace_dict
 
 
@@ -332,62 +332,62 @@ def build_funcdir_info(data,study,type,block):
 	/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/atlloc_stats_job.m to a file that actually 
 	corresponds to a specific subject."""
 	study_dict = dict();
-	study_dict["[subject]"] = data["subject"]
-	study_dict["[email_message]"] = " ".join([data["subject"],study,type,"finished."])
-	study_dict["[stat_folder]"] = type
+	study_dict["subject"] = data["subject"]
+	study_dict["email_message"] = " ".join([data["subject"],study,type,"finished."])
+	study_dict["stat_folder"] = type
 	#find paths for all the runs in the study/block
 	all_runs = find_all_runs(data,study)
 	for i,run in enumerate(all_runs):
-		study_dict["[Run"+str(i+1)+"XXX]"] = os.path.basename(os.path.dirname(run))
+		study_dict["Run"+str(i+1)+"XXX"] = os.path.basename(os.path.dirname(run))
 	if "stats" in type:
 		if study == "BaleenMM":
-			study_dict["[email_message]"] = " ".join([data["subject"],study,type,"block "+block,
+			study_dict["email_message"] = " ".join([data["subject"],study,type,"block "+block,
 				"finished."])
-			study_dict["[stat_folder]"] = type+block
+			study_dict["stat_folder"] = type+block
 			if block == "1":
 				all_runs = find_all_runs(data,study,[1, 4])
 				for i,run in enumerate(all_runs):
-					study_dict["[Run"+str(i+1)+"XXX]"] = os.path.basename(os.path.dirname(run))				
+					study_dict["Run"+str(i+1)+"XXX"] = os.path.basename(os.path.dirname(run))				
 					if "outliers" in type:
-						study_dict["[Run"+str(i+1)+"MR]"] = ("art_regression_outliers_and_movement_"
+						study_dict["Run"+str(i+1)+"MR"] = ("art_regression_outliers_and_movement_"
 							+study+str(i+1)+".mat")
 					else:
-						study_dict["[Run"+str(i+1)+"MR]"] = "rp_"+study+str(i+1)+".txt"
+						study_dict["Run"+str(i+1)+"MR"] = "rp_"+study+str(i+1)+".txt"
 			elif block == "2":
 				all_runs = find_all_runs(data,study,[5, 8])
 				for i,run in enumerate(all_runs):
-					study_dict["[Run"+str(i+5)+"XXX]"] = os.path.basename(os.path.dirname(run))
+					study_dict["Run"+str(i+5)+"XXX"] = os.path.basename(os.path.dirname(run))
 					if "outliers" in type:
-						study_dict["[Run"+str(i+5)+"MR]"] = ("art_regression_outliers_and_movement_"
+						study_dict["Run"+str(i+5)+"MR"] = ("art_regression_outliers_and_movement_"
 							+study+str(i+5)+".mat")
 					else:
-						study_dict["[Run"+str(i+5)+"MR]"] = "rp_"+study+str(i+5)+".txt"
+						study_dict["Run"+str(i+5)+"MR"] = "rp_"+study+str(i+5)+".txt"
 			else:
 				raise ProgrammerError("Build_func_dir: baleen stats not specificied with block")
 		else: #not baleen
 			all_runs = find_all_runs(data,study)
 			for i,run in enumerate(all_runs):
-				study_dict["[Run"+str(i+1)+"XXX]"] = os.path.basename(os.path.dirname(run))
+				study_dict["Run"+str(i+1)+"XXX"] = os.path.basename(os.path.dirname(run))
 				if "outliers" in type:
-					study_dict["[Run"+str(i+1)+"MR]"] = ("art_regression_outliers_and_movement_"+
+					study_dict["Run"+str(i+1)+"MR"] = ("art_regression_outliers_and_movement_"+
 						study+str(i+1)+".mat")
 				else:
-					study_dict["[Run"+str(i+1)+"MR]"] = "rp_"+study+str(i+1)+".txt"
+					study_dict["Run"+str(i+1)+"MR"] = "rp_"+study+str(i+1)+".txt"
 	elif type == "preproc":
 		#find mprage xxx
 		mprage = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
 		if len(mprage) == 0:
 			raise UserError("Error: cannot find any mprage scans for this subject. Fix immediately")
-		study_dict["[MPRAGEXXX]"] = os.path.basename(os.path.dirname(mprage[0]))
+		study_dict["MPRAGEXXX"] = os.path.basename(os.path.dirname(mprage[0]))
 		#find phase fieldmap xxx
 		fieldmap_phase = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Phase.nii"))
 		if len(fieldmap_phase) == 0:
 			raise UserError("Error:cannot find fieldmap for "+study+" phase. Fix immediately") 
-		study_dict["[FieldMapPhaseXXX]"] = os.path.basename(os.path.dirname(fieldmap_phase[0]))
+		study_dict["FieldMapPhaseXXX"] = os.path.basename(os.path.dirname(fieldmap_phase[0]))
 		fieldmap_mag = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Mag.nii"))
 		if len(fieldmap_phase) == 0:
 			raise UserError("Error: cannot find fieldmap for "+study+" mag. Fix immediately")
-		study_dict["[FieldMapMagXXX]"] = os.path.basename(os.path.dirname(fieldmap_mag[0]))
+		study_dict["FieldMapMagXXX"] = os.path.basename(os.path.dirname(fieldmap_mag[0]))
 	return study_dict	
 
 
@@ -636,10 +636,10 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 				print("Cannot open pickle file at {0}".format(info_fname))
 				break
 			#now, make the <con>.html file
-			replace_dict = dict({"[N]":str(info["N"]),"[pvalue]":str(info["pvalue"]),
-				"[contrast]":info["contrast"],"[study]":study,"[stype]":info["stype"],
-				"[images]":"\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
-				"[mask]":info["mask"]})
+			replace_dict = dict({"N":str(info["N"]),"pvalue":str(info["pvalue"]),
+				"contrast":info["contrast"],"study":study,"stype":info["stype"],
+				"images":"\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
+				"mask]":info["mask"]})
 			pipeline.f2f_replace(os.path.join(surf_dir,"contrast.html"),
 				os.path.join(study_dir,contrast+".html"),replace_dict,data["verbose"])
 
@@ -683,8 +683,8 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			tvalue = stats.t.isf(pvalue,info["N"])
 			info["tvalue"] = tvalue
 			print("T-threshold at N={0} and p<{1} is {2}".format(info["N"],pvalue,tvalue))
-			script_dict["[tvalue]"] = str(tvalue)
-			script_dict["[aparc]"] = data["aparc"]
+			script_dict["tvalue"] = str(tvalue)
+			script_dict["aparc"] = data["aparc"]
 			new_script_path = os.path.join(con_dir,"make_images.sh")
 			pipeline.f2f_replace(os.path.join(mri_scripts,"surf_analysis","make_images.sh"),
 				new_script_path,script_dict,data["verbose"])
@@ -727,9 +727,9 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 		print("\n{0}:\t{1} contrasts".format(study,len(study_contrasts[study])))
 		for [contrast,XXXX] in study_contrasts[study]:
 			replace_dict = dict()
-			replace_dict["[contrast]"] = contrast
+			replace_dict["contrast"] = contrast
 			con_dir = os.path.join(new_dir,contrast)
-			replace_dict["[con_dir]"] = con_dir
+			replace_dict["con_dir"] = con_dir
 			if not os.path.exists(con_dir):
 				os.mkdir(con_dir)
 			if "Baleen" in study:
@@ -748,7 +748,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
 			good_img[:] = ["'"+x+"'" for x in good_img]
 			N = len(good_img)
-			replace_dict["[contrast_images]"] = "\n".join(good_img)
+			replace_dict["contrast_images"] = "\n".join(good_img)
 			#are we masking?
 			match = [x for x in data["mask"] if x[0] == study and x[1] == contrast]
 			if match:
@@ -756,15 +756,15 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 				print("Using mask at {0}".format(mask))
 			else:
 				mask = ""
-			replace_dict["[mask]"] = mask
+			replace_dict["mask"] = mask
 			ibatch = os.path.join(batch_dir,data["stype"],"generic_2nd_batch.m")
 			obatch = os.path.join(job_dir,contrast+"_job.m")
 			iscript = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
 			oscript = os.path.join(job_dir,contrast+".m")
 			#make batch
 			pipeline.f2f_replace(ibatch,obatch,replace_dict)
-			replace_dict["[study]"] = study
-			replace_dict["[batch]"] = obatch
+			replace_dict["study"] = study
+			replace_dict["batch"] = obatch
 			#make script
 			pipeline.f2f_replace(iscript,oscript,replace_dict)
 			shell_commands.append("rm {0}/SPM.mat".format(con_dir))

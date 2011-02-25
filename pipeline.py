@@ -4,6 +4,7 @@ from subprocess import Popen,PIPE
 import os
 import smtplib
 import time
+import string
 
 VERBOSE = False
 
@@ -118,34 +119,25 @@ def unpack(src,targ,cfg_path,output=None):
 	process = run_process(args,output)
 	output = process.communicate()[0]
 
-
-def fix_line(line,study_dict):
-	"""
-	line: string with (possible) tokens to replace
-	study_dict: keys of which, if found in line, are replaced with the corresponding value
-	Returns a line that has been fixed.
-	"""
-	for key,value in study_dict.iteritems():
-		if key in line:				
-			line = line.replace(key,value)
-	return line
-
 	
 def f2f_replace(incoming,outgoing,replace,verbose=None):
 	try:
 		with open(incoming,"r") as f:
-			all_lines = f.read()
-			all_lines = all_lines.splitlines()
+			old_string = f.read()
 			if verbose:
 				print("Reading {0}".format(incoming))
 	except IOError:
 		print("Cannot open {0}".format(incoming))
 		raise
-	for i,line in enumerate(all_lines[:]):
-		all_lines[i] = fix_line(line,replace)
+	t = string.Template(old_string)
+	try:
+		new_string = t.substitute(replace)
+	except KeyError as (errno,strerror):
+		print("Missing key in {1}...\n{0}".format(strerror,incoming))
+		raise
 	try:
 		with open(outgoing,"w") as f:
-			f.writelines("\n".join(all_lines))
+			f.write(new_string)
 			if verbose:
 				print("Writing {0}".format(outgoing))
 	except IOError:
