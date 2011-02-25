@@ -1,6 +1,3 @@
-%-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 3944 $)
-%-----------------------------------------------------------------------
 % CHANGE ME
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.phase = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/FieldMap/$FieldMapPhaseXXX/FieldMap_BaleenMM_Phase.nii,1'};
 % CHANGE ME

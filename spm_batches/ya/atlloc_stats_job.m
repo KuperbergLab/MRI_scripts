@@ -1,7 +1,3 @@
-%-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 3944 $)
-%-----------------------------------------------------------------------
-
 % 6mm
 matlabbatch{1}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$stat_folder/6mm/'};
 matlabbatch{1}.spm.stats.fmri_spec.timing.units = 'secs';

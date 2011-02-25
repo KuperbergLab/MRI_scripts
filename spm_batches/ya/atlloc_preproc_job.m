@@ -1,9 +1,4 @@
-%-----------------------------------------------------------------------
-% Job configuration created by cfg_util (rev $Rev: 3944 $)
-%-----------------------------------------------------------------------
-% CHANGE ME
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.phase = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/FieldMap/$FieldMapPhaseXXX/FieldMap_ATLLoc_Phase.nii,1'};
-% CHANGE ME
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.magnitude = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/FieldMap/$FieldMapMagXXX/FieldMap_ATLLoc_Mag.nii,1'};
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.defaults.defaultsval.et = [4.92 7.38];
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.defaults.defaultsval.maskbrain = 0;

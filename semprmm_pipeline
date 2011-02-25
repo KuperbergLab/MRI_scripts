@@ -205,10 +205,10 @@ def setup_spm(data,type):
 			write_batch_files(data,study,type,"2")
 		else:
 			write_batch_files(data,study,type,"")
-	write_shell_script(data,study,type)
+	write_shell_script(data,type)
 
 
-def shell_script_path(data,study,type):
+def shell_script_path(data,type):
 	script_dir = os.path.join(data["mri_dir"],"scripts")
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
@@ -220,8 +220,8 @@ def shell_script_path(data,study,type):
 		return os.path.join(script_dir,"all_"+type+"_"+data["subject"]+".sh")
 
 
-def write_shell_script(data,study,type):
-	shell_script = shell_script_path(data,study,type)
+def write_shell_script(data,type):
+	shell_script = shell_script_path(data,type)
 	commands = []
 	commands.append("#!/bin/sh")
 	if "recon" in type:
@@ -312,17 +312,18 @@ def matlab_batch_dict(data,study,type,block):
 	if block:
 		replace_dict["block"] = "_block"+block
 	else:
-		replace_dict["block"] = block
+		replace_dict["block"] = "<none>"
 	if "stats" in type:
 		replace_dict["rm"] = "1"
-		replace_dict["6mmDir"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
-		replace_dict["8mmDir"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
+		replace_dict["SixDir"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
+		replace_dict["EightDir"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
 	else:
 		replace_dict["rm"] = "0"
-		replace_dict["6mmDir"] = ""
-		replace_dict["8mmDir"] = ""
+		replace_dict["SixDir"] = ""
+		replace_dict["EightDir"] = ""
 	replace_dict["script"] = specific_batch_path(data,study,type,block)
-	replace_dict["working_dir"] = os.path.join(data["mri_dir"],study,"jobs")
+	replace_dict["run_file"] = touch_file_path(data,study,type,block,"run")
+	replace_dict["start_file"] = touch_file_path(data,study,type,block,"start")
 	return replace_dict
 
 
@@ -391,6 +392,14 @@ def build_funcdir_info(data,study,type,block):
 	return study_dict	
 
 
+def touch_file_path(data,study,type,block,when):
+	if block:
+		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"block"+block+"_"+when)
+	else:
+		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
+	return s
+
+
 def find_all_runs(data,study,fl="all"):
 	"""find_all_runs:
 	Searches data["mri_dir"]/study for desired runs. Normally, fl is "all", so all runs of a
@@ -428,11 +437,11 @@ def find_proc_studies(data):
 	run_studies = []
 	possible = possible_studies.keys()
 	for study in possible:
-		run_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_preproc_run")
-		if data["verbose"]:
-			print("Found a run file at {0}".format(run_file))
+		run_file = touch_file_path(data,study,"preproc","","run")
 		if os.path.exists(run_file):
 			run_studies.append(study)
+			if data["verbose"]:
+				print("Found a run file at {0}".format(run_file))
 	return run_studies
 
 

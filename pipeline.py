@@ -132,16 +132,19 @@ def f2f_replace(incoming,outgoing,replace,verbose=None):
 	t = string.Template(old_string)
 	try:
 		new_string = t.substitute(replace)
-	except KeyError as (errno,strerror):
-		print("Missing key in {1}...\n{0}".format(strerror,incoming))
+		try:
+			with open(outgoing,"w") as f:
+				f.write(new_string)
+				if verbose:
+					print("Writing {0}".format(outgoing))
+		except IOError:
+			print("Cannot write {0}".format(outgoing))
+			raise
+	except KeyError:
+		print("KeyError with {0}".format(incoming))
 		raise
-	try:
-		with open(outgoing,"w") as f:
-			f.write(new_string)
-			if verbose:
-				print("Writing {0}".format(outgoing))
-	except IOError:
-		print("Cannot write {0}".format(outgoing))
+	except :
+		print("Error : {0}".format(incoming))
 		raise
 	
 def run_process(args,output=None,error=None):
