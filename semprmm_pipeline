@@ -499,7 +499,7 @@ def meg_script(data,type,extra=None):
 		print("ICA mat:\n{0}".format("\n".join(icamat)))
 		blinks = glob(os.path.join(data["meg_dir"],"*.blinks"))
 		N_blinks = len(blinks)
-		print("Blinks:\n{0}".format("\n".join(blinks))
+		print("Blinks:\n{0}".format("\n".join(blinks)))
 		if (N_fif == 0):
 			raise UserError("No fif files found for this subject")
 		if not (N_fif == N_icamat == N_blinks):
