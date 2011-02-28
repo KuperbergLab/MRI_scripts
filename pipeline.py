@@ -131,7 +131,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=None):
 		raise
 	t = string.Template(old_string)
 	try:
-		new_string = t.substitute(replace)
+		new_string = t.safe_substitute(replace)
 		try:
 			with open(outgoing,"w") as f:
 				f.write(new_string)
