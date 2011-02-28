@@ -351,3 +351,9 @@ So, if you make a custom cfg file, then you can skip running --scan2cfg and run 
 ####--preAnat
 
 ####--makeInv
+
+####--run_ica
+
+This option starts a MATLAB job that computes the ICA for the given subject.  It uses EEGLAB's implementation of the Independent Component Analysis.
+
+This option makes *_ica.mat files along with *.blinks, where the * stands for [subject]\_[studyrun].

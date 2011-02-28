@@ -521,6 +521,20 @@ def meg_script(data,type,extra=None):
 		process.communicate()[0]
 
 
+def run_ica(data):
+	iscript = os.path.join(meg_scripts,"generic_runica.m")
+	oscript = os.path.join(data["meg_dir"],data["subject"]+"_ica.m")
+	pipeline.f2f_replace(iscript,oscript,dict({"subject":data["subject"]}),data["verbose"])
+	log = os.path.join(data["meg_dir"],data["subject"]+"_ica.log")
+	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop","-nojvm", "<", oscript,
+		">", log]
+	try:
+		process = pipeline.run_process(my_args,output=None)
+		process.communicate()
+	except:
+		print("Unexpected error when running ICA")
+
+
 def setup_bem(data):
 	print("Setup_BEM:{0}".format(data["subject"]))
 	#must have env var set
@@ -626,7 +640,7 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 			print("{0}:\t{1}...".format(study,contrast))
 			#within study_dir, make con/
 			con_dir = os.path.join(date_dir,contrast)
-			res_con_dir = os.path.join(study_dir,contrast+"_img")
+			res_con_dir = os.path.join(study_dir,contrast)
 			if not os.path.exists(res_con_dir):
 				os.mkdir(res_con_dir)
 			#data_con_dir points to data contrast directory
@@ -649,7 +663,7 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 			replace_dict = dict({"N":str(info["N"]),"pvalue":str(info["pvalue"]),
 				"contrast":info["contrast"],"study":study,"stype":info["stype"],
 				"images":"\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
-				"mask]":info["mask"]})
+				"mask":info["mask"]})
 			pipeline.f2f_replace(os.path.join(surf_dir,"contrast.html"),
 				os.path.join(study_dir,contrast+".html"),replace_dict,data["verbose"])
 
@@ -899,6 +913,8 @@ def main():
 		help="At the second level, mask certain contrasts. Pass in <study>,<contrast>,<pathtomaskimage>")
 	parser.add_option("--inc",dest="good_sub",action="append",default=[],
 		help="At the second level, include subjects, use with --setup_second")
+	parser.add_option("--run_ica",dest="run_ica",action="store_true",default=False,
+		help="Run ICA processing (takes 90-120 minutes).")
 		
 	(options,args) = parser.parse_args()
 	data = dict({})
@@ -927,7 +943,8 @@ def main():
 	for subject in args:
 		try:
 			data["subject"] = subject
-			set_paths(data)	
+			set_paths(data)
+			#subject level options
 			if data["copy_dicom"]:		
 				archive_to_cluster(data)
 			if data["scan_only"]:
@@ -962,15 +979,19 @@ def main():
 				meg_script(data,"preAnat")
 			if data["makeInv"]:
 				meg_script(data,"makeInv")
-		except (ProgrammerError,UserError, SystemError) as (errno,strerror):
-			print(strerror)
+			if data["run_ica"]:
+				run_ica(data)
+		except Exception as strerr:
+			print(strerr)
 			print("Something happened for {0}".format(data["subject"]))
+	#group level options
 	if data["setup_second"]:
 		second_level(data,"setup")
 	if data["surf_second"]:
 		second_level(data,"surf")
 	if data["package_second"]:
 		second_level(data,"package")
+	#miscellaneous
 	if data["launchpad"]:
 		pipeline.wait_to_finish(running_jobs)
 
