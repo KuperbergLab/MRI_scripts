@@ -491,10 +491,15 @@ def meg_script(data,type,extra=None):
 		#look for fif
 		fif = glob(os.path.join(data["meg_dir"],"*_raw.fif"))
 		#filter our blink and emptyroom
-		fif = [x for x in fif if x.find("Blink") == -1 and x.find("emtpyroom") == -1]
+		fif = [x for x in fif if x.find("Blink") == -1 and x.find("emptyroom") == -1]
 		N_fif = len(fif)
-		N_icamat = len(glob(os.path.join(data["meg_dir"],"*_raw_ica.mat")))
-		N_blinks = len(glob(os.path.join(data["meg_dir"],"*.blinks")))
+		print("Fifs:\n{0}".format("\n".join(fif)))
+		icamat = glob(os.path.join(data["meg_dir"],"*_raw_ica.mat"))
+		N_icamat = len(icamat)
+		print("ICA mat:\n{0}".format("\n".join(icamat)))
+		blinks = glob(os.path.join(data["meg_dir"],"*.blinks"))
+		N_blinks = len(blinks)
+		print("Blinks:\n{0}".format("\n".join(blinks))
 		if (N_fif == 0):
 			raise UserError("No fif files found for this subject")
 		if not (N_fif == N_icamat == N_blinks):
