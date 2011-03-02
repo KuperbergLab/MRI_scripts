@@ -450,16 +450,19 @@ def find_complete_studies(data):
 
 
 def setup_recon(data):
-	write_shell_script(data,"","recon")
+	write_shell_script(data,"recon")
 
 
 def run_mri_script(data,type):
 	#find all the scripts of this type
-	if data["single_study"]:
-		prefix = data["single_study"].lower()+"_"
+	if type == "recon":
+		scripts = [shell_script_path(data,type)]
 	else:
-		prefix = "all_"
-	scripts = glob(os.path.join(data["mri_dir"],"scripts",prefix+type+"_*"))
+		if data["single_study"]:
+			prefix = data["single_study"].lower()+"_"
+		else :
+			prefix = "all_"
+		scripts = glob(os.path.join(data["mri_dir"],"scripts",prefix+type+"_*"))
 	for script in scripts:
 		args = ["nohup", script]
 		print("\nStarting {0}\n".format(script))
