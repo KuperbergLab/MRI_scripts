@@ -201,10 +201,10 @@ def setup_spm(data,type):
 					if not os.path.exists(smooth_dir):
 						os.mkdir(smooth_dir)
 		if "stats" in type and study == "BaleenMM":
-			write_batch_files(data,study,type,"1")
-			write_batch_files(data,study,type,"2")
+			write_mlab_script(data,study,type,"1")
+			write_mlab_script(data,study,type,"2")
 		else:
-			write_batch_files(data,study,type,"")
+			write_mlab_script(data,study,type,"")
 	write_shell_script(data,type)
 
 
@@ -278,52 +278,45 @@ def specific_batch_path(data,study,type,block):
 		return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_job.m")
 		
 
-def write_batch_files(data,study,type,block):
-	study_dict = build_funcdir_info(data,study,type,block)
+def write_mlab_script(data,study,type,block):
 	if "stats_outliers" in type:
 		good_type = "stats"
 	else:
 		good_type = type
-	if study == "BaleenMM" and "stats" in type:
-		if block is None:
-			raise ProgrammerError("write_batch_files: no block specified for baleenmm stats")
-		path_to_batch = os.path.join(batch_dir,data["stype"],
-			study.lower()+"_"+good_type+"_block"+block+"_job.m")
-		out_batch_name = study.lower()+"_"+type+"_block"+block+"_job.m"
-	else:		
-		path_to_batch =os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_job.m")
-		out_batch_name = study.lower()+"_"+type+"_job.m"
-	specific_batch_file = os.path.join(data["mri_dir"],study,"jobs",out_batch_name)
-	pipeline.f2f_replace(path_to_batch,specific_batch_file,study_dict,data["verbose"])
 	batch_dict = matlab_batch_dict(data,study,type,block)
 	if study == "BaleenMM" and "stats" in type:
 		if block is None:
 			raise ProgrammerError("write_batch_files: no block specified for baleenmm stats")
-		subject_batch = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
+		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
 			type+"_block"+block+".m")
+		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+type+"_block"+block+".m")
 	else:
-		subject_batch = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-	pipeline.f2f_replace(os.path.join(batch_dir,data["stype"],"spm_mfile.m"),subject_batch,
-		batch_dict,data["verbose"])
+		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+type+".m")
+	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
 def matlab_batch_dict(data,study,type,block):
-	replace_dict = dict({"study":study.lower(),"type":type,"subject":data["subject"]})
+	replace_dict = build_funcdir_info(data,study,type,block)
+	replace_dict["study"] = study.lower()
+	replace_dict["type"] = type
+	replace_dict["subject"] = data["subject"]
 	if block:
 		replace_dict["block"] = "_block"+block
 	else:
 		replace_dict["block"] = "<none>"
-	if "stats" in type:
-		replace_dict["rm"] = "1"
-		replace_dict["SixDir"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
-		replace_dict["EightDir"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
+	if "stats" in type and study == "BaleenMM":
+		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
+		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
 	else:
-		replace_dict["rm"] = "0"
-		replace_dict["SixDir"] = ""
-		replace_dict["EightDir"] = ""
-	replace_dict["script"] = specific_batch_path(data,study,type,block)
+		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type,"6mm","SPM.mat")
+		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type,"8mm","SPM.mat")
 	replace_dict["run_file"] = touch_file_path(data,study,type,block,"run")
 	replace_dict["start_file"] = touch_file_path(data,study,type,block,"start")
+	replace_dict["email_success"] = "{0} {1} {2} block {3} succeeded".format(data["subject"],study,
+		type,block)
+	replace_dict["email_fail"] =  "{0} {1} {2} block {3} failed".format(data["subject"],study,
+		type,block)
 	return replace_dict
 
 
@@ -334,7 +327,6 @@ def build_funcdir_info(data,study,type,block):
 	corresponds to a specific subject."""
 	study_dict = dict();
 	study_dict["subject"] = data["subject"]
-	study_dict["email_message"] = " ".join([data["subject"],study,type,"finished."])
 	study_dict["stat_folder"] = type
 	#find paths for all the runs in the study/block
 	all_runs = find_all_runs(data,study)
