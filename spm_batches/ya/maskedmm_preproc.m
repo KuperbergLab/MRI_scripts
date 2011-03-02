@@ -509,8 +509,21 @@ matlabbatch{8}.spm.spatial.smooth.dtype = 0;
 matlabbatch{8}.spm.spatial.smooth.im = 0;
 matlabbatch{8}.spm.spatial.smooth.prefix = 's8';
 matlabbatch{9}.spm.tools.sendmail.recipient = 'sburns@nmr.mgh.harvard.edu';
-matlabbatch{9}.spm.tools.sendmail.subject = '$email_message';
+matlabbatch{9}.spm.tools.sendmail.subject = '$email_success';
 matlabbatch{9}.spm.tools.sendmail.message = 'thank you';
 matlabbatch{9}.spm.tools.sendmail.attachments = {};
 matlabbatch{9}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
 matlabbatch{9}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
+
+
+warning off all;
+try
+	spm('defaults','fmri');
+	spm_jobman('initcfg');
+	fclose(fopen('$start_file','w'));
+	output = spm_jobman('run_nogui',matlabbatch);
+	fclose(fopen('$run_file','w'));
+catch ME
+	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+end
+exit;

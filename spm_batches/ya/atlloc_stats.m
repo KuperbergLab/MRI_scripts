@@ -461,3 +461,18 @@ matlabbatch{7}.spm.tools.sendmail.attachments = {};
 matlabbatch{7}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.params.zip = 'No';
+
+
+warning off all;
+try
+	spm('defaults','fmri');
+	spm_jobman('initcfg');
+	delete('$SixSPM');
+	delete('$EightSPM');
+	fclose(fopen('$start_file','w'));
+	output = spm_jobman('run_nogui',matlabbatch);
+	fclose(fopen('$run_file','w'));
+catch ME
+	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+end
+exit;

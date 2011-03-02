@@ -45,28 +45,28 @@ Note the following conventions:
 
 ####-d,--copy\_dicom
 This option copies all the dicom images that were produced by the scanner into your study directory.
-It parses the output of 'findsession [subject]' and sets up an rsync job like so: `rysnc -a
-[path/from/findsession/] DICOM_DIR/[subject]/`
+It parses the output of 'findsession $subject]' and sets up an rsync job like so: `rysnc -a
+[path/from/findsession/] DICOM_DIR/$subject]/`
 This is hardcoded to use the newest path.
 
 ####--scan\_only
 This option runs `unpacksdcmdir -src DICOM_DIR/subject/ -targ FUNCTIONALS_DIR/[subject]/ -scanonly
-FUNCTIONALS_DIR/[subject]/scan.log`
+FUNCTIONALS_DIR/$subject]/scan.log`
 The most important output of this is the scan.log file.
 
 ####--scan2cfg
 This transforms the scan.log file into cfg.txt that is useful for --unpack.
 
 ##### Notes
-Currently, these MRI runs are unpacked into the FUNCTIONALS\_DIR/[subject] folder:
+Currently, these MRI runs are unpacked into the FUNCTIONALS\_DIR/$subject] folder:
 
 -	MEMPRAGE\_4e\_p2\_1mm\_iso scans unpack into MPRAGE/
 	-	Only the rms image (which has 1 frame and is the best image) is unpacked, not the 4 frame
 MEMPRAGE
 -	ge\_functionals\_atlloc scans unpack into ATLLoc/
 -	field\_mapping scans unpack into FieldMap/
-	-	These scans are named FieldMap\_[study after which they were run]\_Phase.nii and
-FieldMap\_[study after which they were run]\_Mag.nii
+	-	These scans are named FieldMap\_$study after which they were run]\_Phase.nii and
+FieldMap\_$study after which they were run]\_Mag.nii
 	-	If you didn't collect a FieldMap after a particular study:
 		-	After you run this step, copy the closest matching FieldMaps into two XXX directories
 (the XXX's don't matter but is some three digit string) and rename them according to the above
@@ -82,7 +82,7 @@ has 8 frames
 -	The .nii files are sequentially numbered, e.g. the 5th run of Baleen is named BaleenMM5.nii
 
 ####--unpack
-This option runs `unpacksdcmdir -src DICOM_DIR/subject/ -targ FUNCTIONALS_DIR/[subject]/ -fsfast -cfg FUNCTIONALS_DIR/[subject]/cfg.txt`
+This option runs `unpacksdcmdir -src DICOM_DIR/subject/ -targ FUNCTIONALS_DIR/$subject]/ -fsfast -cfg FUNCTIONALS_DIR/$subject]/cfg.txt`
 This actually does the major DICOM -> Nifti conversion (and renaming).
 
 #####Notes
@@ -109,31 +109,13 @@ these files SPM's batch editor to see specific details of these jobs).
 
 By design though, all the pathnames in these files are wrong. For example, the phase fieldmap
 defined in atlloc\_preproc\_job.m is literally
-'/cluster/kuperberg/SemPrMM/MRI/functionals/[subject]/FieldMap/[FieldMapPhaseXXX]/
+'/cluster/kuperberg/SemPrMM/MRI/functionals/$subject]/FieldMap/$FieldMapPhaseXXX]/
 FieldMap\_ATLLoc\_Phase.nii' which clearly doesn't exist after the unpack command. So, a large part of
 this section of the pipeline is taking these 4 generic batches and filling in the correct paths to the unpacked images. This file is written to
-FUNCTIONALS\_DIR/[subject]/[study]/jobs/[study]\_preproc\_job.m
+FUNCTIONALS\_DIR/$subject]/$study]/jobs/$study]\_preproc\_job.m
 
-The batches themselves are useless without a script to run them, though. A matlab script called
-FUNCTIONALS\_DIR/[subject]/[study]/jobs/[study]\_preproc.m is created that looks like this :
-
-	warning off all;
-	try
-		spm('defaults','fmri');
-		spm_jobman('initcfg');
-		if [rm]
-			delete('[6mmDir]');
-			delete('[8mmDir]');
-		end
-		fclose(fopen('[working_dir]/[study]_[type][block]_start','w'));
-		output = spm_jobman('run_nogui','[script]');
-		fclose(fopen('[working_dir]/[study]_[type][block]_run','w'));
-	catch ME
-		sendmail('sburns@nmr.mgh.harvard.edu','[subject] [study] [type] [block] failed.');
-	end
-	exit;
-
-Finally, all matlab commands are written to a script at [subject]/scripts/all\_preproc.sh
+At the end of the batch description, a small snippet of matlab code actually runs the SPM batch. So this single file both describes and runs and entire SPM batch.
+Finally, all matlab commands are written to a script at $subject]/scripts/all\_preproc.sh
 
 ####--run_preproc
 
@@ -142,7 +124,7 @@ This options merely executes the all_preproc.sh script
 ####--study=STUDY
 
 If you need to preprocess single paradigms individually for whatever reason, use this option with --setup\_preproc and --run\_preproc to specifiy a paradigm/study.
-If you do this, the script file made will be called [study]\_preproc.sh.
+If you do this, the script file made will be called $study]\_preproc.sh.
 
 ###First-Level Statistical Processing Options
 
@@ -151,11 +133,11 @@ This option does the same --setup\_preproc except first-level statistics scripts
 
 The files of interest are :
 
--	atlloc\_stats\_job.m
--	maskedmm\_stats\_job.m
--	baleenmm\_stats\_block1\_job.m
--	baleenmm\_stats\_block2\_job.m
--	axcpt\_stats\_job.m
+-	atlloc\_stats\.m
+-	maskedmm\_stats.m
+-	baleenmm\_stats\_block1.m
+-	baleenmm\_stats\_block2.m
+-	axcpt\_stats.m
 
 These files define SPM batches for first-level statistical processing.
 
@@ -163,11 +145,11 @@ BaleenMM is broken into blocks (1 is low proportion, 2 is high proportion) becau
 
 
 ####--run_outliers
-Executes the [subject]/scripts/all\_stats\_outliers.sh script.
+Executes the $subject]/scripts/all\_stats\_outliers.sh script.
 
 _Make sure you've done the following two things before using this option:_
 
--	Run art (Sue Gabrieli's artifact detection tool) and created art\_regression\_outliers\_and\_movement\_[RUN NAME].mat
+-	Run art (Sue Gabrieli's artifact detection tool) and created art\_regression\_outliers\_and\_movement\_$RUN NAME].mat
 -	Make the multiple condition file for each run using `(matlab prompt)>> MakeMultCond({'(subject)'})`
 
 ###Second Level Options
@@ -209,8 +191,8 @@ In each contrast directory, make\_images.sh is created. This looks like:
 
 	#!/bin/sh
 	mkdir img
-	tksurfer fsaverage rh inflated -overlay spmT_0001.img -mni152reg -fthresh [tvalue] -tcl rh_tiff	[aparc]
-	tksurfer fsaverage lh inflated -overlay spmT_0001.img -mni152reg -fthresh [tvalue] -tcl lh_tiff [aparc] 
+	tksurfer fsaverage rh inflated -overlay spmT_0001.img -mni152reg -fthresh $tvalue] -tcl rh_tiff	$aparc]
+	tksurfer fsaverage lh inflated -overlay spmT_0001.img -mni152reg -fthresh $tvalue] -tcl lh_tiff $aparc] 
 	cd img
 	for side in RH LH ; do 
 		for view in Anterior Posterior Medial Lateral Superior Inferior ; do

@@ -1026,10 +1026,8 @@ warning off all;
 try
 	spm('defaults','fmri');
 	spm_jobman('initcfg');
-    if $rm
-        delete('$SixSPM');
-        delete('$EightSPM');
-    end
+	delete('$SixSPM');
+	delete('$EightSPM');
 	fclose(fopen('$start_file','w'));
 	output = spm_jobman('run_nogui',matlabbatch);
 	fclose(fopen('$run_file','w'));

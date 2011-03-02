@@ -1217,9 +1217,24 @@ matlabbatch{6}.spm.stats.con.consess{9}.tcon.convec = [0 1 0 -1 0];
 matlabbatch{6}.spm.stats.con.consess{9}.tcon.sessrep = 'replsc';
 matlabbatch{6}.spm.stats.con.delete = 1;
 matlabbatch{7}.spm.tools.sendmail.recipient = 'sburns@nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.subject = '$email_message';
+matlabbatch{7}.spm.tools.sendmail.subject = '$email_success';
 matlabbatch{7}.spm.tools.sendmail.message = 'thank you';
 matlabbatch{7}.spm.tools.sendmail.attachments = {};
 matlabbatch{7}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.params.zip = 'No';
+
+
+warning off all;
+try
+	spm('defaults','fmri');
+	spm_jobman('initcfg');
+	delete('$SixSPM');
+	delete('$EightSPM');
+	fclose(fopen('$start_file','w'));
+	output = spm_jobman('run_nogui',matlabbatch);
+	fclose(fopen('$run_file','w'));
+catch ME
+	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+end
+exit;
