@@ -169,7 +169,6 @@ def scan2cfg(data):
 	except:
 		print("Failure in scan2cfg")
 		raise
-	cfg2info(data)	
 
 
 def info_path(data):
@@ -187,45 +186,72 @@ def cfg2info(data):
 	for study in possible_studies:
 		study_dict = dict({})
 		runs = [x for x in cfg if x[1] == study]
-		for run in runs:
-			run_num = run[3].split(".")[0].split(study)[1]
-			study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
-		if not (study == "AXCPT" and data["stype"] == "ac"):
-			if len(runs) == possible_studies[study]:
-				study_dict["complete"] = True
+		if len(runs) > 0:
+			study_dict["was_run"] = True
+			for run in runs:
+				run_num = run[3].split(".")[0].split(study)[1]
+				study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
+			if not (study == "AXCPT" and data["stype"] == "ac"):
+				if len(runs) == possible_studies[study]:
+					study_dict["complete"] = True
+				else:
+					study_dict["complete"] = False
 			else:
-				study_dict["complete"] = False
+				if len(runs) == 3:
+					study_dict["complete"] = True
+				else:
+					study_dict["complete"] = False
+			#find the MPRAGE
+			mprage_runs = [x for x in cfg if x[1] == "MPRAGE"]
+			study_dict["MPRAGE_runs"] = [prepend_zero(x[0]) for x in mprage_runs]
+			#find the Phase and Mag XXX
+			for type in ["Phase","Mag"]:
+				type_run = [x for x in cfg if study in x[3] and type in x[3]]
+				if not len(type_run) == 1:
+					print("ALERT: Couldn't find the FieldMap_{0}_{1}.nii in cfg for {2}".format(study,
+						type,data["subject"]))
+				else:	
+					study_dict["FieldMap"+type+"XXX"] = prepend_zero(type_run[0][0])
+			info[study] = study_dict
 		else:
-			if len(runs) == 3:
-				study_dict["complete"] = True
-			else:
-				study_dict["complete"] = False
-		#find the MPRAGE
-		mprage_runs = [x for x in cfg if x[1] == "MPRAGE"]
-		study_dict["MPRAGE_runs"] = [prepend_zero(x[0]) for x in mprage_runs]
-		#find the Phase and Mag XXX
-		for type in ["Phase","Mag"]:
-			type_run = [x for x in cfg if study in x[3] and type in x[3]]
-			if not len(type_run) == 1:
-				print("ALERT: Could find the FieldMap_{0}_{1}.nii in cfg".format(study,type))
-				raise UserError("cfg2info")
-			study_dict["FieldMap"+type+"XXX"] = prepend_zero(type_run[0][0])
-		info[study] = study_dict
+			study_dict["was_run"] = False
 	#write out info.txt as pickled dict
 	with open(info_path(data),"w") as f:
 		pickle.dump(info,f)
 	if data["verbose"]:
+		pprint("Info:")
 		pprint(info)
 
+
+def load_info(data):
+	try:
+		with open(info_path(data),"r") as f:
+			info = pickle.load(f)
+	except:
+		print("ERROR: cannot load info.txt for {0}".format(data["subject"]))
+		raise
+	return info
+
+	
+def save_info(data,info):
+	try:
+		with open(info_path(data),"w") as f:
+			pickle.dump(info,f)
+	except:
+		print("ERROR: cannot save info.txt for {0}".format(data["subject"]))
+		raise
+		
 	
 def studies_to_setup(data,type):
-	studies = []
-	if "stats" in type:
-		studies = find_proc_studies(data)
-	elif "preproc" in type:
-		studies = find_complete_studies(data)
+	info = load_info(data)
 	if data["single_study"]:
 		studies = [data["single_study"]]
+	else:		
+		if "stats" in type:
+			studies = [k for k,v in info.iteritems if os.path.exists(
+				touch_file_path(data,k,"preproc","","run"))]
+		elif "preproc" in type:
+			studies = [k for k,v in info.iteritems() if v["was_run"]]
 	return studies
 
 
@@ -275,7 +301,8 @@ def write_shell_script(data,type):
 	commands.append("#!/bin/sh")
 	if "recon" in type:
 		setup_recon = "recon-all -s " + data["subject"]
-		mprages = find_all_runs(data,"MPRAGE")
+		#find all mprages 
+		mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MRPAGE*.nii"))
 		for mprage in mprages:
 			setup_recon = setup_recon + " -i " + mprage
 		commands.append(setup_recon + " > {0}".format(os.path.join(data["mri_dir"],"scripts","setup_recon.log")))
@@ -349,84 +376,44 @@ def matlab_batch_dict(data,study,type,block):
 	replace_dict = build_funcdir_info(data,study,type,block)
 	replace_dict["study"] = study.lower()
 	replace_dict["type"] = type
-	replace_dict["subject"] = data["subject"]
 	if block:
 		replace_dict["block"] = "_block"+block
 	else:
 		replace_dict["block"] = "<none>"
-	if "stats" in type and study == "BaleenMM":
-		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
-		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
-	else:
+	if "stats" in type:
 		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type,"6mm","SPM.mat")
 		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type,"8mm","SPM.mat")
 	replace_dict["run_file"] = touch_file_path(data,study,type,block,"run")
 	replace_dict["start_file"] = touch_file_path(data,study,type,block,"start")
-	replace_dict["email_success"] = "{0} {1} {2} block {3} succeeded".format(data["subject"],study,
+	replace_dict["email_success"] = "{0} {1} {2}{3} succeeded".format(data["subject"],study,
 		type,block)
-	replace_dict["email_fail"] =  "{0} {1} {2} block {3} failed".format(data["subject"],study,
+	replace_dict["email_fail"] =  "{0} {1} {2}{3} failed".format(data["subject"],study,
 		type,block)
 	return replace_dict
 
 
 def build_funcdir_info(data,study,type,block):
 	"""build_funcdir_info:
-	creates a dictionary that is used by write_batch_files to convert a generic batch file (e.g. 
-	/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/atlloc_stats_job.m to a file that actually 
-	corresponds to a specific subject."""
-	study_dict = dict();
+	looks for info.txt and uses the dictionary stored that for everything.
+	The MPRAGEXXX is filled out here"""
+	info = load_info(data)
+	study_dict = info[study];
 	study_dict["subject"] = data["subject"]
-	study_dict["stat_folder"] = type
-	conc = lambda x: "0"+x if int(x) >= 10 else "00"+x
-	cfg_list = readTable(cfg_path(data))
-	all_runs = [x for x in cfg_list if x[1] == study]
-	for i,run in enumerate(all_runs):
-		study_dict["Run"+str(i+1)+"XXX"] = conc(run[0])
+	study_dict["stat_folder"] = type+block
 	if "stats" in type:
-		if study == "BaleenMM":
-			study_dict["stat_folder"] = type+block
-			if block == "1":
-				all_runs = [x for x in cfg_list if x[1] == study and int(x[3].split(".")[0].split(study)[1]) < 5]
-				for i,run in enumerate(all_runs):
-					if "outliers" in type:
-						study_dict["Run"+str(i+1)+"MR"] = ("art_regression_outliers_and_movement_"
-							+study+str(i+1)+".mat")
-					else:
-						study_dict["Run"+str(i+1)+"MR"] = "rp_"+study+str(i+1)+".txt"
-			elif block == "2":
-				all_runs = [x for x in cfg_list if x[1] == study and int(x[3].split(".")[0].split(study)[1]) > 4]
-				for i,run in enumerate(all_runs):
-					if "outliers" in type:
-						study_dict["Run"+str(i+5)+"MR"] = ("art_regression_outliers_and_movement_"
-							+study+str(i+5)+".mat")
-					else:
-						study_dict["Run"+str(i+5)+"MR"] = "rp_"+study+str(i+5)+".txt"
+		# we need to insert MRs into study_dict
+		run_keys = [k for k,v in study_dict.iteritems() if "Run" in k]
+		for run_key in run_keys:
+			mr_key = run_key.split("XXX")[0] + "MR"
+			run_num = mr_key.split("Run")[1]
+			if "outliers" in type:
+				study_dict[mr_key] = "art_regression_outliers_and_movement_{0}{1}.mat".format(
+					study,run_num)
 			else:
-				raise ProgrammerError("Build_func_dir: baleen stats not specificied with block")
-		else: #not baleen
-			for i,run in enumerate(all_runs):
-				if "outliers" in type:
-					study_dict["Run"+str(i+1)+"MR"] = ("art_regression_outliers_and_movement_"+
-						study+str(i+1)+".mat")
-				else:
-					study_dict["Run"+str(i+1)+"MR"] = "rp_"+study+str(i+1)+".txt"
+				study_dict[mr_key] = "rp_{0}{1}.txt".format(study,run_num)
 	elif type == "preproc":
-		#find mprage xxx
-		mprage_runs = [x for x in cfg_list if x[1] == "MPRAGE"]
-		if len(mprage) == 0:
-			raise UserError("Error: cannot find any mprage scans for this subject. Fix immediately")
-		study_dict["MPRAGEXXX"] = conc(mprage_runs[0][0])
-		#find phase fieldmap xxx
-		fieldmap_phase = [x for x in cfg_list if study in x[3] and "Phase" in x[3]]
-# 		fieldmap_phase = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Phase.nii"))
-		if len(fieldmap_phase) == 0:
-			raise UserError("Error:cannot find fieldmap for "+study+" phase. Fix immediately") 
-		study_dict["FieldMapPhaseXXX"] = conc(fieldmap_phase[0][0])
-		fieldmap_mag = [x for x in cfg_list if study in x[3] and "Mag" in [3]]
-# 		fieldmap_mag = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Mag.nii"))
-		if len(fieldmap_phase) == 0:
-			raise UserError("Error: cannot find fieldmap for "+study+" mag. Fix immediately")
-		study_dict["FieldMapMagXXX"] = conc(fieldmap_mag[0][0])
+		#find mprage xxx (hardcoded to use the first)
+		study_dict["MPRAGEXXX"] = study_dict["MPRAGE_runs"][0]
 	return study_dict	
 
 
@@ -436,63 +423,6 @@ def touch_file_path(data,study,type,block,when):
 	else:
 		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 	return s
-
-
-def find_all_runs(data,study,fl="all"):
-	"""find_all_runs:
-	Searches data["mri_dir"]/study for desired runs. Normally, fl is "all", so all runs of a
-	study are returned.  fl can be a 2-item list in which the first item is the lower bound run # 
-	and the 2nd item is the upper bound item run number.  This is useful for BaleenMM, in which
-	sometimes we only want the first four or second four runs."""
-	if fl == "all":
-		number_str = "*"
-	else:
-		number_str = "["+str(fl[0])+"-"+str(fl[1])+"]"
-	return glob(os.path.join(data["mri_dir"],study,"*",study+number_str+".nii"))
-
-
-def find_studies_run(data):
-	studies_run = []
-	for study in possible_studies:
-		if os.path.exists(os.path.join(data["mri_dir"],study)):
-			studies_run.append(study)
-			all_runs = find_all_runs(data,study)
-			if (len(all_runs) == possible_studies[study]) or (
-			len(all_runs) == 3  and study == "AXCPT" and data["stype"] == "ac"):
-				touch_file = os.path.join(data["mri_dir"],study,"complete")
-			else:
-				touch_file = os.path.join(data["mri_dir"],study,"incomplete")
-			open(touch_file,"w").close();
-	return studies_run	
-
-
-def find_proc_studies(data):
-	"""find_proc_studies:
-	Searches for data["mri_dir"]/[study]/jobs/[study]_preproc_run.  This file is made after a 
-	preprocessing batch completes.  Since preprocessing takes the most time (and thus, want to skip 
-	if it"s already run), this doesn"t look for *_stats_run files (since stats jobs takes at most 5 
-	minutes)"""
-	run_studies = []
-	possible = possible_studies.keys()
-	for study in possible:
-		run_file = touch_file_path(data,study,"preproc","","run")
-		if os.path.exists(run_file):
-			run_studies.append(study)
-			if data["verbose"]:
-				print("Found a run file at {0}".format(run_file))
-
-	return run_studies
-
-
-def find_complete_studies(data):
-	complete_studies = []
-	data["studies_run"] = find_studies_run(data)
-	for study in data["studies_run"]:
-		complete_file = os.path.join(data["mri_dir"],study,"complete")
-		nosetup_file = os.path.join(data["mri_dir"],study,"NO_SETUP")
-		if os.path.exists(complete_file) and not os.path.exists(nosetup_file):
-			complete_studies.append(study)
-	return complete_studies
 
 
 def setup_recon(data):
