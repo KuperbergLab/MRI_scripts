@@ -5,6 +5,7 @@ import os
 import smtplib
 import time
 import string
+import pickle
 
 VERBOSE = False
 
@@ -120,18 +121,22 @@ def unpack(src,targ,cfg_path,output=None):
 	output = process.communicate()[0]
 
 	
-def load_data(path):
+def load_data(path,verbose=False):
 	try:
 		with open(path,"r") as f:
 			info = pickle.load(f)
+			if verbose:
+				print("Loaded data from {0}".format(path))
 	except:
 		raise
 	return info
 	
-def save_data(data,path):
+def save_data(data,path,verbose=False):
 	try:
 		with open(path,"w") as f:
-			pickle.dump(data,path)
+			pickle.dump(data,f)
+			if verbose:
+				print("Saved data to {0}".format(path))
 	except:
 		raise
 	
@@ -162,23 +167,24 @@ def f2f_replace(incoming,outgoing,replace,verbose=None):
 	except :
 		print("Error : {0}".format(incoming))
 		raise
+
 	
-def run_process(args,output=None,error=None):
+def run_process(my_args,output=None,error=None):
 	"""
-	args: list of string tokens that make up command to run
-	E.G. to run something like 'ls -l .' at the commandline, args should be ['ls','-l','.']
+	my_args: list of string tokens that make up command to run
+	E.G. to run something like 'ls -l .' at the commandline, my_args should be ['ls','-l','.']
 	Returns the process object so the caller can block if needed or extract output.
 	"""
-	if not args:
+	if not my_args:
 		raise ProgrammerError('pipeline:run_process - empty command')
 	if VERBOSE:
 		print('pipeline:run_process...')
-		print(' '.join(args))
+		print(' '.join(my_args))
 	if not output:
 		output=PIPE
 	if not output:
 		error=PIPE
-	return Popen(args,stdout=output,stderr=error,close_fds=True)
+	return Popen(my_args,stdout=output,stderr=error,close_fds=True)
 
 def wait_to_finish(running_jobs):
 	"""
