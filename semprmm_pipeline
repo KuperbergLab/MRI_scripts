@@ -105,11 +105,13 @@ def unpack_all(data):
 	Runs:
 		1) scan_only
 		2) scan2cfg
-		3) unpack
+		3) cfg2info
+		4) unpack
 	parallel subjects: NO
 	"""
 	scan_only(data)
 	scan2cfg(data)
+	cfg2info(data)
 	unpack(data)	
 
 
@@ -216,34 +218,14 @@ def cfg2info(data):
 		else:
 			study_dict["was_run"] = False
 	#write out info.txt as pickled dict
-	with open(info_path(data),"w") as f:
-		pickle.dump(info,f)
+	pipeline.save_data(info,info_path(data),data["verbose"])
 	if data["verbose"]:
 		pprint("Info:")
 		pprint(info)
-
-
-def load_info(data):
-	try:
-		with open(info_path(data),"r") as f:
-			info = pickle.load(f)
-	except:
-		print("ERROR: cannot load info.txt for {0}".format(data["subject"]))
-		raise
-	return info
-
-	
-def save_info(data,info):
-	try:
-		with open(info_path(data),"w") as f:
-			pickle.dump(info,f)
-	except:
-		print("ERROR: cannot save info.txt for {0}".format(data["subject"]))
-		raise
 		
 	
 def studies_to_setup(data,type):
-	info = load_info(data)
+	info = pipeline.load_data(info_path(data),data["verbose"])
 	if data["single_study"]:
 		studies = [data["single_study"]]
 	else:		
@@ -302,7 +284,7 @@ def write_shell_script(data,type):
 	if "recon" in type:
 		setup_recon = "recon-all -s " + data["subject"]
 		#find all mprages 
-		mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MRPAGE*.nii"))
+		mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
 		for mprage in mprages:
 			setup_recon = setup_recon + " -i " + mprage
 		commands.append(setup_recon + " > {0}".format(os.path.join(data["mri_dir"],"scripts","setup_recon.log")))
@@ -396,7 +378,7 @@ def build_funcdir_info(data,study,type,block):
 	"""build_funcdir_info:
 	looks for info.txt and uses the dictionary stored that for everything.
 	The MPRAGEXXX is filled out here"""
-	info = load_info(data)
+	info = pipeline.load_data(info_path(data),data["verbose"])
 	study_dict = info[study];
 	study_dict["subject"] = data["subject"]
 	study_dict["stat_folder"] = type+block
@@ -628,13 +610,6 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 			for jpg in jpgs:
 				shutil.copy(jpg,res_con_dir)
 			info_fname = os.path.join(con_dir,"info.txt")
-			if os.path.exists(info_fname):
-				with open(info_fname,"r") as f:
-					info = pickle.load(f)
-					print("Loaded pickle file")
-			else:
-				print("Cannot open pickle file at {0}".format(info_fname))
-				break
 			#now, make the <con>.html file
 			replace_dict = dict({"N":str(info["N"]),"pvalue":str(info["pvalue"]),
 				"contrast":info["contrast"],"study":study,"stype":info["stype"],
@@ -670,13 +645,7 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			#spmT_0001.img exists, let's proceed
 			#look for the pickled data
 			info_fname = os.path.join(con_dir,"info.txt")
-			if os.path.exists(info_fname):
-				with open(info_fname,"r") as f:
-					info = pickle.load(f)
-					print("Loaded pickle file")
-			else:
-				print("Uh oh, no info.txt in {0}, quitting".format(con_dir))
-				break
+			info = pipeline.load_data(info_fname,data["verbose"])
 			script_dict = dict({})
 			pvalue = data["pvalue"]
 			info["pvalue"] = pvalue
@@ -694,9 +663,7 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 				tiffs_path = os.path.join(mri_scripts,"surf_analysis",surf_script)
 				new_tiffs_path = os.path.join(con_dir,surf_script)
 				shutil.copyfile(tiffs_path,new_tiffs_path)
-			with open(info_fname,"w") as f:
-				pickle.dump(info,f)
-				print("Saved new pickle file")
+			pipeline.save_data(info,info_fname,data["verbose"])
 			if not data["dry"]:
 				# all ready to run make_images.sh
 				os.chdir(con_dir)
@@ -776,8 +743,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 				info["mask"] = mask
 			else:
 				info["mask"] = "No mask used"
-			with open(info_fname,"w") as f:
-				pickle.dump(info,f)
+			pipeline.save_data(info,info_fname,data["verbose"])
 			print("{0} -> {1} subjects".format(contrast,N))	
 	shell_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 	write_file_with_list(shell_path,"\n".join(shell_commands),data["verbose"])
@@ -974,6 +940,7 @@ def main():
 	#miscellaneous
 	if data["launchpad"]:
 		pipeline.wait_to_finish(running_jobs)
+
 
 if __name__ == "__main__":
 	main()

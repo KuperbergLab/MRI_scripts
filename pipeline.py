@@ -120,6 +120,22 @@ def unpack(src,targ,cfg_path,output=None):
 	output = process.communicate()[0]
 
 	
+def load_data(path):
+	try:
+		with open(path,"r") as f:
+			info = pickle.load(f)
+	except:
+		raise
+	return info
+	
+def save_data(data,path):
+	try:
+		with open(path,"w") as f:
+			pickle.dump(data,path)
+	except:
+		raise
+	
+	
 def f2f_replace(incoming,outgoing,replace,verbose=None):
 	try:
 		with open(incoming,"r") as f:
