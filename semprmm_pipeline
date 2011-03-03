@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
+from readInput import readTable
 import os
 from subprocess import Popen, PIPE
+from pprint import pprint
 from glob import glob
 import getpass
 import stat
@@ -167,8 +169,55 @@ def scan2cfg(data):
 	except:
 		print("Failure in scan2cfg")
 		raise
+	cfg2info(data)	
 
 
+def info_path(data):
+	return os.path.join(data["mri_dir"],"info.txt")
+
+
+def cfg2info(data):
+	cfg_fname = cfg_path(data)
+	if not os.path.exists(cfg_fname):
+		print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
+		raise UserError
+	cfg = readTable(cfg_fname)
+	info = dict({})
+	prepend_zero = lambda x: "00"+x if int(x)<10 else "0"+x
+	for study in possible_studies:
+		study_dict = dict({})
+		runs = [x for x in cfg if x[1] == study]
+		for run in runs:
+			run_num = run[3].split(".")[0].split(study)[1]
+			study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
+		if not (study == "AXCPT" and data["stype"] == "ac"):
+			if len(runs) == possible_studies[study]:
+				study_dict["complete"] = True
+			else:
+				study_dict["complete"] = False
+		else:
+			if len(runs) == 3:
+				study_dict["complete"] = True
+			else:
+				study_dict["complete"] = False
+		#find the MPRAGE
+		mprage_runs = [x for x in cfg if x[1] == "MPRAGE"]
+		study_dict["MPRAGE_runs"] = [prepend_zero(x[0]) for x in mprage_runs]
+		#find the Phase and Mag XXX
+		for type in ["Phase","Mag"]:
+			type_run = [x for x in cfg if study in x[3] and type in x[3]]
+			if not len(type_run) == 1:
+				print("ALERT: Could find the FieldMap_{0}_{1}.nii in cfg".format(study,type))
+				raise UserError("cfg2info")
+			study_dict["FieldMap"+type+"XXX"] = prepend_zero(type_run[0][0])
+		info[study] = study_dict
+	#write out info.txt as pickled dict
+	with open(info_path(data),"w") as f:
+		pickle.dump(info,f)
+	if data["verbose"]:
+		pprint(info)
+
+	
 def studies_to_setup(data,type):
 	studies = []
 	if "stats" in type:
@@ -289,10 +338,10 @@ def write_mlab_script(data,study,type,block):
 			raise ProgrammerError("write_batch_files: no block specified for baleenmm stats")
 		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
 			type+"_block"+block+".m")
-		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+type+"_block"+block+".m")
+		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_block"+block+".m")
 	else:
 		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+type+".m")
+		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
 	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
@@ -328,28 +377,25 @@ def build_funcdir_info(data,study,type,block):
 	study_dict = dict();
 	study_dict["subject"] = data["subject"]
 	study_dict["stat_folder"] = type
-	#find paths for all the runs in the study/block
-	all_runs = find_all_runs(data,study)
+	conc = lambda x: "0"+x if int(x) >= 10 else "00"+x
+	cfg_list = readTable(cfg_path(data))
+	all_runs = [x for x in cfg_list if x[1] == study]
 	for i,run in enumerate(all_runs):
-		study_dict["Run"+str(i+1)+"XXX"] = os.path.basename(os.path.dirname(run))
+		study_dict["Run"+str(i+1)+"XXX"] = conc(run[0])
 	if "stats" in type:
 		if study == "BaleenMM":
-			study_dict["email_message"] = " ".join([data["subject"],study,type,"block "+block,
-				"finished."])
 			study_dict["stat_folder"] = type+block
 			if block == "1":
-				all_runs = find_all_runs(data,study,[1, 4])
+				all_runs = [x for x in cfg_list if x[1] == study and int(x[3].split(".")[0].split(study)[1]) < 5]
 				for i,run in enumerate(all_runs):
-					study_dict["Run"+str(i+1)+"XXX"] = os.path.basename(os.path.dirname(run))				
 					if "outliers" in type:
 						study_dict["Run"+str(i+1)+"MR"] = ("art_regression_outliers_and_movement_"
 							+study+str(i+1)+".mat")
 					else:
 						study_dict["Run"+str(i+1)+"MR"] = "rp_"+study+str(i+1)+".txt"
 			elif block == "2":
-				all_runs = find_all_runs(data,study,[5, 8])
+				all_runs = [x for x in cfg_list if x[1] == study and int(x[3].split(".")[0].split(study)[1]) > 4]
 				for i,run in enumerate(all_runs):
-					study_dict["Run"+str(i+5)+"XXX"] = os.path.basename(os.path.dirname(run))
 					if "outliers" in type:
 						study_dict["Run"+str(i+5)+"MR"] = ("art_regression_outliers_and_movement_"
 							+study+str(i+5)+".mat")
@@ -358,9 +404,7 @@ def build_funcdir_info(data,study,type,block):
 			else:
 				raise ProgrammerError("Build_func_dir: baleen stats not specificied with block")
 		else: #not baleen
-			all_runs = find_all_runs(data,study)
 			for i,run in enumerate(all_runs):
-				study_dict["Run"+str(i+1)+"XXX"] = os.path.basename(os.path.dirname(run))
 				if "outliers" in type:
 					study_dict["Run"+str(i+1)+"MR"] = ("art_regression_outliers_and_movement_"+
 						study+str(i+1)+".mat")
@@ -368,25 +412,27 @@ def build_funcdir_info(data,study,type,block):
 					study_dict["Run"+str(i+1)+"MR"] = "rp_"+study+str(i+1)+".txt"
 	elif type == "preproc":
 		#find mprage xxx
-		mprage = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
+		mprage_runs = [x for x in cfg_list if x[1] == "MPRAGE"]
 		if len(mprage) == 0:
 			raise UserError("Error: cannot find any mprage scans for this subject. Fix immediately")
-		study_dict["MPRAGEXXX"] = os.path.basename(os.path.dirname(mprage[0]))
+		study_dict["MPRAGEXXX"] = conc(mprage_runs[0][0])
 		#find phase fieldmap xxx
-		fieldmap_phase = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Phase.nii"))
+		fieldmap_phase = [x for x in cfg_list if study in x[3] and "Phase" in x[3]]
+# 		fieldmap_phase = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Phase.nii"))
 		if len(fieldmap_phase) == 0:
 			raise UserError("Error:cannot find fieldmap for "+study+" phase. Fix immediately") 
-		study_dict["FieldMapPhaseXXX"] = os.path.basename(os.path.dirname(fieldmap_phase[0]))
-		fieldmap_mag = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Mag.nii"))
+		study_dict["FieldMapPhaseXXX"] = conc(fieldmap_phase[0][0])
+		fieldmap_mag = [x for x in cfg_list if study in x[3] and "Mag" in [3]]
+# 		fieldmap_mag = glob(os.path.join(data["mri_dir"],"FieldMap","*","*"+study+"_Mag.nii"))
 		if len(fieldmap_phase) == 0:
 			raise UserError("Error: cannot find fieldmap for "+study+" mag. Fix immediately")
-		study_dict["FieldMapMagXXX"] = os.path.basename(os.path.dirname(fieldmap_mag[0]))
+		study_dict["FieldMapMagXXX"] = conc(fieldmap_mag[0][0])
 	return study_dict	
 
 
 def touch_file_path(data,study,type,block,when):
 	if block:
-		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"block"+block+"_"+when)
+		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_block"+block+"_"+when)
 	else:
 		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 	return s
@@ -915,7 +961,9 @@ def main():
 		help="At the second level, include subjects, use with --setup_second")
 	parser.add_option("--run_ica",dest="run_ica",action="store_true",default=False,
 		help="Run ICA processing (takes 90-120 minutes).")
-		
+	parser.add_option("--cfg2info",dest="cfg2info",action="store_true",default=False,
+		help="Convert cfg to info dictionary")
+	
 	(options,args) = parser.parse_args()
 	data = dict({})
 	#add options to data
@@ -951,6 +999,8 @@ def main():
 				scan_only(data)
 			if data["scan2cfg"]:
 				scan2cfg(data)
+			if data["cfg2info"]:
+				cfg2info(data)
 			if data["unpack"]:
 				unpack(data)
 			if data["unpack_all"]:
