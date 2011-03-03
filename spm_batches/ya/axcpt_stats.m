@@ -1,4 +1,4 @@
-matlabbatch{1}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/AXCPT/$stat_folder]/6mm/'};
+matlabbatch{1}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/AXCPT/$stat_folder/6mm/'};
 matlabbatch{1}.spm.stats.fmri_spec.timing.units = 'secs';
 matlabbatch{1}.spm.stats.fmri_spec.timing.RT = 2;
 matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t = 16;
@@ -557,7 +557,7 @@ matlabbatch{3}.spm.stats.con.consess{12}.tcon.name = 'BYvsBX';
 matlabbatch{3}.spm.stats.con.consess{12}.tcon.convec = [0 -1 1 0];
 matlabbatch{3}.spm.stats.con.consess{12}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.delete = 1;
-matlabbatch{4}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/AXCPT/$stat_folder]/8mm/'};
+matlabbatch{4}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/AXCPT/$stat_folder/8mm/'};
 matlabbatch{4}.spm.stats.fmri_spec.timing.units = 'secs';
 matlabbatch{4}.spm.stats.fmri_spec.timing.RT = 2;
 matlabbatch{4}.spm.stats.fmri_spec.timing.fmri_t = 16;
