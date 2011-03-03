@@ -230,7 +230,7 @@ def studies_to_setup(data,type):
 		studies = [data["single_study"]]
 	else:		
 		if "stats" in type:
-			studies = [k for k,v in info.iteritems if os.path.exists(
+			studies = [k for k,v in info.iteritems() if os.path.exists(
 				touch_file_path(data,k,"preproc","","run"))]
 		elif "preproc" in type:
 			studies = [k for k,v in info.iteritems() if v["was_run"]]
@@ -386,8 +386,9 @@ def build_funcdir_info(data,study,type,block):
 		# we need to insert MRs into study_dict
 		run_keys = [k for k,v in study_dict.iteritems() if "Run" in k]
 		for run_key in run_keys:
-			mr_key = run_key.split("XXX")[0] + "MR"
+			mr_key = run_key.split("XXX")[0]
 			run_num = mr_key.split("Run")[1]
+			mr_key += "MR"
 			if "outliers" in type:
 				study_dict[mr_key] = "art_regression_outliers_and_movement_{0}{1}.mat".format(
 					study,run_num)
