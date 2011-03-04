@@ -7,8 +7,6 @@ import time
 import string
 import pickle
 
-VERBOSE = False
-
 class ProgrammerError(Exception):
 	pass
 
@@ -122,6 +120,9 @@ def unpack(src,targ,cfg_path,output=None):
 
 	
 def load_data(path,verbose=False):
+	"""
+	Read the file at path as pickled object and return the object.
+	"""
 	try:
 		with open(path,"r") as f:
 			info = pickle.load(f)
@@ -132,40 +133,46 @@ def load_data(path,verbose=False):
 	return info
 	
 def save_data(data,path,verbose=False):
+	"""
+	Save the object given by data to a file at path.
+	"""
 	try:
 		with open(path,"w") as f:
 			pickle.dump(data,f)
 			if verbose:
 				print("Saved data to {0}".format(path))
 	except:
+		print("Couldn't save data to {0}".format(path))
 		raise
 	
 	
-def f2f_replace(incoming,outgoing,replace,verbose=None):
+def f2f_replace(incoming,outgoing,replace,verbose=False):
+	"""
+	incoming: path to the "template" file that contains keywords
+	outgoing: path to write new file
+	replace: dictionary that contains keywords and their replacements
+		Note: replacements should be strings (but not positive about that)
+	Ex:
+	incoming contains "My name is $name."
+	replace is ({"name":"Scott"})
+	outgoing contains "My name is Scott."
+	"""
 	try:
 		with open(incoming,"r") as f:
-			old_string = f.read()
+			new_string = string.Template(f.read()).safe_substitute(replace)
 			if verbose:
-				print("Reading {0}".format(incoming))
+				print("Read and replaced {0}".format(incoming))
+			#check if there were $keywords that weren't replaced
+			if new_string.count("$") > 0:
+				print("WARNING: keyword missed in {0} -> {1}".format(incoming,outgoing))
+		with open(outgoing,"w") as f:
+			f.write(new_string)
+			if verbose:
+				print("Wrote {0}".format(outgoing))
 	except IOError:
-		print("Cannot open {0}".format(incoming))
-		raise
-	t = string.Template(old_string)
-	try:
-		new_string = t.safe_substitute(replace)
-		try:
-			with open(outgoing,"w") as f:
-				f.write(new_string)
-				if verbose:
-					print("Writing {0}".format(outgoing))
-		except IOError:
-			print("Cannot write {0}".format(outgoing))
-			raise
-	except KeyError:
-		print("KeyError with {0}".format(incoming))
-		raise
-	except :
-		print("Error : {0}".format(incoming))
+		print("IOError with {0} or {1}".format(incoming,outgoing))
+		raise		
+	except:
 		raise
 
 	
@@ -186,12 +193,13 @@ def run_process(my_args,output=None,error=None):
 		error=PIPE
 	return Popen(my_args,stdout=output,stderr=error,close_fds=True)
 
-def wait_to_finish(running_jobs):
+def wait_to_finish(running_jobs,loop_time=30):
 	"""
 	running_jobs: a list of currently running processes
-	This waits for all processes to quit by looping
+	loop_time: number that controls the interval of when processes are checked for completion (sec.)
+	This waits for all processes to quit.
 	"""
 	while len(running_jobs) > 0:
 		running_jobs[:] = [process for process in running_jobs if process.poll() is None]
-		time.sleep(30)
+		time.sleep(loop_time)
 	
