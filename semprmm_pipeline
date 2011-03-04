@@ -725,19 +725,14 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			else:
 				mask = ""
 			replace_dict["mask"] = mask
+			replace_dict["email_fail"] = "{0} {1} 2nd Level failed".format(study,contrast)
+			replace_dict["SPM"] = "{0}/SPM.mat".format(con_dir)
 			ibatch = os.path.join(batch_dir,data["stype"],"generic_2nd_batch.m")
-			obatch = os.path.join(job_dir,contrast+"_job.m")
-			iscript = os.path.join(batch_dir,data["stype"],"spm_2nd_mfile.m")
-			oscript = os.path.join(job_dir,contrast+".m")
+			obatch = os.path.join(job_dir,contrast+".m")
 			#make batch
-			pipeline.f2f_replace(ibatch,obatch,replace_dict)
-			replace_dict["study"] = study
-			replace_dict["batch"] = obatch
-			#make script
-			pipeline.f2f_replace(iscript,oscript,replace_dict)
-			shell_commands.append("rm {0}/SPM.mat".format(con_dir))
+			pipeline.f2f_replace(ibatch,obatch,replace_dict,data["verbose"])
 			log = os.path.join(job_dir,contrast+".log")
-			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,oscript,log,data["parallel"]))
+			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log,data["parallel"]))
 			info_fname = os.path.join(con_dir,"info.txt")
 			info = dict({"N":N,"images":good_img,"stype":data["stype"],"contrast":contrast})
 			if mask:

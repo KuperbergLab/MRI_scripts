@@ -6,6 +6,7 @@
 %'con_dir'
 %'mask'
 %'contrast_images'
+%'SPM'
 matlabbatch{1}.spm.stats.factorial_design.dir = {'$con_dir'};
 matlabbatch{1}.spm.stats.factorial_design.des.t1.scans = {$contrast_images};
 matlabbatch{1}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
@@ -38,3 +39,15 @@ matlabbatch{3}.spm.stats.con.consess{1}.tcon.name = '$contrast';
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.convec = 1;
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{3}.spm.stats.con.delete = 1;
+
+warning off all;
+try
+	spm('defaults','fmri');
+	spm_jobman('initcfg');
+	delete('$SPM');
+	output = spm_jobman('run_nogui',matlabbatch);
+catch ME
+	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+end
+exit;
+
