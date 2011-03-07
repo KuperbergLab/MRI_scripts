@@ -459,7 +459,7 @@ def meg_script(data,type,extra=None):
 		if not (N_fif == N_icamat == N_blinks):
 			raise UserError("Unequal amount of fif,ica.mat,and blink files.\nTry Again")
 		# DEFAULT EYE BLINK ARGUMENTS FOR PREPROC1
-		extra = ["0.1","0.3"]
+		extra = ["-0.1","0.3"]
 	if type == "preAnat":
 		setup_bem(data)
 		#check that flash was unpacked
@@ -485,13 +485,14 @@ def run_ica(data):
 	oscript = os.path.join(data["meg_dir"],data["subject"]+"_ica.m")
 	pipeline.f2f_replace(iscript,oscript,dict({"subject":data["subject"]}),data["verbose"])
 	log = os.path.join(data["meg_dir"],data["subject"]+"_ica.log")
-	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop","-nojvm", "<", oscript,
+	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", oscript,
 		">", log]
 	try:
 		process = pipeline.run_process(my_args,output=None)
 		process.communicate()
 	except:
 		print("Unexpected error when running ICA")
+		raise
 
 
 def setup_bem(data):
