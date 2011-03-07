@@ -10,7 +10,7 @@ import pickle
 class ProgrammerError(Exception):
 	pass
 
-def find_session(subject):
+def find_session(subject,verbose=False):
 	"""
 	subject: list of arguments to findsession, typically [<subjectname>, "-x",<experimenter>] 
 	or something along those lines
@@ -21,7 +21,7 @@ def find_session(subject):
 		raise ProgrammerError('pipeline:find_session - did not specify subject.')
 	args = ['findsession']
 	args.extend(subject)
-	if VERBOSE:
+	if verbose:
 		print('pipeline:find_session')
 		print(' '.join(args))		
 	process = run_process(args)
@@ -100,7 +100,7 @@ def scan_to_cfg(dir_map,file_map,scan_list,scan_path,filetype='nii'):
 				'{0}{1}.nii'.format(file_map[v[1]],i+1)]))
 	return good_lines
 	
-def unpack(src,targ,cfg_path,output=None):
+def unpack(src,targ,cfg_path,output=None,verbose=False):
 	"""
 	src: dicom directory
 	targ: unpacking directory
@@ -112,7 +112,7 @@ def unpack(src,targ,cfg_path,output=None):
 	if not (src and targ and cfg_path):
 		raise ProgrammerError('pipeline:unpack - empty arg(s)')
 	args = ['unpacksdcmdir','-src',src,'-targ',targ,'-cfg',cfg_path,'-fsfast']
-	if VERBOSE:
+	if verbose:
 		print('pipeline:unpack')
 		print(' '.join(args))
 	process = run_process(args,output)
@@ -176,7 +176,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
 		raise
 
 	
-def run_process(my_args,output=None,error=None):
+def run_process(my_args,output=None,error=None,verbose=False):
 	"""
 	my_args: list of string tokens that make up command to run
 	E.G. to run something like 'ls -l .' at the commandline, my_args should be ['ls','-l','.']
@@ -184,7 +184,7 @@ def run_process(my_args,output=None,error=None):
 	"""
 	if not my_args:
 		raise ProgrammerError('pipeline:run_process - empty command')
-	if VERBOSE:
+	if verbose:
 		print('pipeline:run_process...')
 		print(' '.join(my_args))
 	if not output:
