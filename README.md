@@ -181,9 +181,13 @@ A script to process all these contrasts is written to functionals/SecondLevelSta
 
 _You must pass into a subject type (ya,ac,sc) with this option_
 
+####--run_second
+
+This just calls the script that was made by --setup_second.
+
 ####--surf_second
 
-With the second level statistics processed (after executing all\_studies.sh), it's time to display the results nicely.
+With the second level statistics processed (after using --run_second), it's time to display the results nicely.
 
 Using FreeSurfer, the functional data is painted on fsaverage, thresholded at an appropriate value corresponding to N and the p-value.
 

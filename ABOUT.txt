@@ -25,7 +25,7 @@ semprmm_pipeline:
 		7.	Setting up and running the cortical reconstruction using FreeSurfer
 			--setup_recon,--run_recon
 		8.	Setting up and running 2nd-level (group) analyses
-			--setup_second,--inc,--exc,--mask
+			--setup_second,--inc,--exc,--mask,--run_second
 		9.	Running FreeSurfer in "batch mode" to output jpegs of the 2nd-level results overlayed onto fsaverage.
 			--surf_second, --dry, --aparc,--pvalue,--date
 		10.	Combine these jpegs and template HTML files into a small "website" of results which can be readily packaged up and shared with colloborators.

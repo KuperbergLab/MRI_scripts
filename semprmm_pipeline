@@ -564,9 +564,10 @@ def second_level(data,type):
 		date_dir = data["date"]
 	else:
 		date_dir = time.strftime("%Y%m%d")
-	
 	if type == "setup":
 		second_setup(data,prefix,date_dir,study_contrasts,study_stats)
+	if type == "run":
+		second_run(data,prefix,date_dir,study_contrasts,study_stats)
 	if type == "surf":
 		second_surf(data,prefix,date_dir,study_contrasts,study_stats)
 	if type == "package":
@@ -612,6 +613,7 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 			for jpg in jpgs:
 				shutil.copy(jpg,res_con_dir)
 			info_fname = os.path.join(con_dir,"info.txt")
+			info = pipeline.load_data(info_fname,data["verbose"])
 			#now, make the <con>.html file
 			replace_dict = dict({"N":str(info["N"]),"pvalue":str(info["pvalue"]),
 				"contrast":info["contrast"],"study":study,"stype":info["stype"],
@@ -742,9 +744,19 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 				info["mask"] = "No mask used"
 			pipeline.save_data(info,info_fname,data["verbose"])
 			print("{0} -> {1} subjects".format(contrast,N))	
-	shell_path = os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
+	shell_path = second_script(data)
 	write_file_with_list(shell_path,"\n".join(shell_commands),data["verbose"])
 	make_file_exec(shell_path)
+
+
+def second_run(data,prefix,date_dir,study_contrasts,study_stats):
+	script_path = second_script(data)
+	print("\nStarting {0}".format(script_path))
+	process = pipeline.run_process(script_path)
+	process.communicate()
+
+def second_script(data):
+	return os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 
 		
 def subject_type(subjects):
@@ -856,7 +868,9 @@ def main():
 		help="Run ICA processing (takes 90-120 minutes).")
 	parser.add_option("--cfg2info",dest="cfg2info",action="store_true",default=False,
 		help="Convert cfg to info dictionary")
-	
+	parser.add_option("--run_second",dest="run_second",action="store_true",default=False,
+		help="Run the script made my --setup_second")
+		
 	(options,args) = parser.parse_args()
 	data = dict({})
 	#add options to data
@@ -930,6 +944,8 @@ def main():
 	#group level options
 	if data["setup_second"]:
 		second_level(data,"setup")
+	if data["run_second"]:
+		second_level(data,"run")
 	if data["surf_second"]:
 		second_level(data,"surf")
 	if data["package_second"]:
