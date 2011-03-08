@@ -1,7 +1,8 @@
 #!/bin/sh
+cd $con_dir
 mkdir img
 tksurfer fsaverage rh inflated -overlay spmT_0001.img -mni152reg -fthresh $tvalue -tcl rh_tiff	$aparc
-tksurfer fsaverage lh inflated -overlay spmT_0001.img -mni152reg -fthresh $tvalue -tcl lh_tiff $aparc
+tksurfer fsaverage lh inflated -overlay spmT_0001.img -mni152reg -fthresh $tvalue -tcl lh_tiff $aparc 
 
 convert img/RH_Anterior.tiff img/RH_Anterior.jpg
 rm img/RH_Anterior.tiff
