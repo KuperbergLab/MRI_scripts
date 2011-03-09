@@ -739,6 +739,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			pipeline.f2f_replace(ibatch,obatch,replace_dict,data["verbose"])
 			log = os.path.join(job_dir,contrast+".log")
 			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log,data["parallel"]))
+			shell_commands.append("echo {0}:{1} has finished.".format(study,contrast))
 			info_fname = os.path.join(con_dir,"info.txt")
 			info = dict({"N":N,"images":good_img,"stype":data["stype"],"contrast":contrast})
 			if mask:
@@ -755,8 +756,9 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 def second_run(data,prefix,date_dir,study_contrasts,study_stats):
 	script_path = second_script(data)
 	print("\nStarting {0}".format(script_path))
-	process = pipeline.run_process(script_path)
+	process = pipeline.run_process(script_path,output=sys.stdout)
 	process.communicate()
+
 
 def second_script(data):
 	return os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
@@ -875,8 +877,8 @@ def main():
 		help="Run the script made my --setup_second")
 	parser.add_option("--override_p",dest="override_p",action="store_true",default=False,
 		help="Overwrite p-value with new --pvalue")
-	parser.add_option("all_second",dest="all_second",action="store_true",default=False,
-		help("Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
+	parser.add_option("--all_second",dest="all_second",action="store_true",default=False,
+		help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
 		
 	(options,args) = parser.parse_args()
 	data = dict({})
