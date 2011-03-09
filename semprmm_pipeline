@@ -651,12 +651,15 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			info_fname = os.path.join(con_dir,"info.txt")
 			info = pipeline.load_data(info_fname,data["verbose"])
 			script_dict = dict({})
-			pvalue = data["pvalue"]
-			info["pvalue"] = pvalue
-			tvalue = stats.t.isf(pvalue,info["N"])
-			info["tvalue"] = tvalue
-			print("T-threshold at N={0} and p<{1} is {2}".format(info["N"],pvalue,tvalue))
-			script_dict["tvalue"] = str(tvalue)
+			if not "pvalue" in info:
+				info["pvalue"] = data["pvalue"]
+			if data["override_p"]:
+				info["pvalue"] = data["pvalue"]
+			#else, assume pvalue is already in info
+			info["tvalue"] = stats.t.isf(info["pvalue"],info["N"])
+			print("T-threshold at N={0} and p<{1} is {2}".format(info["N"],info["pvalue"],
+				info["tvalue"]))
+			script_dict["tvalue"] = str(info["tvalue"])
 			script_dict["aparc"] = data["aparc"]
 			script_dict["con_dir"] = con_dir
 			new_script_path = os.path.join(con_dir,"make_images.sh")
@@ -870,6 +873,8 @@ def main():
 		help="Convert cfg to info dictionary")
 	parser.add_option("--run_second",dest="run_second",action="store_true",default=False,
 		help="Run the script made my --setup_second")
+	parser.add_option("--override_p",dest="override_p",action="store_true",default=False,
+		help="Overwrite p-value with new --pvalue")
 		
 	(options,args) = parser.parse_args()
 	data = dict({})
