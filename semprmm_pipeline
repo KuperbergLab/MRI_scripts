@@ -875,6 +875,8 @@ def main():
 		help="Run the script made my --setup_second")
 	parser.add_option("--override_p",dest="override_p",action="store_true",default=False,
 		help="Overwrite p-value with new --pvalue")
+	parser.add_option("all_second",dest="all_second",action="store_true",default=False,
+		help("Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
 		
 	(options,args) = parser.parse_args()
 	data = dict({})
@@ -947,6 +949,11 @@ def main():
 			print(strerr)
 			print("Something happened for {0}".format(data["subject"]))
 	#group level options
+	if data["all_second"]:
+		second_level(data,"setup")
+		second_level(data,"run")	
+		second_level(data,"surf")
+		second_level(data,"package")
 	if data["setup_second"]:
 		second_level(data,"setup")
 	if data["run_second"]:
