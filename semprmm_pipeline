@@ -675,7 +675,8 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 			if not data["dry"]:
 				# all ready to run make_images.sh
 				try:
-					process = pipeline.run_process([new_script_path],sys.stdout)
+					process = pipeline.run_process([new_script_path],output=sys.stdout,
+						error=sys.stderr)
 					output = process.communicate()[0]
 				except KeyboardInterrupt:
 					sys.exit("Surf canceled by user...Goodbye")
