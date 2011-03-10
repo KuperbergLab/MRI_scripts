@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+Semantic Priming (MultiModa) Pipeline
+Author: Scott Burns <sburns AT nmr DOT mgh DOT harvard DOT edu>
+Copyright 2011 Kuperberg Lab
+License: BSD,3 clause
+"""
+
 from optparse import OptionParser
 import os
 from subprocess import Popen, PIPE

@@ -1,5 +1,13 @@
 ﻿# -*- coding: utf-8 -*-
 
+"""
+Study-agnostic Pipeline functions
+Author: Scott Burns <sburns AT nmr DOT mgh DOT harvard DOT edu>
+Copyright 2011 Kuperberg Lab
+License: BSD,3 clause
+"""
+
+
 from subprocess import Popen,PIPE
 import os
 import smtplib

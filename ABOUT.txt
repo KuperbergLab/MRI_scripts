@@ -74,4 +74,5 @@ surf_analysis/make_images.sh
 surf_analysis/rh_tiff or lh_tiff
 	These are TCL scripts that command TkSurfer to make six images (Anterior,Posterior,Superior,Inferior,Medial, and Lateral views) for each hemisphere. There's a coupling here with the images this script makes and the images make_images.sh expects to convert, FYI.
 	
+Any other files depend on our stimulus presentation program and are probably not applicable to you, but you can take a look if you'd like.	
 	
