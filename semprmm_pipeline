@@ -46,6 +46,7 @@ class SystemError(Exception):
 def archive_to_cluster(data):
 	"""
 	data: dict with keys:"subject","subject_dicom"
+	
 	Copies dicom images from archive dir to dicom dir.
 	parallel subjects : YES
 	"""
@@ -72,8 +73,7 @@ def scan_only(data):
 	try:
 		pipeline.scan_only(data["dicom_dir"],data["mri_dir"],data["scan_path"])
 	except OSError:
-		print("\nScan_only: Failed\n\nYou need to setup NMRENV before proceeding.\n\n")
-
+		raise UserError("scan_only: start nmrenv and try again.")
 
 def unpack(data):
 	"""
@@ -181,10 +181,20 @@ def scan2cfg(data):
 
 
 def info_path(data):
+	"""
+	just a little method to encapsulate this path
+	"""
 	return os.path.join(data["mri_dir"],"info.txt")
 
 
 def cfg2info(data):
+	"""
+	converts the cfg.txt to a pickled data file. This data file is used in the rest of the stream 
+	and as such, is very important.
+	The pickled data is a dictionary with keys of the studies that were run and values that are 
+	dictionaries themselves.  These dictionaries hold keys like "MPRAGEXXX","FieldMapPhaseXXX",etc. 
+	and are used as the keyword mapping when templating SPM batches.
+	"""
 	cfg_fname = cfg_path(data)
 	if not os.path.exists(cfg_fname):
 		print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
@@ -232,6 +242,9 @@ def cfg2info(data):
 		
 	
 def studies_to_setup(data,type):
+	"""
+	returns what studies should be set up. This list depends on the type of processing to be setup.
+	"""
 	if not os.path.exists(info_path(data)):
 		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
 		raise UserError("Broke in studies_to_setup")
@@ -248,6 +261,9 @@ def studies_to_setup(data,type):
 
 
 def setup_spm(data,type):
+	"""
+	Any 1st-level mri processing goes through this function.
+	"""
 	#does this subject exist?
 	if not os.path.exists(data["mri_dir"]):
 		print("Hey dummy, no MRI dir for {0}".format(data["subject"]))
@@ -280,6 +296,9 @@ def setup_spm(data,type):
 
 
 def shell_script_path(data,type):
+	"""
+	This function just encapsulates the little bit of logic needed to name a shell script.
+	"""
 	script_dir = os.path.join(data["mri_dir"],"scripts")
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
@@ -292,6 +311,12 @@ def shell_script_path(data,type):
 
 
 def write_shell_script(data,type):
+	"""
+	Writes out the shell script with matlab calls if we're preprocessing or stats processing or with
+	recon-all functions if we're reconstructing.
+	If --parallel was used, then & will be appended to the matlab lines. With the new parallelization
+	scheme I've got with joblib, this could be dangerous, use at your own risk.
+	"""
 	shell_script = shell_script_path(data,type)
 	commands = []
 	commands.append("#!/bin/sh")
@@ -339,10 +364,16 @@ def write_shell_script(data,type):
 
 
 def make_file_exec(path):
+	"""
+	just makes the file given by path executable by the system
+	"""
 	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
 	
 	
 def specific_batch_path(data,study,type,block):
+	"""
+	another little encapsulating method
+	"""
 	if study == "BaleenMM" and "stats" in type:
 		return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
 			type+"_block"+block+"_job.m")
@@ -351,6 +382,9 @@ def specific_batch_path(data,study,type,block):
 		
 
 def write_mlab_script(data,study,type,block):
+	"""
+	This basically just wraps f2f_replace and uses the dictionary from matlab_batch_dict.
+	"""
 	if "stats_outliers" in type:
 		good_type = "stats"
 	else:
@@ -369,6 +403,10 @@ def write_mlab_script(data,study,type,block):
 
 
 def matlab_batch_dict(data,study,type,block):
+	"""
+	Adds to the dictionary returned by build_funcdir_info.  Any keywords you insert to the SPM batches
+	should be added here.
+	"""
 	replace_dict = build_funcdir_info(data,study,type,block)
 	replace_dict["study"] = study.lower()
 	replace_dict["type"] = type
@@ -415,6 +453,9 @@ def build_funcdir_info(data,study,type,block):
 
 
 def touch_file_path(data,study,type,block,when):
+	"""
+	yet another little method to capture this logic in one place
+	"""
 	if block:
 		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_block"+block+"_"+when)
 	else:
@@ -423,10 +464,19 @@ def touch_file_path(data,study,type,block,when):
 
 
 def setup_recon(data):
+	"""
+	Nothing else to do but write this file.
+	"""
 	write_shell_script(data,"recon")
 
 
 def run_mri_script(data,type):
+	"""
+	Looks for the write script to run based on type and executes it. This method blocks which is ok
+	because this method is starting in parallel automatically for many subjects. However, if you used
+	--parallel for the --setup_*, then this method will return almost immediately because the opened
+	shell will start the jobs (in the background) and then return.
+	"""
 	#find all the scripts of this type
 	if type == "recon":
 		scripts = [shell_script_path(data,type)]
@@ -443,6 +493,7 @@ def run_mri_script(data,type):
 #		running_jobs.append(process)
 		#block
 		process.communicate()
+
 
 def meg_script(data,type,extra=None):
 	"""
@@ -496,6 +547,9 @@ def meg_script(data,type,extra=None):
 
 
 def run_ica(data):
+	"""
+	just writes out the run_ica script for a subject and runs it.
+	"""
 	iscript = os.path.join(meg_scripts,"generic_runica.m")
 	oscript = os.path.join(data["meg_dir"],data["subject"]+"_ica.m")
 	pipeline.f2f_replace(iscript,oscript,dict({"subject":data["subject"]}),data["verbose"])
@@ -511,6 +565,9 @@ def run_ica(data):
 
 
 def setup_bem(data):
+	"""
+	This makes symbolic links to the MEFLASH_8e_1mm_iso_5deg dicom images. This is called for --preProc.
+	"""
 	print("Setup_BEM:{0}".format(data["subject"]))
 	#must have env var set
 	if os.getenv("SUBJECTS_DIR") is None:
@@ -566,6 +623,9 @@ def set_paths(data):
 
 
 def second_level(data,type):
+	"""
+	All second level functions pass through here.
+	"""
 	prefix = os.path.join(func_dir,"SecondLevelStats")
 	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
 		["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
@@ -590,6 +650,9 @@ def second_level(data,type):
 
 		
 def second_package(data,prefix,date,study_contrasts,study_stats):
+	"""
+	This copies images and copy/replaces the HTML files to the date directory.
+	"""
 	import shutil
 	print("Packaging second level surf analysis....\n")
 	package_dir = os.path.join(prefix,"surf_analysis_"+date)
@@ -639,6 +702,9 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 
 			
 def second_surf(data,prefix,date,study_contrasts,study_stats):
+	"""
+	This copy/replaces the make_images.sh script and runs each one for each paradigm/contrast.
+	"""
 	from scipy import stats
 	import shutil
 	print("We're going surfing....\n")
@@ -698,6 +764,10 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 
 			
 def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
+	"""
+	This copy/replaces the generic_2nd_level.m script for each paradigm/contrast and writes out a 
+	script to run each in matlab. This is the 2nd-level cousin to --setup_spm.
+	"""
 	mlab_cmd = "matlab7.11 -nodisplay -nosplash -nodesktop "
 	shell_commands = []
 	shell_commands.append("#!/bin/sh")
@@ -770,6 +840,10 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 
 
 def second_run(data,prefix,date_dir,study_contrasts,study_stats):
+	"""
+	Runs the script made by --setup_second.  That script's output is hooked into sys.stdout (which 
+	probably the terminal)
+	"""
 	script_path = second_script(data)
 	print("\nStarting {0}".format(script_path))
 	process = pipeline.run_process(script_path,output=sys.stdout)
@@ -777,10 +851,16 @@ def second_run(data,prefix,date_dir,study_contrasts,study_stats):
 
 
 def second_script(data):
+	"""
+	returns the path to the second-level script.
+	"""
 	return os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 
 		
 def subject_type(subjects):
+	"""
+	This code is shakey but works.
+	"""
 	# assume first is good
 	if len(subjects) == 1:
 		stype = subjects[0][:2]
@@ -797,6 +877,9 @@ def subject_type(subjects):
 
 
 def write_file_with_list(path,lines,verbose=None):
+	"""
+	Any file writing should go through here.
+	"""
 	try:
 		with open(path,'w') as f:
 			f.writelines(lines)
@@ -807,6 +890,9 @@ def write_file_with_list(path,lines,verbose=None):
 
 
 def list_from_file(path,verbose=None):
+	"""
+	Any file reading should go through here. Returns a list from the file split at newlines.
+	"""
 	try: 
 		with open(path,'r') as f:
 			all_lines = f.read()
@@ -868,7 +954,7 @@ def process_subject(subject,data):
 		print(strerr)
 
 
-def main():
+if __name__ == "__main__":
 	parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
 	parser.add_option("-d","--copy_dicom",dest="copy_dicom", 
 		help="Copy from archive to $DICOM_DIR/[subject]",action="store_true",default=False)
@@ -969,15 +1055,11 @@ def main():
 			masks.append(parts)
 		data["mask"] = masks
 	data['stype'] = subject_type(subjects)
-	
-	
 	#subject-level options
 	if use_joblib:
 		Parallel(n_jobs=-1,verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
 	else:
 		[process_subject(subject,data) for subject in subjects]
-	
-	
 	#group level options
 	if data["all_second"]:
 		second_level(data,"setup")
@@ -995,7 +1077,3 @@ def main():
 	#miscellaneous
 	if data["launchpad"]:
 		pipeline.wait_to_finish(running_jobs)
-
-
-if __name__ == "__main__":
-	main()

@@ -65,13 +65,13 @@ spm_batches/(ya or ac)/*_preproc.m
 spm_batches/(ya or ac)/*_stats.m
 	These scripts define 1st-level statistical processing for our different paradigms.  Nothing too fancy.
 	
-spm_batch/(ya or ac)/generic_2nd_batch.m
-	These script defines a 2nd-level group analysis. Again, nothing too fancy.
+spm_batches/(ya or ac)/generic_2nd_batch.m
+	These script defines a one-sample T test for 2nd-level group analysis. Again, nothing too fancy.
 	
 surf_analysis/make_images.sh
 	This shell script wraps two calls to TkSurfer (for lh and rh) and the code to convert tiffs (which TkSurfer outputs) to more readily usable jpegs.
 	
 surf_analysis/rh_tiff or lh_tiff
-	These are TCL scripts the command TkSurfer to make six images (Anterior,Posterior,Superior,Inferior,Medial, and Lateral views) for each hemisphere. There's a coupling here with the images this script makes and the images make_images.sh expects to convert, FYI.
+	These are TCL scripts that command TkSurfer to make six images (Anterior,Posterior,Superior,Inferior,Medial, and Lateral views) for each hemisphere. There's a coupling here with the images this script makes and the images make_images.sh expects to convert, FYI.
 	
 	
