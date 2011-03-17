@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Semantic Priming (MultiModa) Pipeline
+Semantic Priming (MultiModal) Pipeline
 Author: Scott Burns <sburns AT nmr DOT mgh DOT harvard DOT edu>
 Copyright 2011 Kuperberg Lab
 License: BSD,3 clause
@@ -1037,6 +1037,11 @@ if __name__ == "__main__":
 		help="Overwrite p-value with new --pvalue")
 	parser.add_option("--all_second",dest="all_second",action="store_true",default=False,
 		help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
+	parser.add_option("--debug",dest="debug",action="store_true",default=False,
+		help="Stop joblib's parallel running, thereby allowing debugging with pdb")
+	parser.add_option("--joblib",dest="joblib",action="store_true",default=False,
+		help="Use joblib to parallelize the pipeline for subjects")
+		
 		
 	(options,subjects) = parser.parse_args()
 	data = dict({})
@@ -1062,8 +1067,12 @@ if __name__ == "__main__":
 			masks.append(parts)
 		data["mask"] = masks
 	data['stype'] = subject_type(subjects)
+	
+	if data["debug"]:
+		use_joblib = False;
+	
 	#subject-level options
-	if use_joblib:
+	if use_joblib and data["joblib"]:
 		Parallel(n_jobs=-1,verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
 	else:
 		[process_subject(subject,data) for subject in subjects]
