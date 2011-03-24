@@ -238,22 +238,41 @@ def makeMC(data):
 		#study scanner subject list run onset # stims..... code item iti response_time
 		code_ind = len(vtsd_data[0]) - 1 - 3
 		response_ind = len(vtsd_data[0]) - 1
+		iti_ind = len(vtsd_data[0]) - 1 - 1
 		onset_ind = 5
 		run = vtsd_data[0][4]
 		study = vtsd_data[0][0]
+		sub = codes[study]["on_sub"]
 		uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
 		for code in uncodes:
 			#get raw data
-			raw_onsets = [x[onset_ind] for x in vtsd_data if x[code_ind] == code]
+			good_onsets = []
+			misses = []
+			for trial in [x for x in vtsd_data if x[code_ind] == code]:
+				task = codes[study][code][1]
+				response =  trial[response_ind] != "0.000"
+				if (task and response) or (not task and not response):
+					good_onsets.append(trial[onset_ind])
+				if (not task and response) or (task and not response):
+					misses.append(trial[onset_ind])
 			#xfm to floats, subtract, round,int,back to string
-			sub = codes[study]["on_sub"]
-			new_onsets = map(str,[int(round(float(x) - sub)) for x in raw_onsets])
-			onset_key = "Run"+run+codes[study][code][0]+"Onsets"
-			duration_key = "Run"+run+codes[study][code][0]+"Durations"
+			xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
+			if len(misses) > 0:
+				xfm_misses = map(str,[int(round(float(x) - sub)) for x in misses])
+				miss_dur = [codes[study]["duration"]] * len(xfm_misses)
+				print("{0}:{1}:{2}:Run{4}:{3} miss(es)".format(data["subject"],study,codes[study][code][0],run,len(xfm_misses)))
+			else:
+				# we need to find one iti time and consider it a "miss"
+				trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
+				unique_iti = sorted(set([float(x[iti_ind]) for x in trials_with_iti]))
+				xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study]["duration"])))]
+				miss_dur = ["2"]
+			new_dict = {"Run"+run+"MissesOnsets":" ".join(xfm_misses),
+				"Run"+run+"MissesDurations":" ".join(miss_dur),
+				"Run"+run+codes[study][code][0]+"Onsets":" ".join(xfm_onsets),
+				"Run"+run+codes[study][code][0]+"Durations":" ".join(codes[study]["duration"] * len(xfm_onsets))}
 			if study in info:
-				info[study][onset_key] = " ".join(new_onsets)
-				info[study][duration_key] = " ".join(codes[study]["duration"] * len(new_onsets))
-		pass
+				info[study].update(new_dict)
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
