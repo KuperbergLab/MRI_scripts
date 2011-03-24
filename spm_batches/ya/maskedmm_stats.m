@@ -156,8 +156,38 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(1).scans = {
                                                     '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run1XXX/s6waurMaskedMM1.nii,148'
                                                     };
 %%
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond = struct('name', {}, 'onset', {}, 'duration', {}, 'tmod', {}, 'pmod', {});
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$subject/MultCond_MaskedMM1_$subject.mat'};
+% DirectlyRelated
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(1).name = 'DirectlyRelated';
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(1).onset = [$Run1DirectlyRelatedOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(1).duration = [$Run1DirectlyRelatedDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(1).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% IndirectlyRelated
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(2).name = 'IndirectlyRelated';
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(2).onset = [$Run1IndirectlyRelatedOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(2).duration = [$Run1IndirectlyRelatedDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(2).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% Unrelated
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(3).name = 'Unrelated';
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(3).onset = [$Run1UnrelatedOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(3).duration = [$Run1UnrelatedDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(3).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectPrime
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).name = 'InsectPrime';
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).onset = [$Run1InsectPrimeOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).duration = [$Run1InsectPrimeDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectTarget
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).name = 'InsectTarget';
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).onset = [$Run1InsectTargetOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).duration = [$Run1InsectTargetDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
+
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).regress = struct('name', {}, 'val', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run1XXX/$Run1MR'};
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).hpf = 128;
@@ -313,8 +343,37 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(2).scans = {
                                                     '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run2XXX/s6waurMaskedMM2.nii,148'
                                                     };
 %%
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond = struct('name', {}, 'onset', {}, 'duration', {}, 'tmod', {}, 'pmod', {});
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).multi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$subject/MultCond_MaskedMM2_$subject.mat'};
+% DirectlyRelated
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(1).name = 'DirectlyRelated';
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(1).onset = [$Run2DirectlyRelatedOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(1).duration = [$Run2DirectlyRelatedDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(1).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% IndirectlyRelated
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(2).name = 'IndirectlyRelated';
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(2).onset = [$Run2IndirectlyRelatedOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(2).duration = [$Run2IndirectlyRelatedDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(2).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% Unrelated
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(3).name = 'Unrelated';
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(3).onset = [$Run2UnrelatedOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(3).duration = [$Run2UnrelatedDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(3).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectPrime
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).name = 'InsectPrime';
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).onset = [$Run2InsectPrimeOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).duration = [$Run2InsectPrimeDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectTarget
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).name = 'InsectTarget';
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).onset = [$Run2InsectTargetOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).duration = [$Run2InsectTargetDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).regress = struct('name', {}, 'val', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run2XXX/$Run2MR'};
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).hpf = 128;
@@ -523,8 +582,37 @@ matlabbatch{4}.spm.stats.fmri_spec.sess(1).scans = {
                                                     '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run1XXX/s8waurMaskedMM1.nii,148'
                                                     };
 %%
-matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond = struct('name', {}, 'onset', {}, 'duration', {}, 'tmod', {}, 'pmod', {});
-matlabbatch{4}.spm.stats.fmri_spec.sess(1).multi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$subject/MultCond_MaskedMM1_$subject.mat'};
+% DirectlyRelated
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(1).name = 'DirectlyRelated';
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(1).onset = [$Run1DirectlyRelatedOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(1).duration = [$Run1DirectlyRelatedDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(1).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% IndirectlyRelated
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(2).name = 'IndirectlyRelated';
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(2).onset = [$Run1IndirectlyRelatedOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(2).duration = [$Run1IndirectlyRelatedDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(2).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% Unrelated
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(3).name = 'Unrelated';
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(3).onset = [$Run1UnrelatedOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(3).duration = [$Run1UnrelatedDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(3).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectPrime
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(4).name = 'InsectPrime';
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(4).onset = [$Run1InsectPrimeOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(4).duration = [$Run1InsectPrimeDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(4).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectTarget
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(5).name = 'InsectTarget';
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(5).onset = [$Run1InsectTargetOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(5).duration = [$Run1InsectTargetDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(5).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
+matlabbatch{4}.spm.stats.fmri_spec.sess(1).multi = {''};
 matlabbatch{4}.spm.stats.fmri_spec.sess(1).regress = struct('name', {}, 'val', {});
 matlabbatch{4}.spm.stats.fmri_spec.sess(1).multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run1XXX/$Run1MR'};
 matlabbatch{4}.spm.stats.fmri_spec.sess(1).hpf = 128;
@@ -680,8 +768,38 @@ matlabbatch{4}.spm.stats.fmri_spec.sess(2).scans = {
                                                     '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run2XXX/s8waurMaskedMM2.nii,148'
                                                     };
 %%
-matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond = struct('name', {}, 'onset', {}, 'duration', {}, 'tmod', {}, 'pmod', {});
-matlabbatch{4}.spm.stats.fmri_spec.sess(2).multi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$subject/MultCond_MaskedMM2_$subject.mat'};
+% DirectlyRelated
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(1).name = 'DirectlyRelated';
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(1).onset = [$Run2DirectlyRelatedOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(1).duration = [$Run2DirectlyRelatedDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(1).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% IndirectlyRelated
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(2).name = 'IndirectlyRelated';
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(2).onset = [$Run2IndirectlyRelatedOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(2).duration = [$Run2IndirectlyRelatedDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(2).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% Unrelated
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(3).name = 'Unrelated';
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(3).onset = [$Run2UnrelatedOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(3).duration = [$Run2UnrelatedDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(3).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectPrime
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(4).name = 'InsectPrime';
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(4).onset = [$Run2InsectPrimeOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(4).duration = [$Run2InsectPrimeDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(4).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
+% InsectTarget
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(5).name = 'InsectTarget';
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(5).onset = [$Run2InsectTargetOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(5).duration = [$Run2InsectTargetDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(5).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
+
+matlabbatch{4}.spm.stats.fmri_spec.sess(2).multi = {''};
 matlabbatch{4}.spm.stats.fmri_spec.sess(2).regress = struct('name', {}, 'val', {});
 matlabbatch{4}.spm.stats.fmri_spec.sess(2).multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MaskedMM/$Run2XXX/$Run2MR'};
 matlabbatch{4}.spm.stats.fmri_spec.sess(2).hpf = 128;
@@ -740,17 +858,17 @@ matlabbatch{7}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
 matlabbatch{7}.spm.tools.sendmail.params.zip = 'No';
 
-
-warning off all;
-try
-	spm('defaults','fmri');
-	spm_jobman('initcfg');
-	delete('$SixSPM');
-	delete('$EightSPM');
-	fclose(fopen('$start_file','w'));
-	output = spm_jobman('run_nogui',matlabbatch);
-	fclose(fopen('$run_file','w'));
-catch ME
-	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
-end
-exit;
+%
+%warning off all;
+%try
+%	spm('defaults','fmri');
+%	spm_jobman('initcfg');
+%	delete('$SixSPM');
+%	delete('$EightSPM');
+%	fclose(fopen('$start_file','w'));
+%	output = spm_jobman('run_nogui',matlabbatch);
+%	fclose(fopen('$run_file','w'));
+%catch ME
+%	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+%end
+%exit;

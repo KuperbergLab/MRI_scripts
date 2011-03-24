@@ -1,3 +1,5 @@
+warning off all;
+
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.phase = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/FieldMap/$FieldMapPhaseXXX/FieldMap_AXCPT_Phase.nii,1'};
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.magnitude = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/FieldMap/$FieldMapMagXXX/FieldMap_AXCPT_Mag.nii,1'};
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj.defaults.defaultsval.et = [4.92 7.38];
@@ -693,7 +695,6 @@ matlabbatch{9}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
 matlabbatch{9}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
 matlabbatch{9}.spm.tools.sendmail.params.zip = 'No';
 
-warning off all;
 try
 	spm('defaults','fmri');
 	spm_jobman('initcfg');

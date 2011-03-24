@@ -168,8 +168,26 @@ matlabbatch{1}.spm.stats.fmri_spec.sess.scans = {
                                                  '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/s6waurATLLoc1.nii,160'
                                                  };
 %%
-matlabbatch{1}.spm.stats.fmri_spec.sess.cond = struct('name', {}, 'onset', {}, 'duration', {}, 'tmod', {}, 'pmod', {});
-matlabbatch{1}.spm.stats.fmri_spec.sess.multi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$subject/MultCond_ATLLoc1_$subject.mat'};
+%Sentences
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).name = 'Sentences';
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = [$Run1SentencesOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).duration = [$Run1SentencesDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%Wordlist
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).name = 'Wordlist';
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).onset = [$Run1WordlistOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).duration = [$Run1WordlistDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%Nonwords
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).name = 'Nonwords';
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).onset = [$Run1NonwordsOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).duration = [$Run1NonwordsDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%
+matlabbatch{1}.spm.stats.fmri_spec.sess.multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess.multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/$Run1MR'};
 matlabbatch{1}.spm.stats.fmri_spec.sess.hpf = 128;
@@ -396,8 +414,26 @@ matlabbatch{4}.spm.stats.fmri_spec.sess.scans = {
                                                  '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/s8waurATLLoc1.nii,160'
                                                  };
 %%
-matlabbatch{4}.spm.stats.fmri_spec.sess.cond = struct('name', {}, 'onset', {}, 'duration', {}, 'tmod', {}, 'pmod', {});
-matlabbatch{4}.spm.stats.fmri_spec.sess.multi = {'/autofs/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$subject/MultCond_ATLLoc1_$subject.mat'};
+%Sentences
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(1).name = 'Sentences';
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(1).onset = [$Run1SentencesOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(1).duration = [$Run1SentencesDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(1).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(1).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%Wordlist
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(2).name = 'Wordlist';
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(2).onset = [$Run1WordlistOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(2).duration = [$Run1WordlistDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(2).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(2).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%Nonwords
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(3).name = 'Nonwords';
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(3).onset = [$Run1NonwordsOnsets];
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(3).duration = [$Run1NonwordsDurations];
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(3).tmod = 0;
+matlabbatch{4}.spm.stats.fmri_spec.sess.cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%
+matlabbatch{4}.spm.stats.fmri_spec.sess.multi = {''};
 matlabbatch{4}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
 matlabbatch{4}.spm.stats.fmri_spec.sess.multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/$Run1MR'};
 matlabbatch{4}.spm.stats.fmri_spec.sess.hpf = 128;

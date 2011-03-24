@@ -24,6 +24,7 @@ except ImportError:
 	use_joblib = False
 
 from readInput import readTable
+from writeOutput import writeTable
 import pipeline as pipeline
 
 
@@ -35,6 +36,7 @@ dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
 meg_dir = "/cluster/kuperberg/SemPrMM/MEG/data/"
 meg_scripts = "/cluster/kuperberg/SemPrMM/MEG/scripts/"
 mri_scripts = "/cluster/kuperberg/SemPrMM/MRI/scripts/"
+mri_vtsd = "/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/"
 running_jobs = [ ]
 
 
@@ -185,6 +187,74 @@ def scan2cfg(data):
 	except:
 		print("Failure in scan2cfg")
 		raise
+
+
+def makeMC(data):
+	codes = {"ATLLoc":{
+				"1":("Sentences",False),
+				"2":("Wordlist",False),
+				"3":("Nonwords",False),
+				"duration":"4",
+				"on_sub":0.4},
+			"BaleenMM":{
+				"1":("LP_RelatedTarget",False),
+				"2":("LP_UnrelatedTarget",False),
+				"4":("LP_UnrelatedFiller",False),
+				"5":("LP_AnimalTarget",True),
+				"6":("HP_RelatedTarget",False),
+				"7":("HP_UnrelatedTarget",False),
+				"8":("HP_RelatedFiller",False),
+				"9":("HP_UnrelatedFiller",False),
+				"10":("HP_AnimalTarget",True),
+				"11":("LP_AnimalPrime",True),
+				"12":("HP_AnimalPrime",True),
+				"duration":"2",
+				"on_sub":1},
+			"MaskedMM":{
+				"1":("DirectlyRelated",False),
+				"2":("IndirectlyRelated",False),
+				"3":("Unrelated",False),
+				"4":("InsectPrime",True),
+				"5":("InsectTarget",True),
+				"duration":"2",
+				"on_sub":1},
+			"AXCPT":{
+				"1":("AY",False),
+				"2":("BX",False),
+				"3":("BY",False),
+				"4":("AX",True),
+				"duration":"2",
+				"on_sub":0}
+			}
+	#first, just glob all the vtsd_logs from mri_vtsd/data["subject"]
+	vtsd_logs = glob(os.path.join(mri_vtsd,data["subject"],"*.vtsd_log"))
+	info = pipeline.load_data(info_path(data),data["verbose"])
+	for vtsd_log in vtsd_logs:
+		if data["verbose"]:
+			print("Parsing {0}".format(vtsd_log))
+		xfm = []
+		vtsd_data = readTable(vtsd_log)
+		pass
+		#study scanner subject list run onset # stims..... code item iti response_time
+		code_ind = len(vtsd_data[0]) - 1 - 3
+		response_ind = len(vtsd_data[0]) - 1
+		onset_ind = 5
+		run = vtsd_data[0][4]
+		study = vtsd_data[0][0]
+		uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
+		for code in uncodes:
+			#get raw data
+			raw_onsets = [x[onset_ind] for x in vtsd_data if x[code_ind] == code]
+			#xfm to floats, subtract, round,int,back to string
+			sub = codes[study]["on_sub"]
+			new_onsets = map(str,[int(round(float(x) - sub)) for x in raw_onsets])
+			onset_key = "Run"+run+codes[study][code][0]+"Onsets"
+			duration_key = "Run"+run+codes[study][code][0]+"Durations"
+			if study in info:
+				info[study][onset_key] = " ".join(new_onsets)
+				info[study][duration_key] = " ".join(codes[study]["duration"] * len(new_onsets))
+		pass
+	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
 def info_path(data):
@@ -520,13 +590,16 @@ def meg_script(data,type,extra=None):
 		#filter our blink and emptyroom
 		fif = [x for x in fif if x.find("Blink") == -1 and x.find("emptyroom") == -1]
 		N_fif = len(fif)
-		print("Fifs:\n{0}".format("\n".join(fif)))
+		if data["verbose"]:
+			print("Fifs:\n{0}".format("\n".join(fif)))
 		icamat = glob(os.path.join(data["meg_dir"],"*_raw_ica.mat"))
 		N_icamat = len(icamat)
-		print("ICA mat:\n{0}".format("\n".join(icamat)))
+		if data["verbose"]:
+			print("ICA mat:\n{0}".format("\n".join(icamat)))
 		blinks = glob(os.path.join(data["meg_dir"],"*.blinks"))
 		N_blinks = len(blinks)
-		print("Blinks:\n{0}".format("\n".join(blinks)))
+		if data["verbose"]:
+			print("Blinks:\n{0}".format("\n".join(blinks)))
 		if (N_fif == 0):
 			raise UserError("No fif files found for this subject")
 		if not (N_fif == N_icamat == N_blinks):
@@ -933,6 +1006,8 @@ def process_subject(subject,data):
 			unpack_all(data)
 		if data["setup_preproc"]:
 			setup_spm(data,"preproc")
+		if data["makeMC"]:
+			makeMC(data)
 		if data["setup_stats"]:
 			setup_spm(data,"stats")
 		if data["setup_outliers"]:
@@ -1041,7 +1116,8 @@ if __name__ == "__main__":
 		help="Stop joblib's parallel running, thereby allowing debugging with pdb")
 	parser.add_option("--joblib",dest="joblib",action="store_true",default=False,
 		help="Use joblib to parallelize the pipeline for subjects")
-		
+	parser.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
+    	help="Make multiple condition files for subject")	
 		
 	(options,subjects) = parser.parse_args()
 	data = dict({})
