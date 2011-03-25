@@ -796,7 +796,6 @@ warning off all;
 try
 	spm('defaults','fmri');
 	spm_jobman('initcfg');
-	delete('$SixSPM');
 	delete('$EightSPM');
 	fclose(fopen('$start_file','w'));
 	output = spm_jobman('run_nogui',matlabbatch);
