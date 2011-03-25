@@ -184,7 +184,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
 		raise
 
 	
-def run_process(my_args,output=PIPE,error=PIPE,verbose=False):
+def run_process(my_args,output=PIPE,error=PIPE,input=PIPE,verbose=False):
 	"""
 	my_args: list of string tokens that make up command to run
 	E.G. to run something like 'ls -l .' at the commandline, my_args should be ['ls','-l','.']
@@ -195,7 +195,7 @@ def run_process(my_args,output=PIPE,error=PIPE,verbose=False):
 	if verbose:
 		print('pipeline:run_process...')
 		print(' '.join(my_args))
-	return Popen(my_args,stdout=output,stderr=error,close_fds=True)
+	return Popen(my_args,stdin=input,stdout=output,stderr=error,close_fds=True)
 
 def wait_to_finish(running_jobs,loop_time=30):
 	"""
