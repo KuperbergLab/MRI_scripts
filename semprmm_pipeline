@@ -348,7 +348,7 @@ def studies_to_setup(data,type):
 	if data["single_study"]:
 		studies = [data["single_study"]]
 	else:		
-		if "stats" in type:
+		if "stats" in type or "art" in type:
 			studies = [k for k,v in info.iteritems() if os.path.exists(
 				touch_file_path(data,k,"preproc","","run"))]
 		elif "preproc" in type:
@@ -458,6 +458,45 @@ def write_shell_script(data,type):
 		raise SystemError("Cannot write shell script. See text above traceback for shell commands.")
 	make_file_exec(shell_script)		
 
+def run_art(data):
+	"""
+	This function writes out the ART-specific session file, then a short matlab script, then
+	runs matlab and passes the script into the matlab process to run. We use ART defaults.
+	"""
+	studies = studies_to_setup(data,"art")
+	sessions = []
+	for study in studies:
+		#glob the images
+		images = glob(os.path.join(data["mri_dir"],study,"*",study+"*.nii"))
+		motions = glob(os.path.join(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
+		if len(images) != len(motions):
+			print("Not the same amount of images and motion files")
+			raise UserError("run_art")
+		sess_contents = []
+		sess_contents.append("sessions: {0}".format(len(images)))
+		sess_contents.append("global_mean: 1")
+		sess_contents.append("drop_flag: 0")
+		sess_contents.append("motion_file_type: 0")
+		sess_contents.append("end")
+		for i,(im,mo) in enumerate(zip(images,motions)):
+			sess_contents.append("session {0} image {1}".format(str(i+1),im))
+			sess_contents.append("session {0} motion {1}".format(str(i+1),mo))
+		sess_contents.append("end")
+		sess_path = os.path.join(data["mri_dir"],study,"art_sess.txt")
+		sessions.append(sess_path)
+		write_file_with_list(sess_path,"\n".join(sess_contents),data["verbose"])
+	art_m = []
+	for session in sessions:
+		art_m.append("art('sess_file','{0}');".format(session))
+	art_m.append("exit;")
+	art_path = os.path.join(data["mri_dir"],"run_art.m")
+	art_log = os.path.join(data["mri_dir"],"run_art.log")
+	write_file_with_list(art_path,"\n".join(art_m),data["verbose"])
+	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
+	proc = pipeline.run_process(my_args,output=sys.stdout,error=sys.stderr)
+	proc.communicate()
+	print("Finished ART for {0}".format(data["subject"]))
+
 
 def make_file_exec(path):
 	"""
@@ -513,6 +552,9 @@ def matlab_batch_dict(data,study,type,block):
 	if "stats" in type:
 		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type,"6mm","SPM.mat")
 		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type,"8mm","SPM.mat")
+	if block:
+		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
+		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
 	replace_dict["run_file"] = touch_file_path(data,study,type,block,"run")
 	replace_dict["start_file"] = touch_file_path(data,study,type,block,"start")
 	replace_dict["email_success"] = "{0} {1} {2}{3} succeeded".format(data["subject"],study,
@@ -1027,6 +1069,8 @@ def process_subject(subject,data):
 			setup_spm(data,"preproc")
 		if data["makeMC"]:
 			makeMC(data)
+		if data["run_art"]:
+			run_art(data)
 		if data["setup_stats"]:
 			setup_spm(data,"stats")
 		if data["setup_outliers"]:
@@ -1133,10 +1177,12 @@ if __name__ == "__main__":
 		help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
 	parser.add_option("--debug",dest="debug",action="store_true",default=False,
 		help="Stop joblib's parallel running, thereby allowing debugging with pdb")
-	parser.add_option("--joblib",dest="joblib",action="store_true",default=False,
+	parser.add_option("--joblib",dest="joblib",action="store",type="int",default=0,
 		help="Use joblib to parallelize the pipeline for subjects")
 	parser.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
     	help="Make multiple condition files for subject")	
+	parser.add_option("--run_art",dest="run_art",action="store_true",default=False,
+		help="Run artifact detection for a subject")
 		
 	(options,subjects) = parser.parse_args()
 	data = dict({})
@@ -1168,7 +1214,7 @@ if __name__ == "__main__":
 	
 	#subject-level options
 	if use_joblib and data["joblib"]:
-		Parallel(n_jobs=-1,verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
+		Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
 	else:
 		[process_subject(subject,data) for subject in subjects]
 	#group level options
