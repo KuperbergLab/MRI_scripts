@@ -9,27 +9,30 @@ License: BSD,3 clause
 
 from optparse import OptionParser
 import os
-from subprocess import Popen, PIPE
 from pprint import pprint
 from glob import glob
 import getpass
 import stat
 import sys
 import time
-import pickle
 try:
-	from joblib import Parallel,delayed
+	from joblib import Parallel, delayed
 	use_joblib = True
 except ImportError:
 	use_joblib = False
-
+import shutil
 from readInput import readTable
-from writeOutput import writeTable
 import pipeline as pipeline
-
+#meg imports
+import meg_py
+from fixTriggers import fixTriggers
+from makeAveFiles import makeAveFiles
+from makeCovFiles import makeCovFiles
+from blinkEveFiles import blinkEveFiles
+from countEvents import countEvents
 
 VER = "1.0"
-possible_studies = dict({"ATLLoc":1,"MaskedMM":2,"BaleenMM":8,"AXCPT":2}) 
+possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2}) 
 batch_dir = "/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/"
 func_dir = "/cluster/kuperberg/SemPrMM/MRI/functionals/"
 dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
@@ -166,7 +169,7 @@ def scan2cfg(data):
 				print(line)
 			return
 		prev_func = all_prev_func[len(all_prev_func)-1]
-		run = fm.split()[0]
+
 		func = prev_func.split()[1]
 		parts = fm.split()
 		(before,dot,filetype) = parts[3].partition(".")
@@ -232,7 +235,7 @@ def makeMC(data):
 	for vtsd_log in vtsd_logs:
 		if data["verbose"]:
 			print("Parsing {0}".format(vtsd_log))
-		xfm = []
+
 		vtsd_data = readTable(vtsd_log)
 		pass
 		#study scanner subject list run onset # stims..... code item iti response_time
@@ -244,10 +247,10 @@ def makeMC(data):
 		study = vtsd_data[0][0]
 		sub = codes[study]["on_sub"]
 		uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
+		misses = []
 		for code in uncodes:
 			#get raw data
 			good_onsets = []
-			misses = []
 			for trial in [x for x in vtsd_data if x[code_ind] == code]:
 				task = codes[study][code][1]
 				response =  trial[response_ind] != "0.000"
@@ -257,22 +260,22 @@ def makeMC(data):
 					misses.append(trial[onset_ind])
 			#xfm to floats, subtract, round,int,back to string
 			xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
-			if len(misses) > 0:
-				xfm_misses = map(str,[int(round(float(x) - sub)) for x in misses])
-				miss_dur = [codes[study]["duration"]] * len(xfm_misses)
-				print("{0}:{1}:{2}:Run{4}:{3} miss(es)".format(data["subject"],study,codes[study][code][0],run,len(xfm_misses)))
-			else:
-				# we need to find one iti time and consider it a "miss"
-				trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
-				unique_iti = sorted(set([float(x[iti_ind]) for x in trials_with_iti]))
-				xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study]["duration"])))]
-				miss_dur = ["2"]
-			new_dict = {"Run"+run+"MissesOnsets":" ".join(xfm_misses),
-				"Run"+run+"MissesDurations":" ".join(miss_dur),
-				"Run"+run+codes[study][code][0]+"Onsets":" ".join(xfm_onsets),
+			new_dict = {"Run"+run+codes[study][code][0]+"Onsets":" ".join(xfm_onsets),
 				"Run"+run+codes[study][code][0]+"Durations":" ".join(codes[study]["duration"] * len(xfm_onsets))}
 			if study in info:
 				info[study].update(new_dict)
+		#do misses
+		if len(misses) > 0:
+			xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
+			miss_dur = [codes[study]["duration"]] * len(xfm_misses)
+			print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study,run,len(xfm_misses)))
+		else:
+			trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
+
+			xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study]["duration"])))]
+			miss_dur = ["2"]
+		info[study].update({"Run"+run+"MissesOnsets":" ".join(xfm_misses),
+					"Run"+run+"MissesDurations":" ".join(miss_dur)})
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
@@ -490,7 +493,7 @@ def run_art(data):
 		art_m.append("art('sess_file','{0}');".format(session))
 	art_m.append("exit;")
 	art_path = os.path.join(data["mri_dir"],"run_art.m")
-	art_log = os.path.join(data["mri_dir"],"run_art.log")
+
 	write_file_with_list(art_path,"\n".join(art_m),data["verbose"])
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
 	proc = pipeline.run_process(my_args,output=sys.stdout,error=sys.stderr)
@@ -631,6 +634,119 @@ def run_mri_script(data,type):
 #		running_jobs.append(process)
 		#block
 		process.communicate()
+
+def new_preProc(data):
+	"""
+	New pure-python pre-processing for MEG.
+	"""
+	#make folders
+	dirs = ["raw_backup","eve","ave","cov","ave_projon","ave_projoff","ave_projon/logs","ave_projoff/logs"]
+	for dir in dirs:
+		to_make = os.path.join(data["meg_dir"],dir)
+		if not os.path.exists(to_make):
+			os.mkdir(to_make)
+	raw_fifs = glob(os.path.join(data["meg_dir"],"*_raw.fif"))
+	#copy _raw.fif
+	for raw in raw_fifs:
+		fname = os.path.basename(raw)
+		fname_copy = os.path.join(data["meg_dir"],"raw_backup",fname)
+		if not os.path.exists(fname_copy):
+			shutil.copyfile(raw,fname_copy)
+	#extract events
+	print("Extracting Events...")
+	for raw in raw_fifs:
+		eve_name = os.path.basename(raw).replace("_raw.fif",".eve")
+		eve_p = os.path.join(data["meg_dir"],"eve",eve_name)
+		meg_py.extract_events(raw=raw,event=eve_p)
+	#fixTriggers
+	os.chdir(data["meg_dir"])
+	print("Fixing Triggers...")
+	fixTriggers(data["subject"])
+	#rename channels
+	if data["subject"] in ["ya1","ya3","ya4","ya7"]:
+		for raw in raw_fifs:
+			meg_py.rename_chan(fiff=raw,alias="/cluster/kuperberg/SemPrMM/MEG/scripts/alias1.txt")
+			meg_py.check_eeg_loc(raw)
+	for raw in raw_fifs:
+		meg_py.rename_chan(fiff=raw,alias="/cluster/kuperberg/SemPrMM/MEG/scripts/alias2.txt")
+	# mark bad chan
+	for raw in raw_fifs:
+		bad_file = os.path.join(data["meg_dir"],data["subject"]+"_bad_chan.txt")
+		if not os.path.exists(bad_file):
+			raise UserError("preProc: no bad channels file. Fix and re-run")
+		meg_py.mark_bad_chan(fiff=raw,bad=bad_file)
+	preBlinkTime = "-0.1"
+	postBlinkTime = "0.3"
+	print("Making Ave Parameter Files...")
+	makeAveFiles(data["subject"],preBlinkTime,postBlinkTime)
+	print("Making blink .eve files...")
+	blinkEveFiles(data["subject"],preBlinkTime,postBlinkTime)
+	print("Making Cov parameter files...")
+	makeCovFiles(data["subject"],preBlinkTime,postBlinkTime)
+	#line up all files
+	atl_fif = [os.path.join(data["meg_dir"],"{0}_ATLLoc_raw.fif".format(data["subject"]))]
+	atl_ave = [os.path.join(data["meg_dir"],"ave","{0}_ATLLoc.ave".format(data["subject"]))]
+	do_atl = len(atl_fif) == len(atl_ave)
+	mask_fif = sorted(glob(os.path.join(data["meg_dir"],"*MaskedMM*_raw.fif")))
+	mask_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*MaskedMM*.ave")))
+	do_mask = len(mask_fif) == len(mask_ave)
+	blp_fif = sorted(glob(os.path.join(data["meg_dir"],"*BaleenRun[1-4]_raw.fif")))
+	blp_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*BaleenRun[1-4]*.ave")))
+	do_blp = len(blp_fif) == len(blp_ave)
+	bhp_fif = sorted(glob(os.path.join(data["meg_dir"],"*BaleenRun[5-8]_raw.fif")))
+	bhp_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*BaleenRun[5-8]*.ave")))
+	do_bhp = len(bhp_fif) == len(bhp_ave)
+	ax_fif = sorted(glob(os.path.join(data["meg_dir"],"*AXCPT*_raw.fif")))
+	ax_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*AXCPT*.ave")))
+	do_ax = len(ax_fif) == len(ax_ave)
+	#will need to fix later for single runs of AX
+	for proj in ["projon","projoff"]:
+		print("Projection:{0}".format(proj))
+		#ATLLoc
+		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_ATLLoc-ave.fif".format(data["subject"]))
+		if do_atl:
+			print("Averaging ATLLoc")
+			meg_py.average([atl_fif],[atl_ave],projection=proj,lowpass=20,highpass=0.5,gave=gave)
+		#MaskedMM
+		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_MaskedMM_All-ave.fif".format(data["subject"]))
+		if do_mask:
+			print("Averaging Mask")
+			meg_py.average(mask_fif,mask_ave,projection=proj,lowpass=20,gave=gave)
+		#BaleenLP
+		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_BaleenLP_All-ave.fif".format(data["subject"]))
+		if do_blp:
+			print("Averaging BaleenLP")
+			meg_py.average(blp_fif,blp_ave,projection=proj,lowpass=20,gave=gave)
+		#BaleenHP
+		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_BaleenHP_All-ave.fif".format(data["subject"]))
+		if do_bhp:
+			print("Averaging BaleenHP")
+			meg_py.average(blp_fif,blp_ave,projection=proj,lowpass=20,gave=gave)
+		#AXCPT
+		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_AXCPT_All-ave.fif".format(data["subject"]))
+		if do_ax:
+			print("Averaging AXCPT")
+			meg_py.average(ax_fif,ax_ave,projection=proj,lowpass=20,gave=gave)
+		countEvents(data["subject"],0,"ATLLoc","1",proj)
+		countEvents(data["subject"],0,"MaskedMM", "2",proj)
+		countEvents(data["subject"],0,"Baleen","8",proj)
+	#COVARIANCES
+	ax_cov = sorted(glob(os.path.join(data["meg_dir"],"cov","*AXCPT*.cov")))
+	do_ax = len(ax_fif) == len(ax_cov)
+	gcov = os.path.join(data["meg_dir"],"ave_projon","{0}_AXCPT_All-cov.fif".format(data["subject"]))
+	if do_ax:
+		meg_py.covariance(ax_fif,ax_cov,projection="on",lowpass=20,gcov=gcov)
+	#cov all tar
+	mask_cov = glob(os.path.join(data["meg_dir"],"cov","{0}_MaskedMMRun*.cov".format(data["subject"])))
+	bal_cov = glob(os.path.join(data["meg_dir"],"cov","{0}_BaleemRun*.cov".format(data["subject"])))
+	all_fif = mask_fif.extend(blp_fif).extend(bhp_fif)
+	all_cov = mask_cov.extend(bal_cov)
+	gcov = os.path.join(data["meg_dir"],"ave_projon","{0}_AllTar-cov.fif".format(data["subject"]))
+	if len(all_fif) == len(all_cov):
+		print("Processing covariance for all targets")
+		meg_py.covariance(all_fif,all_cov,projection="on",lowpass=20,gcov=gcov)
+	#change group for all files
+	os.system("chgrp -R lingua {0}".format(data["meg_dir"]))
 
 
 def meg_script(data,type,extra=None):
@@ -794,7 +910,6 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 	"""
 	This copies images and copy/replaces the HTML files to the date directory.
 	"""
-	import shutil
 	print("Packaging second level surf analysis....\n")
 	package_dir = os.path.join(prefix,"surf_analysis_"+date)
 	surf_dir = os.path.join(mri_scripts,"surf_analysis")
@@ -899,7 +1014,7 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 				try:
 					process = pipeline.run_process([new_script_path],output=sys.stdout,
 						error=sys.stderr)
-					output = process.communicate()[0]
+					process.communicate()[0]
 				except KeyboardInterrupt:
 					sys.exit("Surf canceled by user...Goodbye")
 
@@ -1006,8 +1121,9 @@ def subject_type(subjects):
 	if len(subjects) == 1:
 		stype = subjects[0][:2]
 	else:
-		stype = subjects[0][:2]
-		match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
+		pass
+# 		stype = subjects[0][:2]
+# 		match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
 # 		if not match:
 # 			print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
 # 			response = 'n'
@@ -1089,6 +1205,8 @@ def process_subject(subject,data):
 			setup_bem(data)
 		if data["preProc"]:
 			meg_script(data,"preProc")
+		if data["new_preProc"]:
+			new_preProc(data)
 		if data["preAnat"]:
 			meg_script(data,"preAnat")
 		if data["makeInv"]:
@@ -1097,6 +1215,15 @@ def process_subject(subject,data):
 			run_ica(data)
 	except Exception as strerr:
 		print(strerr)
+
+def get_subjects(sub_list):
+	raw = list_from_file(sub_list)
+	pass
+	subjects = []
+	for s in raw:
+		if s and s[0] != "#": #notempty
+			subjects.append(s)
+	return subjects
 
 
 if __name__ == "__main__":
@@ -1183,12 +1310,21 @@ if __name__ == "__main__":
     	help="Make multiple condition files for subject")	
 	parser.add_option("--run_art",dest="run_art",action="store_true",default=False,
 		help="Run artifact detection for a subject")
-		
+	parser.add_option("--new_preProc",dest="new_preProc",action="store_true",default=False,
+		help="Run the new meg preprocessing.")
+	parser.add_option("--subject_list",dest="subject_list",action="store",default="",
+		help="Run the pipeline for subjects in this file.")
+
+
+
 	(options,subjects) = parser.parse_args()
 	data = dict({})
 	#add options to data
 	for opt,value in options.__dict__.items():
 		data[opt] = value
+	
+	if data["subject_list"]:
+		subjects = get_subjects(data["subject_list"])
 	
 	#transform parallel
 	if data["parallel"]:
