@@ -757,7 +757,7 @@ def meg_script(data,type,extra=None):
 	extra: list of extra arguments (e.g. for "preProc2", extra would be [{preBlinkTime},
 	{postBlinkTime}])
 	"""
-	script_path = os.path.join(meg_scripts,type)
+	script_path = os.path.join(meg_scripts,type+".sh")
 	if not os.path.exists(script_path):
 		raise UserError("meg_script: can not locate {0}".format(type))
 	my_args = [script_path,data["subject"]]
@@ -1121,8 +1121,7 @@ def subject_type(subjects):
 	if len(subjects) == 1:
 		stype = subjects[0][:2]
 	else:
-		pass
-# 		stype = subjects[0][:2]
+		stype = subjects[0][:2]
 # 		match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
 # 		if not match:
 # 			print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
