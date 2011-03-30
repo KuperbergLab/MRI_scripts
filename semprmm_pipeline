@@ -255,6 +255,8 @@ def makeMC(data):
 					misses.append(trial[onset_ind])
 			#xfm to floats, subtract, round,int,back to string
 			xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
+			if len(xfm_onsets) == 0:
+				print("WARNING: empty onsets for {0}.Please fix manually".format(codes[study][code][0]))
 			new_dict = {"Run"+run+codes[study][code][0]+"Onsets":" ".join(xfm_onsets),
 				"Run"+run+codes[study][code][0]+"Durations":" ".join(codes[study]["duration"] * len(xfm_onsets))}
 			if study in info:
