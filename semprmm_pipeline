@@ -25,14 +25,9 @@ from readInput import readTable
 import pipeline as pipeline
 #meg imports
 import meg_py
-from fixTriggers import fixTriggers
-from makeAveFiles import makeAveFiles
-from makeCovFiles import makeCovFiles
-from blinkEveFiles import blinkEveFiles
-from countEvents import countEvents
 
 VER = "1.0"
-possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2}) 
+possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2})
 batch_dir = "/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/"
 func_dir = "/cluster/kuperberg/SemPrMM/MRI/functionals/"
 dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
@@ -566,6 +561,13 @@ def matlab_batch_dict(data,study,type,block):
 		type,block)
 	return replace_dict
 
+def print_info(data):
+	info = pipeline.load_data(info_path(data))
+	for k,v in sorted(info.items()):
+		print("{0}...".format(k))
+		for key,value in sorted(v.items()):
+			print("{0}:{1}".format(key,value))
+		print('\n')
 
 def build_funcdir_info(data,study,type,block):
 	"""build_funcdir_info:
@@ -639,115 +641,8 @@ def new_preProc(data):
 	"""
 	New pure-python pre-processing for MEG.
 	"""
-	#make folders
-	dirs = ["raw_backup","eve","ave","cov","ave_projon","ave_projoff","ave_projon/logs","ave_projoff/logs"]
-	for dir in dirs:
-		to_make = os.path.join(data["meg_dir"],dir)
-		if not os.path.exists(to_make):
-			os.mkdir(to_make)
-	raw_fifs = glob(os.path.join(data["meg_dir"],"*_raw.fif"))
-	#copy _raw.fif
-	for raw in raw_fifs:
-		fname = os.path.basename(raw)
-		fname_copy = os.path.join(data["meg_dir"],"raw_backup",fname)
-		if not os.path.exists(fname_copy):
-			shutil.copyfile(raw,fname_copy)
-	#extract events
-	print("Extracting Events...")
-	for raw in raw_fifs:
-		eve_name = os.path.basename(raw).replace("_raw.fif",".eve")
-		eve_p = os.path.join(data["meg_dir"],"eve",eve_name)
-		meg_py.extract_events(raw=raw,event=eve_p)
-	#fixTriggers
-	os.chdir(data["meg_dir"])
-	print("Fixing Triggers...")
-	fixTriggers(data["subject"])
-	#rename channels
-	if data["subject"] in ["ya1","ya3","ya4","ya7"]:
-		for raw in raw_fifs:
-			meg_py.rename_chan(fiff=raw,alias="/cluster/kuperberg/SemPrMM/MEG/scripts/alias1.txt")
-			meg_py.check_eeg_loc(raw)
-	for raw in raw_fifs:
-		meg_py.rename_chan(fiff=raw,alias="/cluster/kuperberg/SemPrMM/MEG/scripts/alias2.txt")
-	# mark bad chan
-	for raw in raw_fifs:
-		bad_file = os.path.join(data["meg_dir"],data["subject"]+"_bad_chan.txt")
-		if not os.path.exists(bad_file):
-			raise UserError("preProc: no bad channels file. Fix and re-run")
-		meg_py.mark_bad_chan(fiff=raw,bad=bad_file)
-	preBlinkTime = "-0.1"
-	postBlinkTime = "0.3"
-	print("Making Ave Parameter Files...")
-	makeAveFiles(data["subject"],preBlinkTime,postBlinkTime)
-	print("Making blink .eve files...")
-	blinkEveFiles(data["subject"],preBlinkTime,postBlinkTime)
-	print("Making Cov parameter files...")
-	makeCovFiles(data["subject"],preBlinkTime,postBlinkTime)
-	#line up all files
-	atl_fif = [os.path.join(data["meg_dir"],"{0}_ATLLoc_raw.fif".format(data["subject"]))]
-	atl_ave = [os.path.join(data["meg_dir"],"ave","{0}_ATLLoc.ave".format(data["subject"]))]
-	do_atl = len(atl_fif) == len(atl_ave)
-	mask_fif = sorted(glob(os.path.join(data["meg_dir"],"*MaskedMM*_raw.fif")))
-	mask_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*MaskedMM*.ave")))
-	do_mask = len(mask_fif) == len(mask_ave)
-	blp_fif = sorted(glob(os.path.join(data["meg_dir"],"*BaleenRun[1-4]_raw.fif")))
-	blp_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*BaleenRun[1-4]*.ave")))
-	do_blp = len(blp_fif) == len(blp_ave)
-	bhp_fif = sorted(glob(os.path.join(data["meg_dir"],"*BaleenRun[5-8]_raw.fif")))
-	bhp_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*BaleenRun[5-8]*.ave")))
-	do_bhp = len(bhp_fif) == len(bhp_ave)
-	ax_fif = sorted(glob(os.path.join(data["meg_dir"],"*AXCPT*_raw.fif")))
-	ax_ave = sorted(glob(os.path.join(data["meg_dir"],"ave","*AXCPT*.ave")))
-	do_ax = len(ax_fif) == len(ax_ave)
-	#will need to fix later for single runs of AX
-	for proj in ["projon","projoff"]:
-		print("Projection:{0}".format(proj))
-		#ATLLoc
-		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_ATLLoc-ave.fif".format(data["subject"]))
-		if do_atl:
-			print("Averaging ATLLoc")
-			meg_py.average([atl_fif],[atl_ave],projection=proj,lowpass=20,highpass=0.5,gave=gave)
-		#MaskedMM
-		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_MaskedMM_All-ave.fif".format(data["subject"]))
-		if do_mask:
-			print("Averaging Mask")
-			meg_py.average(mask_fif,mask_ave,projection=proj,lowpass=20,gave=gave)
-		#BaleenLP
-		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_BaleenLP_All-ave.fif".format(data["subject"]))
-		if do_blp:
-			print("Averaging BaleenLP")
-			meg_py.average(blp_fif,blp_ave,projection=proj,lowpass=20,gave=gave)
-		#BaleenHP
-		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_BaleenHP_All-ave.fif".format(data["subject"]))
-		if do_bhp:
-			print("Averaging BaleenHP")
-			meg_py.average(blp_fif,blp_ave,projection=proj,lowpass=20,gave=gave)
-		#AXCPT
-		gave = os.path.join(data["meg_dir"],"ave_proj"+proj,"{0}_AXCPT_All-ave.fif".format(data["subject"]))
-		if do_ax:
-			print("Averaging AXCPT")
-			meg_py.average(ax_fif,ax_ave,projection=proj,lowpass=20,gave=gave)
-		countEvents(data["subject"],0,"ATLLoc","1",proj)
-		countEvents(data["subject"],0,"MaskedMM", "2",proj)
-		countEvents(data["subject"],0,"Baleen","8",proj)
-	#COVARIANCES
-	ax_cov = sorted(glob(os.path.join(data["meg_dir"],"cov","*AXCPT*.cov")))
-	do_ax = len(ax_fif) == len(ax_cov)
-	gcov = os.path.join(data["meg_dir"],"ave_projon","{0}_AXCPT_All-cov.fif".format(data["subject"]))
-	if do_ax:
-		meg_py.covariance(ax_fif,ax_cov,projection="on",lowpass=20,gcov=gcov)
-	#cov all tar
-	mask_cov = glob(os.path.join(data["meg_dir"],"cov","{0}_MaskedMMRun*.cov".format(data["subject"])))
-	bal_cov = glob(os.path.join(data["meg_dir"],"cov","{0}_BaleemRun*.cov".format(data["subject"])))
-	all_fif = mask_fif.extend(blp_fif).extend(bhp_fif)
-	all_cov = mask_cov.extend(bal_cov)
-	gcov = os.path.join(data["meg_dir"],"ave_projon","{0}_AllTar-cov.fif".format(data["subject"]))
-	if len(all_fif) == len(all_cov):
-		print("Processing covariance for all targets")
-		meg_py.covariance(all_fif,all_cov,projection="on",lowpass=20,gcov=gcov)
-	#change group for all files
-	os.system("chgrp -R lingua {0}".format(data["meg_dir"]))
-
+	print("Starting meg_py:preProc")
+	meg_py.preProc(data["subject"],data["meg_dir"],force=data["force"])
 
 def meg_script(data,type,extra=None):
 	"""
@@ -1122,13 +1017,13 @@ def subject_type(subjects):
 		stype = subjects[0][:2]
 	else:
 		stype = subjects[0][:2]
-# 		match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
-# 		if not match:
-# 			print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
-# 			response = 'n'
-# 			response = input("Do you wish to continue? (y/n) : ")
-# 			if response != "y":
-# 				raise UserError("Try again with a better subject list")
+#		 match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
+#		 if not match:
+#			 print("\nWarning, you seem to be processing subjects of differing types!!!!\n")
+#			 response = 'n'
+#			 response = input("Do you wish to continue? (y/n) : ")
+#			 if response != "y":
+#				 raise UserError("Try again with a better subject list")
 	return stype
 
 
@@ -1184,6 +1079,8 @@ def process_subject(subject,data):
 			setup_spm(data,"preproc")
 		if data["makeMC"]:
 			makeMC(data)
+		if data["print_info"]:
+			print_info(data)
 		if data["run_art"]:
 			run_art(data)
 		if data["setup_stats"]:
@@ -1306,14 +1203,17 @@ if __name__ == "__main__":
 	parser.add_option("--joblib",dest="joblib",action="store",type="int",default=0,
 		help="Use joblib to parallelize the pipeline for subjects")
 	parser.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
-    	help="Make multiple condition files for subject")	
+		help="Make multiple condition files for subject")	
 	parser.add_option("--run_art",dest="run_art",action="store_true",default=False,
 		help="Run artifact detection for a subject")
 	parser.add_option("--new_preProc",dest="new_preProc",action="store_true",default=False,
 		help="Run the new meg preprocessing.")
 	parser.add_option("--subject_list",dest="subject_list",action="store",default="",
 		help="Run the pipeline for subjects in this file.")
-
+	parser.add_option("--force",dest="force",action="store_true",default=False,
+		help="Cause new_preProc (and maybe others) to re-do everything")
+	parser.add_option("--print_info",dest="print_info",action="store_true",default=False,
+		help="Print subject's info.txt")
 
 
 	(options,subjects) = parser.parse_args()
