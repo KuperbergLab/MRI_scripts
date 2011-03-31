@@ -7,7 +7,7 @@ Copyright 2011 Kuperberg Lab
 License: BSD,3 clause
 """
 
-from optparse import OptionParser
+from optparse import OptionParser,OptionGroup
 import os
 from pprint import pprint
 from glob import glob
@@ -23,8 +23,6 @@ except ImportError:
 import shutil
 from readInput import readTable
 import pipeline as pipeline
-#meg imports
-import meg_py
 
 VER = "1.0"
 possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2})
@@ -35,7 +33,7 @@ meg_dir = "/cluster/kuperberg/SemPrMM/MEG/data/"
 meg_scripts = "/cluster/kuperberg/SemPrMM/MEG/scripts/"
 mri_scripts = "/cluster/kuperberg/SemPrMM/MRI/scripts/"
 mri_vtsd = "/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/"
-running_jobs = [ ]
+running_jobs = []
 
 
 class ProgrammerError(Exception):
@@ -47,25 +45,25 @@ class UserError(Exception):
 
 
 class SystemError(Exception):
-	pass	
+	pass
 
 
 def archive_to_cluster(data):
 	"""
-	data: dict with keys:"subject","subject_dicom"
-	
+	data: dict
+		req. keys:"subject","subject_dicom"
 	Copies dicom images from archive dir to dicom dir.
 	parallel subjects : YES
 	"""
 	if data["verbose"]:
 		print("archive_to_cluster:")
-	data["archive_dir"] = pipeline.find_session([data["subject"],"-x","Kuperberg"])
+	data["archive_dir"] = pipeline.find_session([data["subject"], "-x", "Kuperberg"])
 	if data["archive_dir"] is None:
 		print("ALERT:findsession returned nothing for {0}".format(data["subject"]))
 		return
 	if not os.path.exists(data["dicom_dir"]):
 		os.mkdir(data["dicom_dir"])
-	pipeline.mirror(data["archive_dir"],data["dicom_dir"],True)
+	pipeline.mirror(data["archive_dir"], data["dicom_dir"], True)
 
 
 def scan_only(data):
@@ -78,20 +76,21 @@ def scan_only(data):
 		os.mkdir(data["mri_dir"])
 	data["scan_path"] = scan_path(data)
 	try:
-		pipeline.scan_only(data["dicom_dir"],data["mri_dir"],data["scan_path"])
+		pipeline.scan_only(data["dicom_dir"], data["mri_dir"], data["scan_path"])
 	except OSError:
 		raise UserError("scan_only: start nmrenv and try again.")
 
+
 def unpack(data):
 	"""
-	data: dict with keys:"subject_dir","subject_dicom","subject"
+	data: dict with keys:"subject_dir", "subject_dicom", "subject"
 	Runs unpacksdcmdir in the full mode.
-	Can take a long time, run with care.
+	Can take a long time,  run with care.
 	parallel subjects: NO
 	"""
 	data["cfg_path"] = cfg_path(data)
 	if os.access(data["cfg_path"], os.R_OK):
-		pipeline.unpack(data["dicom_dir"],data["mri_dir"],data["cfg_path"])
+		pipeline.unpack(data["dicom_dir"], data["mri_dir"], data["cfg_path"])
 	else:
 		print("ALERT: cannot find cfg file for {0}, re-run --scan2cfg".format(data["subject"]))
 
@@ -101,7 +100,7 @@ def cfg_path(data):
 	data: dict with keys:"subject_dir"
 	Returns path to cfg file.
 	"""
-	return os.path.join(data["mri_dir"],"cfg.txt")
+	return os.path.join(data["mri_dir"], "cfg.txt")
 
 
 def scan_path(data):
@@ -109,12 +108,12 @@ def scan_path(data):
 	data: dict with "subject_dir"
 	returns path to scan.log file
 	"""
-	return os.path.join(data["mri_dir"],"scan.log")
+	return os.path.join(data["mri_dir"], "scan.log")
 
 
 def unpack_all(data):
 	"""
-	data: dict with keys:"subject_dir","subject_dicom","subject"
+	data: dict with keys:"subject_dir", "subject_dicom", "subject"
 	Wrapper for all three pieces of unpacking a subject"s dicom dir.
 	Runs:
 		1) scan_only
@@ -126,7 +125,7 @@ def unpack_all(data):
 	scan_only(data)
 	scan2cfg(data)
 	cfg2info(data)
-	unpack(data)	
+	unpack(data)
 
 
 def scan2cfg(data):
@@ -136,11 +135,11 @@ def scan2cfg(data):
 	"""
 	data["scan_path"] = scan_path(data)
 	data["cfg_path"] = cfg_path(data)
-	dir_map = dict({"MEMPRAGE_4e_p2_1mm_iso":"MPRAGE", "ge_functionals_atlloc":"ATLLoc", 
-			"field_mapping":"FieldMap", "ge_functionals_maskmm":"MaskedMM", 
-			"ge_functionals_baleen":"BaleenMM", "MEFLASH_8e_1mm_iso_5deg":"MEFLASH",
-			"ge_functionals_axcpt":"AXCPT","ge_functionals_axcpt_sc":"AXCPT"})
-	scan_list = [["MEMPRAGE_4e_p2_1mm_iso","ok","256","256","1"],
+	dir_map = dict({"MEMPRAGE_4e_p2_1mm_iso": "MPRAGE", "ge_functionals_atlloc": "ATLLoc",
+			"field_mapping": "FieldMap", "ge_functionals_maskmm": "MaskedMM", 
+			"ge_functionals_baleen": "BaleenMM", "MEFLASH_8e_1mm_iso_5deg": "MEFLASH",
+			"ge_functionals_axcpt": "AXCPT", "ge_functionals_axcpt_sc": "AXCPT"})
+	scan_list = [["MEMPRAGE_4e_p2_1mm_iso","ok","256","256","1"], 
 				["ge_functionals_atlloc","ok","160"],["ge_functionals_maskmm","ok","148"],
 				["ge_functionals_baleen","ok","130"],["ge_functionals_axcpt","ok","240"],
 				["MEFLASH_8e_1mm_iso_5deg","256","256","ok","1"],["field_mapping","ok","1"],
@@ -163,7 +162,7 @@ def scan2cfg(data):
 			for line in good_lines:
 				print(line)
 			return
-		prev_func = all_prev_func[len(all_prev_func)-1]
+		prev_func = all_prev_func[len(all_prev_func) - 1]
 
 		func = prev_func.split()[1]
 		parts = fm.split()
@@ -192,7 +191,7 @@ def makeMC(data):
 				"1":("Sentences",False),
 				"2":("Wordlist",False),
 				"3":("Nonwords",False),
-				"duration":"4",
+				"duration": "4",
 				"on_sub":0.4},
 			"BaleenMM":{
 				"1":("LP_RelatedTarget",False),
@@ -206,7 +205,7 @@ def makeMC(data):
 				"10":("HP_AnimalTarget",True),
 				"11":("LP_AnimalPrime",True),
 				"12":("HP_AnimalPrime",True),
-				"duration":"2",
+				"duration": "2",
 				"on_sub":1},
 			"MaskedMM":{
 				"1":("DirectlyRelated",False),
@@ -214,15 +213,15 @@ def makeMC(data):
 				"3":("Unrelated",False),
 				"4":("InsectPrime",True),
 				"5":("InsectTarget",True),
-				"duration":"2",
+				"duration": "2",
 				"on_sub":1},
 			"AXCPT":{
 				"1":("AY",False),
 				"2":("BX",False),
 				"3":("BY",False),
 				"4":("AX",True),
-				"duration":"2",
-				"on_sub":0}
+				"duration": "2",
+				"on_sub": 0}
 			}
 	#first, just glob all the vtsd_logs from mri_vtsd/data["subject"]
 	vtsd_logs = glob(os.path.join(mri_vtsd,data["subject"],"*.vtsd_log"))
@@ -230,7 +229,6 @@ def makeMC(data):
 	for vtsd_log in vtsd_logs:
 		if data["verbose"]:
 			print("Parsing {0}".format(vtsd_log))
-
 		vtsd_data = readTable(vtsd_log)
 		pass
 		#study scanner subject list run onset # stims..... code item iti response_time
@@ -257,8 +255,8 @@ def makeMC(data):
 			xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
 			if len(xfm_onsets) == 0:
 				print("WARNING: empty onsets for {0}.Please fix manually".format(codes[study][code][0]))
-			new_dict = {"Run"+run+codes[study][code][0]+"Onsets":" ".join(xfm_onsets),
-				"Run"+run+codes[study][code][0]+"Durations":" ".join(codes[study]["duration"] * len(xfm_onsets))}
+			new_dict = {"Run"+run+codes[study][code][0]+"Onsets": " ".join(xfm_onsets),
+				"Run"+run+codes[study][code][0]+"Durations": " ".join(codes[study]["duration"] * len(xfm_onsets))}
 			if study in info:
 				info[study].update(new_dict)
 		#do misses
@@ -271,8 +269,8 @@ def makeMC(data):
 
 			xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study]["duration"])))]
 			miss_dur = ["2"]
-		info[study].update({"Run"+run+"MissesOnsets":" ".join(xfm_misses),
-					"Run"+run+"MissesDurations":" ".join(miss_dur)})
+		info[study].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
+					"Run"+run+"MissesDurations": " ".join(miss_dur)})
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
@@ -608,19 +606,11 @@ def touch_file_path(data,study,type,block,when):
 	return s
 
 
-def setup_recon(data):
-	"""
-	Nothing else to do but write this file.
-	"""
-	write_shell_script(data,"recon")
-
-
 def run_mri_script(data,type):
 	"""
 	Looks for the write script to run based on type and executes it. This method blocks which is ok
-	because this method is starting in parallel automatically for many subjects. However, if you used
-	--parallel for the --setup_*, then this method will return almost immediately because the opened
-	shell will start the jobs (in the background) and then return.
+	because this method is starting in parallel automatically for many subjects. This will block 
+	even if you used --parallel with --setup_*.
 	"""
 	#find all the scripts of this type
 	if type == "recon":
@@ -634,17 +624,17 @@ def run_mri_script(data,type):
 	for script in scripts:
 		args = ["nohup", script]
 		print("\nStarting {0}\n".format(script))
-		process = pipeline.run_process(args)
-#		running_jobs.append(process)
-		#block
-		process.communicate()
+		pipeline.run_process(args).wait()
+
 
 def new_preProc(data):
 	"""
 	New pure-python pre-processing for MEG.
 	"""
+	import meg_py
 	print("Starting meg_py:preProc")
-	meg_py.preProc(data["subject"],data["meg_dir"],force=data["force"])
+	meg_py.preProc(data["subject"],data["meg_dir"])
+
 
 def meg_script(data,type,extra=None):
 	"""
@@ -706,7 +696,7 @@ def run_ica(data):
 	"""
 	iscript = os.path.join(meg_scripts,"generic_runica.m")
 	oscript = os.path.join(data["meg_dir"],data["subject"]+"_ica.m")
-	pipeline.f2f_replace(iscript,oscript,dict({"subject":data["subject"]}),data["verbose"])
+	pipeline.f2f_replace(iscript,oscript,dict({"subject": data["subject"]}),data["verbose"])
 	log = os.path.join(data["meg_dir"],data["subject"]+"_ica.log")
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", oscript,
 		">", log]
@@ -781,14 +771,14 @@ def second_level(data,type):
 	All second level functions pass through here.
 	"""
 	prefix = os.path.join(func_dir,"SecondLevelStats")
-	study_contrasts = dict({"ATLLoc":[["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
+	study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
 		["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
-		"MaskedMM":[["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
-		"BaleenLP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
-		"BaleenHP":[["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
-		["UnRelFillvRelFill","0009"]],"AXCPT":[["AYvBY","0009"],["BXvBY","0011"]]})
-	study_stats = dict({"ATLLoc":"stats_outliers","MaskedMM":"stats_outliers",
-		"BaleenLP":"stats_outliers1","BaleenHP":"stats_outliers2","AXCPT":"stats_outliers"})
+		"MaskedMM": [["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
+		"BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
+		"BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
+		["UnRelFillvRelFill","0009"]],"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
+	study_stats = dict({"ATLLoc": "stats_outliers","MaskedMM": "stats_outliers",
+		"BaleenLP": "stats_outliers1","BaleenHP": "stats_outliers2","AXCPT": "stats_outliers"})
 	if data["date"]:
 		date_dir = data["date"]
 	else:
@@ -846,10 +836,10 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 			info_fname = os.path.join(con_dir,"info.txt")
 			info = pipeline.load_data(info_fname,data["verbose"])
 			#now, make the <con>.html file
-			replace_dict = dict({"N":str(info["N"]),"pvalue":str(info["pvalue"]),
-				"contrast":info["contrast"],"study":study,"stype":info["stype"],
-				"images":"\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
-				"mask":info["mask"]})
+			replace_dict = dict({"N": str(info["N"]),"pvalue": str(info["pvalue"]),
+				"contrast": info["contrast"],"study": study,"stype": info["stype"],
+				"images": "\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
+				"mask": info["mask"]})
 			pipeline.f2f_replace(os.path.join(surf_dir,"contrast.html"),
 				os.path.join(study_dir,contrast+".html"),replace_dict,data["verbose"])
 
@@ -980,7 +970,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log,data["parallel"]))
 			shell_commands.append("echo {0}:{1} has finished.".format(study,contrast))
 			info_fname = os.path.join(con_dir,"info.txt")
-			info = dict({"N":N,"images":good_img,"stype":data["stype"],"contrast":contrast})
+			info = dict({"N": N,"images": good_img,"stype": data["stype"],"contrast": contrast})
 			if mask:
 				info["mask"] = mask
 			else:
@@ -1090,7 +1080,7 @@ def process_subject(subject,data):
 		if data["setup_outliers"]:
 			setup_spm(data,"stats_outliers")
 		if data["setup_recon"]:
-			setup_recon(data)
+			write_shell_script(data,"recon")
 		if data["run_preproc"]:
 			run_mri_script(data,"preproc")
 		if data["run_stats"]:
@@ -1126,96 +1116,121 @@ def get_subjects(sub_list):
 
 if __name__ == "__main__":
 	parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
-	parser.add_option("-d","--copy_dicom",dest="copy_dicom", 
+
+	#Copying/Unpacking options
+	copy_group = OptionGroup(parser,"Copying/Unpacking")
+	copy_group.add_option("--copy_dicom",dest="copy_dicom", 
 		help="Copy from archive to $DICOM_DIR/[subject]",action="store_true",default=False)
-	parser.add_option("-u","--unpack_all",dest="unpack_all",action="store_true",default=False,
+	copy_group.add_option("--unpack_all",dest="unpack_all",action="store_true",default=False,
 		help="If specified, unpacking occurs in $FUNCTIONAL_DIR/[subject]")
-	parser.add_option("-v","--verbose",dest="verbose",help="Print info",action="store_true",
-		default=False)
-	parser.add_option("-p","--setup_preproc",dest="setup_preproc",action="store_true",
-		default=False,help="Make spm (preproc) batch files")
-	parser.add_option("-r","--setup_recon",dest="setup_recon",help="Setup cortical reconstruction",
+	copy_group.add_option("--scan_only",dest="scan_only",help="Run only the scan_only unpack",
 		action="store_true",default=False)
-	parser.add_option("-s","--setup_stats",dest="setup_stats",
+	copy_group.add_option("--scan2cfg",dest="scan2cfg",help="Convert scan.log into cfg file",
+		action="store_true",default=False)
+	copy_group.add_option("--unpack",dest="unpack",help="Run the full unpacking step",
+		action="store_true",default=False)
+	copy_group.add_option("--cfg2info",dest="cfg2info",action="store_true",default=False,
+		help="Convert cfg to info dictionary")
+	parser.add_option_group(copy_group)
+
+	#SPM preprocessing and stats options
+	spm_group = OptionGroup(parser,"SPM Preprocessing/1st Level Statistics")
+	spm_group.add_option("--setup_preproc",dest="setup_preproc",action="store_true",
+		default=False,help="Make spm (preproc) batch files")
+	spm_group.add_option("--setup_stats",dest="setup_stats",
 		help="Make spm (stats) batch files using rp_*.txt as mult regressors",action="store_true",
 		default=False)
-	parser.add_option("-o","--setup_outliers",dest="setup_outliers",
+	spm_group.add_option("--setup_outliers",dest="setup_outliers",
 		help="Make spm (stats) batch files using outliers as mult regressors",action="store_true",
 		default=False)
-	parser.add_option("--study",dest="single_study",help="Setup single study",action="store",
-		type="string",default=None)
-	parser.add_option("--run_outliers",dest="run_outliers",help="Run outlier script",
+	spm_group.add_option("--run_outliers",dest="run_outliers",help="Run outlier script",
 		action="store_true",default=False)
-	parser.add_option("--run_stats",dest="run_stats",help="Run stats script",action="store_true",
+	spm_group.add_option("--run_stats",dest="run_stats",help="Run stats script",action="store_true",
 		default=False)
-	parser.add_option("--run_preproc",dest="run_preproc",help="Run preproc script",
+	spm_group.add_option("--run_preproc",dest="run_preproc",help="Run preproc script",
 		action="store_true",default=False)
-	parser.add_option("--run_recon",dest="run_recon",help="Run reconstruction script",
+	spm_group.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
+		help="Parse exp logs for multiple condition information, must be done before --setup_[stats]")	
+	spm_group.add_option("--run_art",dest="run_art",action="store_true",default=False,
+		help="Run artifact detection for a subject")	
+	parser.add_option_group(spm_group)
+	
+	#Cortical reconstruction options
+	recon_group = OptionGroup(parser,"Cortical reconstructions with Freesurfer")
+	recon_group.add_option("--setup_recon",dest="setup_recon",help="Setup cortical reconstruction",
 		action="store_true",default=False)
-	parser.add_option("--setup_bem",dest="setup_bem",help="Setup BEM folders/dicoms",
+	recon_group.add_option("--run_recon",dest="run_recon",help="Run reconstruction script",
 		action="store_true",default=False)
-	parser.add_option("--scan_only",dest="scan_only",help="Run only the scan_only unpack",
+	parser.add_option_group(recon_group)
+	
+	#MEG options
+	meg_group = OptionGroup(parser,"MEG processing")
+	meg_group.add_option("--preProc",dest="preProc",help="Run the preProc script for meg",
 		action="store_true",default=False)
-	parser.add_option("--scan2cfg",dest="scan2cfg",help="Convert scan.log into cfg file",
+	meg_group.add_option("--preAnat",dest="preAnat",help="Run the preAnat script for meg",
 		action="store_true",default=False)
-	parser.add_option("--unpack",dest="unpack",help="Run the full unpacking step",
-		action="store_true",default=False)
-	parser.add_option("--parallel",dest="parallel",help="Make the script so jobs run in parallel",
-		action="store_true",default=False)
-	parser.add_option("--preProc",dest="preProc",help="Run the preProc script for meg",
-		action="store_true",default=False)
-	parser.add_option("--preAnat",dest="preAnat",help="Run the preAnat script for meg",
-		action="store_true",default=False)
-	parser.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
-		help="Use with --run_*, pipeline only exits when all jobs finish")
-	parser.add_option("--setup_second",dest="setup_second",action="store_true",default=False,
-		help="Setup second level stats")
-	parser.add_option("--surf_second",dest="surf_second",action="store_true",default=False,
-		help="Analyze second level stats (that have been run) with Freesurfer")
-	parser.add_option("--package_second",dest="package_second",action="store_true",default=False,
-		help="Make analysis package (run after --surf_second)")
-	parser.add_option("--pvalue",dest="pvalue",type="float",default=0.001,
-		help="Use with --surf_second")
-	parser.add_option("--date",dest="date",type="string",default=None,
-		help="Specify a previously run second level date in the form of YYYYMMDD")
-	parser.add_option("--aparc",dest="aparc",action="store_true", default=False,
-		help="If passed with --surf_second, tksurfer will load aparc annotations")
-	parser.add_option("--dry",dest="dry",action="store_true",default=False,
-		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
-	parser.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
+	meg_group.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
 		help="Run the MEG makeInv script")
-	parser.add_option("--exc",dest="bad_sub",action="append",default=[],
-		help="Exclude subjects, for use with --setup_second")
-	parser.add_option("--mask",dest="mask",action="append",default=[],
-		help="At the second level, mask certain contrasts. Pass in <study>,<contrast>,<pathtomaskimage>")
-	parser.add_option("--inc",dest="good_sub",action="append",default=[],
-		help="At the second level, include subjects, use with --setup_second")
-	parser.add_option("--run_ica",dest="run_ica",action="store_true",default=False,
+	meg_group.add_option("--run_ica",dest="run_ica",action="store_true",default=False,
 		help="Run ICA processing (takes 90-120 minutes).")
-	parser.add_option("--cfg2info",dest="cfg2info",action="store_true",default=False,
-		help="Convert cfg to info dictionary")
-	parser.add_option("--run_second",dest="run_second",action="store_true",default=False,
+	meg_group.add_option("--setup_bem",dest="setup_bem",help="Setup BEM folders/dicoms",
+		action="store_true",default=False)
+	meg_group.add_option("--new_preProc",dest="new_preProc",action="store_true",default=False,
+		help="Run the new meg preprocessing.")	
+	parser.add_option_group(meg_group)
+	
+	#Second-level options
+	second_group = OptionGroup(parser,"Second-Level Statistics")
+	second_group.add_option("--setup_second",dest="setup_second",action="store_true",default=False,
+		help="Setup second level stats")
+	second_group.add_option("--surf_second",dest="surf_second",action="store_true",default=False,
+		help="Analyze second level stats (that have been run) with Freesurfer")
+	second_group.add_option("--package_second",dest="package_second",action="store_true",default=False,
+		help="Make analysis package (run after --surf_second)")
+	second_group.add_option("--pvalue",dest="pvalue",type="float",default=0.001,
+		help="Use with --surf_second")
+	second_group.add_option("--date",dest="date",type="string",default=None,
+		help="Specify a previously run second level date in the form of YYYYMMDD")
+	second_group.add_option("--aparc",dest="aparc",action="store_true", default=False,
+		help="If passed with --surf_second, tksurfer will load aparc annotations")
+	second_group.add_option("--dry",dest="dry",action="store_true",default=False,
+		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
+	second_group.add_option("--exc",dest="bad_sub",action="append",default=[],
+		help="Exclude subjects, for use with --setup_second")
+	second_group.add_option("--mask",dest="mask",action="append",default=[],
+		help="At the second level, mask certain contrasts. Pass in <study>,<contrast>,<pathtomaskimage>")
+	second_group.add_option("--inc",dest="good_sub",action="append",default=[],
+		help="At the second level, include subjects, use with --setup_second")
+	second_group.add_option("--run_second",dest="run_second",action="store_true",default=False,
 		help="Run the script made my --setup_second")
-	parser.add_option("--override_p",dest="override_p",action="store_true",default=False,
+	second_group.add_option("--override_p",dest="override_p",action="store_true",default=False,
 		help="Overwrite p-value with new --pvalue")
-	parser.add_option("--all_second",dest="all_second",action="store_true",default=False,
+	second_group.add_option("--all_second",dest="all_second",action="store_true",default=False,
 		help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
-	parser.add_option("--debug",dest="debug",action="store_true",default=False,
-		help="Stop joblib's parallel running, thereby allowing debugging with pdb")
-	parser.add_option("--joblib",dest="joblib",action="store",type="int",default=0,
-		help="Use joblib to parallelize the pipeline for subjects")
-	parser.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
-		help="Make multiple condition files for subject")	
-	parser.add_option("--run_art",dest="run_art",action="store_true",default=False,
-		help="Run artifact detection for a subject")
-	parser.add_option("--new_preProc",dest="new_preProc",action="store_true",default=False,
-		help="Run the new meg preprocessing.")
-	parser.add_option("--subject_list",dest="subject_list",action="store",default="",
+	parser.add_option_group(second_group)
+	
+	#Parallelization Options
+	par_group = OptionGroup(parser,"Paralleization","WARNING:Use --joblib and --parallel together "
+													"at your own risk")
+	par_group.add_option("--ncores",dest="joblib",action="store",type="int",default=0,
+		help="Process this many subjects in parallel")
+	par_group.add_option("--parallel",dest="parallel",action="store_true",default=False,
+		help="For use with --setup_*.Make the script so jobs run in parallel")
+	par_group.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
+		help="Use with --run_*, pipeline only exits when all jobs finish")
+	parser.add_option_group(par_group)
+	
+	#Miscellaneous options
+	misc_group = OptionGroup(parser,"Miscellaneous")
+	misc_group.add_option("--subject_list",dest="subject_list",action="store",default="",
 		help="Run the pipeline for subjects in this file.")
-	parser.add_option("--force",dest="force",action="store_true",default=False,
-		help="Cause new_preProc (and maybe others) to re-do everything")
-	parser.add_option("--print_info",dest="print_info",action="store_true",default=False,
+	misc_group.add_option("--print_info",dest="print_info",action="store_true",default=False,
 		help="Print subject's info.txt")
+	misc_group.add_option("--verbose",dest="verbose",help="Print info",action="store_true",
+		default=False)
+	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*",action="store",
+		type="string",default=None)
+	parser.add_option_group(misc_group)	
 
 
 	(options,subjects) = parser.parse_args()
@@ -1245,10 +1260,7 @@ if __name__ == "__main__":
 			masks.append(parts)
 		data["mask"] = masks
 	data['stype'] = subject_type(subjects)
-	
-	if data["debug"]:
-		use_joblib = False;
-	
+		
 	#subject-level options
 	if use_joblib and data["joblib"]:
 		Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
