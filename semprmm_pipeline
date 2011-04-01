@@ -47,7 +47,7 @@ class UserError(Exception):
 class SystemError(Exception):
 	pass
 
-
+####COPYING/UNPACKING#######
 def archive_to_cluster(data):
 	"""
 	data: dict
@@ -186,6 +186,88 @@ def scan2cfg(data):
 		raise
 
 
+def info_path(data):
+	"""
+	just a little method to encapsulate this path
+	"""
+	return os.path.join(data["mri_dir"],"info.txt")
+
+
+def cfg2info(data):
+	"""
+	converts the cfg.txt to a pickled data file. This data file is used in the rest of the stream 
+	and as such, is very important.
+	The pickled data is a dictionary with keys of the studies that were run and values that are 
+	dictionaries themselves.  These dictionaries hold keys like "MPRAGEXXX","FieldMapPhaseXXX",etc. 
+	and are used as the keyword mapping when templating SPM batches.
+	"""
+	cfg_fname = cfg_path(data)
+	if not os.path.exists(cfg_fname):
+		print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
+		raise UserError
+	cfg = readTable(cfg_fname)
+	info = dict({})
+	prepend_zero = lambda x: "00"+x if int(x)<10 else "0"+x
+	for study in possible_studies:
+		study_dict = dict({})
+		runs = [x for x in cfg if x[1] == study]
+		if len(runs) > 0:
+			study_dict["was_run"] = True
+			for run in runs:
+				run_num = run[3].split(".")[0].split(study)[1]
+				study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
+			if not (study == "AXCPT" and data["stype"] == "ac"):
+				if len(runs) == possible_studies[study]:
+					study_dict["complete"] = True
+				else:
+					study_dict["complete"] = False
+			else:
+				if len(runs) == 3:
+					study_dict["complete"] = True
+				else:
+					study_dict["complete"] = False
+			#find the MPRAGE
+			mprage_runs = [x for x in cfg if x[1] == "MPRAGE"]
+			study_dict["MPRAGE_runs"] = [prepend_zero(x[0]) for x in mprage_runs]
+			#find the Phase and Mag XXX
+			for type in ["Phase","Mag"]:
+				type_run = [x for x in cfg if study in x[3] and type in x[3]]
+				if not len(type_run) == 1:
+					print("ALERT: Couldn't find the FieldMap_{0}_{1}.nii in cfg for {2}".format(study,
+						type,data["subject"]))
+				else:	
+					study_dict["FieldMap"+type+"XXX"] = prepend_zero(type_run[0][0])
+			info[study] = study_dict
+		else:
+			study_dict["was_run"] = False
+	#write out info.txt as pickled dict
+	pipeline.save_data(info,info_path(data),data["verbose"])
+	if data["verbose"]:
+		pprint("Info:")
+		pprint(info)
+		
+	
+def studies_to_setup(data,type):
+	"""
+	returns what studies should be set up. This list depends on the type of processing to be setup.
+	"""
+	if not os.path.exists(info_path(data)):
+		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
+		raise UserError("Broke in studies_to_setup")
+	info = pipeline.load_data(info_path(data),data["verbose"])
+	if data["single_study"]:
+		studies = [data["single_study"]]
+	else:		
+		if "stats" in type or "art" in type:
+			studies = [k for k,v in info.iteritems() if os.path.exists(
+				touch_file_path(data,k,"preproc","","run"))]
+		elif "preproc" in type:
+			studies = [k for k,v in info.iteritems() if v["was_run"]]
+	return studies
+
+
+####FUNCTIONAL####
+
 def makeMC(data):
 	codes = {"ATLLoc":{
 				"1":("Sentences",False),
@@ -274,85 +356,8 @@ def makeMC(data):
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
-def info_path(data):
-	"""
-	just a little method to encapsulate this path
-	"""
-	return os.path.join(data["mri_dir"],"info.txt")
 
-
-def cfg2info(data):
-	"""
-	converts the cfg.txt to a pickled data file. This data file is used in the rest of the stream 
-	and as such, is very important.
-	The pickled data is a dictionary with keys of the studies that were run and values that are 
-	dictionaries themselves.  These dictionaries hold keys like "MPRAGEXXX","FieldMapPhaseXXX",etc. 
-	and are used as the keyword mapping when templating SPM batches.
-	"""
-	cfg_fname = cfg_path(data)
-	if not os.path.exists(cfg_fname):
-		print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
-		raise UserError
-	cfg = readTable(cfg_fname)
-	info = dict({})
-	prepend_zero = lambda x: "00"+x if int(x)<10 else "0"+x
-	for study in possible_studies:
-		study_dict = dict({})
-		runs = [x for x in cfg if x[1] == study]
-		if len(runs) > 0:
-			study_dict["was_run"] = True
-			for run in runs:
-				run_num = run[3].split(".")[0].split(study)[1]
-				study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
-			if not (study == "AXCPT" and data["stype"] == "ac"):
-				if len(runs) == possible_studies[study]:
-					study_dict["complete"] = True
-				else:
-					study_dict["complete"] = False
-			else:
-				if len(runs) == 3:
-					study_dict["complete"] = True
-				else:
-					study_dict["complete"] = False
-			#find the MPRAGE
-			mprage_runs = [x for x in cfg if x[1] == "MPRAGE"]
-			study_dict["MPRAGE_runs"] = [prepend_zero(x[0]) for x in mprage_runs]
-			#find the Phase and Mag XXX
-			for type in ["Phase","Mag"]:
-				type_run = [x for x in cfg if study in x[3] and type in x[3]]
-				if not len(type_run) == 1:
-					print("ALERT: Couldn't find the FieldMap_{0}_{1}.nii in cfg for {2}".format(study,
-						type,data["subject"]))
-				else:	
-					study_dict["FieldMap"+type+"XXX"] = prepend_zero(type_run[0][0])
-			info[study] = study_dict
-		else:
-			study_dict["was_run"] = False
-	#write out info.txt as pickled dict
-	pipeline.save_data(info,info_path(data),data["verbose"])
-	if data["verbose"]:
-		pprint("Info:")
-		pprint(info)
-		
-	
-def studies_to_setup(data,type):
-	"""
-	returns what studies should be set up. This list depends on the type of processing to be setup.
-	"""
-	if not os.path.exists(info_path(data)):
-		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
-		raise UserError("Broke in studies_to_setup")
-	info = pipeline.load_data(info_path(data),data["verbose"])
-	if data["single_study"]:
-		studies = [data["single_study"]]
-	else:		
-		if "stats" in type or "art" in type:
-			studies = [k for k,v in info.iteritems() if os.path.exists(
-				touch_file_path(data,k,"preproc","","run"))]
-		elif "preproc" in type:
-			studies = [k for k,v in info.iteritems() if v["was_run"]]
-	return studies
-
+#####SPM#####
 
 def setup_spm(data,type):
 	"""
@@ -561,13 +566,6 @@ def matlab_batch_dict(data,study,type,block):
 		type,block)
 	return replace_dict
 
-def print_info(data):
-	info = pipeline.load_data(info_path(data))
-	for k,v in sorted(info.items()):
-		print("{0}...".format(k))
-		for key,value in sorted(v.items()):
-			print("{0}:{1}".format(key,value))
-		print('\n')
 
 def build_funcdir_info(data,study,type,block):
 	"""build_funcdir_info:
@@ -606,6 +604,8 @@ def touch_file_path(data,study,type,block,when):
 	return s
 
 
+
+####MEG#####
 def run_mri_script(data,type):
 	"""
 	Looks for the write script to run based on type and executes it. This method blocks which is ok
@@ -757,14 +757,8 @@ def setup_bem(data):
 		print("NO Flash DCM...")
 
 
-def set_paths(data):
-	"""Fairly self-explanatory.  Adds keys to the dictionary for "mri_dir","subject_dir",
-	"dicom_dir",and "subject_dicom".  path prefixes are hard coded.
-	"""
-	data["mri_dir"] = os.path.join(func_dir,data["subject"])+os.sep
-	data["dicom_dir"] = os.path.join(dicom_dir,data["subject"])+os.sep
-	data["meg_dir"] = os.path.join(meg_dir,data["subject"])+os.sep
 
+####SECOND LEVEL#######
 
 def second_level(data,type):
 	"""
@@ -999,6 +993,27 @@ def second_script(data):
 	"""
 	return os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 
+
+#####MISC#####
+
+def set_paths(data):
+	"""Fairly self-explanatory.  Adds keys to the dictionary for "mri_dir","subject_dir",
+	"dicom_dir",and "subject_dicom".  path prefixes are hard coded.
+	"""
+	data["mri_dir"] = os.path.join(func_dir,data["subject"])+os.sep
+	data["dicom_dir"] = os.path.join(dicom_dir,data["subject"])+os.sep
+	data["meg_dir"] = os.path.join(meg_dir,data["subject"])+os.sep
+
+
+def get_subjects(sub_list):
+	raw = list_from_file(sub_list)
+	pass
+	subjects = []
+	for s in raw:
+		if s and s[0] != "#": #notempty
+			subjects.append(s)
+	return subjects
+
 		
 def subject_type(subjects):
 	"""
@@ -1018,6 +1033,18 @@ def subject_type(subjects):
 #				 raise UserError("Try again with a better subject list")
 	return stype
 
+
+def print_info(data):
+	info = pipeline.load_data(info_path(data))
+	for k,v in sorted(info.items()):
+		print("{0}...".format(k))
+		for key,value in sorted(v.items()):
+			print("{0}:{1}".format(key,value))
+		print('\n')
+
+
+
+######IO#######
 
 def write_file_with_list(path,lines,verbose=None):
 	"""
@@ -1047,7 +1074,7 @@ def list_from_file(path,verbose=None):
 		raise
 	return all_lines
 
-
+####SUBJ#####
 def process_subject(subject,data):
 	"""
 	This processes options on a single-subject basis.
@@ -1069,6 +1096,8 @@ def process_subject(subject,data):
 			unpack_all(data)
 		if data["setup_preproc"]:
 			setup_spm(data,"preproc")
+		if data["setup_fs_preproc"]:
+			setup_fs(data,"preproc")
 		if data["makeMC"]:
 			makeMC(data)
 		if data["print_info"]:
@@ -1077,6 +1106,7 @@ def process_subject(subject,data):
 			run_art(data)
 		if data["setup_stats"]:
 			setup_spm(data,"stats")
+			
 		if data["setup_outliers"]:
 			setup_spm(data,"stats_outliers")
 		if data["setup_recon"]:
@@ -1104,14 +1134,6 @@ def process_subject(subject,data):
 	except Exception as strerr:
 		print(strerr)
 
-def get_subjects(sub_list):
-	raw = list_from_file(sub_list)
-	pass
-	subjects = []
-	for s in raw:
-		if s and s[0] != "#": #notempty
-			subjects.append(s)
-	return subjects
 
 
 if __name__ == "__main__":
