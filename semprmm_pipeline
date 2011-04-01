@@ -22,10 +22,43 @@ except ImportError:
 	use_joblib = False
 import shutil
 from readInput import readTable
+from writeOutput import writeTable
 import pipeline as pipeline
 
 VER = "1.0"
 possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2})
+cond_num = dict({"ATLLoc":
+					{"Sentences":"1",
+					"Wordlist":"2",
+					"Nonwords":"3",
+					"Misses":"4"},
+				"MaskedMM":
+					{"DirectlyRelated":"1",
+					"IndirectlyRelated":"2",
+					"Unrelated":"3",
+					"InsectPrime":"4",
+					"InsectTarget":"5",
+					"Misses":"6"},
+				"BaleenMM":
+					{"LP_RelatedTarget":"1",
+					"LP_UnrelatedTarget":"2",
+					"LP_UnrelatedFiller":"4",
+					"LP_AnimalTarget":"5",
+					"LP_AnimalPrime":"11",
+					"HP_RelatedTarget":"6",
+					"HP_UnrelatedTarget":"7",
+					"HP_RelatedFiller":"8",
+					"HP_UnrelatedFiller":"9",
+					"HP_AnimalTarget":"10",
+					"HP_AnimalPrime":"12",
+					"Misses":"13"},
+				"AXCPT":
+					{"AY":"1",
+					"BX":"2",
+					"BY":"3",
+					"AX":"4",
+					"Misses":"5"}
+					})
 batch_dir = "/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/"
 func_dir = "/cluster/kuperberg/SemPrMM/MRI/functionals/"
 dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
@@ -186,6 +219,27 @@ def scan2cfg(data):
 		raise
 
 
+####GENERAL FUNCTIONAL####
+	
+def studies_to_setup(data,type):
+	"""
+	returns what studies should be set up. This list depends on the type of processing to be setup.
+	"""
+	if not os.path.exists(info_path(data)):
+		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
+		raise UserError("Broke in studies_to_setup")
+	info = pipeline.load_data(info_path(data),data["verbose"])
+	if data["single_study"]:
+		studies = [data["single_study"]]
+	else:		
+		if "stats" in type or "art" in type:
+			studies = [k for k,v in info.iteritems() if os.path.exists(
+				touch_file_path(data,k,"preproc","","run"))]
+		elif "preproc" in type:
+			studies = [k for k,v in info.iteritems() if v["was_run"]]
+	return studies
+
+
 def info_path(data):
 	"""
 	just a little method to encapsulate this path
@@ -246,27 +300,6 @@ def cfg2info(data):
 		pprint("Info:")
 		pprint(info)
 		
-	
-def studies_to_setup(data,type):
-	"""
-	returns what studies should be set up. This list depends on the type of processing to be setup.
-	"""
-	if not os.path.exists(info_path(data)):
-		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
-		raise UserError("Broke in studies_to_setup")
-	info = pipeline.load_data(info_path(data),data["verbose"])
-	if data["single_study"]:
-		studies = [data["single_study"]]
-	else:		
-		if "stats" in type or "art" in type:
-			studies = [k for k,v in info.iteritems() if os.path.exists(
-				touch_file_path(data,k,"preproc","","run"))]
-		elif "preproc" in type:
-			studies = [k for k,v in info.iteritems() if v["was_run"]]
-	return studies
-
-
-####FUNCTIONAL####
 
 def makeMC(data):
 	codes = {"ATLLoc":{
@@ -354,7 +387,6 @@ def makeMC(data):
 		info[study].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
 					"Run"+run+"MissesDurations": " ".join(miss_dur)})
 	pipeline.save_data(info,info_path(data),data["verbose"])
-
 
 
 #####SPM#####
@@ -604,14 +636,54 @@ def touch_file_path(data,study,type,block,when):
 		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 	return s
 
+
 #####FSFAST#####
+
+def write_par(data,study,info,run):
+	cond_onsets = [key for key in info.keys() if "Run"+run in key and "XXX" not in key and "Onsets" in key]
+	full_par = []
+	for cond_onset in cond_onsets:
+		cond_name = cond_onset.partition("Run"+run)[2].partition("Onsets")[0]
+		onsets = info[cond_onset]
+		duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
+		for onset in onsets.split():
+			full_par.append([onset,cond_num[study][cond_name],duration,"1.0",cond_name])
+	full_par.sort(key=lambda x:int(x[0]))
+	par_fname = os.path.join(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
+	writeTable(par_fname,full_par)
+	
 
 def setup_fs(data,type):
 	"""
 	All 1st level FSFAST processing goes through this function
+	Try to keep variables inline with FSFAST lingo
 	"""
 	print("setup_fs:")
-	
+	for study in studies_to_setup(data,type):
+		fsd = os.path.join(data["mri_dir"],study)
+		sessid = data["mri_dir"]
+		if type == "preproc":
+			#WRITE SUBJECTNAME
+			sname = [data["subject"]]
+			sname_path = os.path.join(sessid,"subjectname")
+			write_file_with_list(sname_path,"\n".join(sname),data["verbose"])
+			#WRITE .PAR
+			study_dict = pipeline.load_data(info_path(data))[study]
+			#amount of runs 
+			runsXXX = [key for key in study_dict.keys() if ("XXX" in key and "Run" in key)]
+			for runXXX in runsXXX:
+				run = runXXX.partition("Run")[2].partition("XXX")[0]
+				write_par(data,study,study_dict,run)
+				#*.nii -> f.nii
+				real_path = os.path.join(fsd,study_dict[runXXX],study+run+".nii")
+				sym_path = os.path.join(fsd,study_dict[runXXX],"f.nii")
+				os.symlink(real_path,sym_path)
+			#make command
+			#preproc-sess -s ya21 -fsd ATLLoc -per-run -fwhm 8 -sliceorder inter -mni305
+			pass
+		if type == "stats":
+			#make command
+			pass
 def run_fs(data,type):
 	print("run_fs:")
 
@@ -1089,59 +1161,59 @@ def process_subject(subject,data):
 	"""
 	This processes options on a single-subject basis.
 	"""
-	try:
-		data["subject"] = subject
-		set_paths(data)
-		if data["copy_dicom"]:		
-			archive_to_cluster(data)
-		if data["scan_only"]:
-			scan_only(data)
-		if data["scan2cfg"]:
-			scan2cfg(data)
-		if data["cfg2info"]:
-			cfg2info(data)
-		if data["unpack"]:
-			unpack(data)
-		if data["unpack_all"]:
-			unpack_all(data)
-		if data["setup_preproc"]:
-			setup_spm(data,"preproc")
-		if data["setup_fs_preproc"]:
-			setup_fs(data,"preproc")
-		if data["makeMC"]:
-			makeMC(data)
-		if data["print_info"]:
-			print_info(data)
-		if data["run_art"]:
-			run_art(data)
-		if data["setup_stats"]:
-			setup_spm(data,"stats")
-		if data["setup_outliers"]:
-			setup_spm(data,"stats_outliers")
-		if data["setup_recon"]:
-			write_shell_script(data,"recon")
-		if data["run_preproc"]:
-			run_mri_script(data,"preproc")
-		if data["run_stats"]:
-			run_mri_script(data,"stats")
-		if data["run_outliers"]:
-			run_mri_script(data,"stats_outliers")
-		if data["run_recon"]:
-			run_mri_script(data,"recon")
-		if data["setup_bem"]:
-			setup_bem(data)
-		if data["preProc"]:
-			meg_script(data,"preProc")
-		if data["new_preProc"]:
-			new_preProc(data)
-		if data["preAnat"]:
-			meg_script(data,"preAnat")
-		if data["makeInv"]:
-			meg_script(data,"makeInv")
-		if data["run_ica"]:
-			run_ica(data)
-	except Exception as strerr:
-		print(strerr)
+#	try:
+	data["subject"] = subject
+	set_paths(data)
+	if data["copy_dicom"]:		
+		archive_to_cluster(data)
+	if data["scan_only"]:
+		scan_only(data)
+	if data["scan2cfg"]:
+		scan2cfg(data)
+	if data["cfg2info"]:
+		cfg2info(data)
+	if data["unpack"]:
+		unpack(data)
+	if data["unpack_all"]:
+		unpack_all(data)
+	if data["setup_preproc"]:
+		setup_spm(data,"preproc")
+	if data["setup_fs_preproc"]:
+		setup_fs(data,"preproc")
+	if data["makeMC"]:
+		makeMC(data)
+	if data["print_info"]:
+		print_info(data)
+	if data["run_art"]:
+		run_art(data)
+	if data["setup_stats"]:
+		setup_spm(data,"stats")
+	if data["setup_outliers"]:
+		setup_spm(data,"stats_outliers")
+	if data["setup_recon"]:
+		write_shell_script(data,"recon")
+	if data["run_preproc"]:
+		run_mri_script(data,"preproc")
+	if data["run_stats"]:
+		run_mri_script(data,"stats")
+	if data["run_outliers"]:
+		run_mri_script(data,"stats_outliers")
+	if data["run_recon"]:
+		run_mri_script(data,"recon")
+	if data["setup_bem"]:
+		setup_bem(data)
+	if data["preProc"]:
+		meg_script(data,"preProc")
+	if data["new_preProc"]:
+		new_preProc(data)
+	if data["preAnat"]:
+		meg_script(data,"preAnat")
+	if data["makeInv"]:
+		meg_script(data,"makeInv")
+	if data["run_ica"]:
+		run_ica(data)
+#	except Exception as strerr:
+#		print(strerr)
 
 
 
