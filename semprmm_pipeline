@@ -685,6 +685,8 @@ def fs_setup(data,type):
 	Try to keep variables inline with FSFAST lingo
 	"""
 	for study in studies_to_setup(data,type):
+		if data["verbose"]:
+			print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
 		fsd = os.path.join(data["mri_dir"],study)
 		sessid = data["mri_dir"]
 		if type == "preproc":
@@ -704,44 +706,58 @@ def fs_setup(data,type):
 				sym_path = os.path.join(fsd,study_dict[runXXX],"f.nii")
 				if not os.path.exists(sym_path):
 					os.symlink(real_path,sym_path)
+			#write script
+			preproc_cmd = "preproc-sess -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -s {0} -fsd {1} -per-run -fwhm 8 -surface fsaverage lhrh -sliceorder odd -mni305 -inorm  > {2} {3}"
+			script_path = fs_script_path(data,type,study)
+			commands = []
+			commands.append("#!/bin/sh")
+			lf = fs_logfile(data,type,study)
+			commands.append(preproc_cmd.format(data["subject"], study, lf, data["parallel"]))
+			commands.append("exit $?")
+			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+			make_file_exec(script_path)
 		if type == "stats":
-			#make command
-			pass
-	fs_write_script(data,type)
+			#write script
+			print("fs_setup:stats NOT IMPLEMENTED")
 
 
 def fs_run(data,type):
-	script_to_run = fs_script_path(data,type)
-	if not os.path.exists(script_to_run):
-		raise UserError("Hey dummy, you need to run --setup_fs_preproc")
-	my_args = ["nohup", script_to_run]
-	print("Starting {0}\n".format(script_to_run))
-	pipeline.run_process(my_args).wait()
+	for study in studies_to_setup(data,type):
+		script_to_run = fs_script_path(data,type,study)
+		if not os.path.exists(script_to_run):
+			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
+		my_args = ["nohup", script_to_run]
+		print("Starting {0}\n".format(script_to_run))
+		return_value = pipeline.run_process(my_args).wait()
+		if return_value:
+			status = "failure"
+		else:
+			status = "success"
+		#open the log file and make that message
+		log_text = "############# {0} ############\n"
+		with open(fs_logfile(data,type,study), "r") as f:
+			log_text += f.read()
+		if not log_text:
+			log_text += "Log couldn't be opened"
+		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
+		subj = "{0} {1} fs-{2} {3}".format(data["subject"],study,type,status)
+		if data["error_email"]:
+			pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
+
+		
+def fs_script_dir(data):
+	return os.path.join(data["mri_dir"],"scripts")
 
 
-def fs_write_script(data,type):
-	script_path = fs_script_path(data,type)
-	commands = []
-	commands.append("#!/bin/sh")
-	if type == "preproc":
-		preproc_cmd = "preproc-sess -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -s {0} -fsd {1} -per-run -fwhm 8 -surface fsaverage lhrh -sliceorder odd -mni305 -inorm  > {2} {3}"
-		for study in studies_to_setup(data,type):
-			lf = os.path.join(os.path.dirname(script_path),"{0}-fspreproc.log".format(study.lower()))
-			commands.append(preproc_cmd.format(data["subject"], study, lf, data["parallel"]))
-	if type == "stats":
-		print("fs_write_script:stats not implemented!")
-	write_file_with_list(script_path,"\n".join(commands),data["verbose"])
-	make_file_exec(script_path)
+def fs_logfile(data,type,study):
+	return os.path.join(fs_script_dir(data),"{0}_fs-{1}.log".format(study.lower(),type))
 
 
-def fs_script_path(data,type):
-	script_dir = os.path.join(data["mri_dir"],"scripts")
+def fs_script_path(data,type,study):
+	script_dir = fs_script_dir(data)
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	if data["single_study"]:
-		return os.path.join(script_dir,"_".join([data["single_study"],"fs"+type,data["subject"]+".sh"]))
-	else:
-		return os.path.join(script_dir,"_".join(["all","fs"+type,data["subject"]+".sh"]))
+	return os.path.join(script_dir,"_".join([study.lower(),"fs-"+type,data["subject"]+".sh"]))
 
 
 ####MEG#####
@@ -1251,7 +1267,12 @@ def process_subject(subject,data):
 		if data["run_ica"]:
 			run_ica(data)
 	except Exception as strerr:
-		print(strerr)
+		print "Run-time error: ",type(strerr),strerr
+		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
+		if data["error_email"]:
+			pipeline.email(sender=add,receiver=add,
+					subject="semprmm_pipeline error with {0}".format(subject),
+					message=str(strerr))
 
 
 
@@ -1381,8 +1402,10 @@ if __name__ == "__main__":
 		default=False)
 	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*",action="store",
 		type="string",default=None)
+	misc_group.add_option("--no_email",dest="error_email",default=True,action="store_true",
+		help="Don't send email when errors occur, on by default")
 	parser.add_option_group(misc_group)	
-
+	
 
 	(options,subjects) = parser.parse_args()
 	data = dict({})
