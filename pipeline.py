@@ -14,6 +14,8 @@ import smtplib
 import time
 import string
 import pickle
+from email.mime.text import MIMEText
+import smtplib
 
 class ProgrammerError(Exception):
 	pass
@@ -206,4 +208,22 @@ def wait_to_finish(running_jobs,loop_time=30):
 	while len(running_jobs) > 0:
 		running_jobs[:] = [process for process in running_jobs if process.poll() is None]
 		time.sleep(loop_time)
-			
+		
+		
+def email(sender,receiver,subject=None,message=None):
+	#construct the message
+	msg = MIMEText(message)
+	msg["From"] = sender
+	msg["To"] = receiver
+	msg["Subject"] = subject
+	
+	#start smtp server
+	server = smtplib.SMTP('localhost')
+	try:
+		server.sendmail(sender,receiver,msg.as_string())
+	except:
+		print("Error sending email")
+		raise
+	finally:
+		server.quit()
+
