@@ -3,32 +3,32 @@ Here's a high-level overview of what these files do and how we use them.
 Any questions, comments or suggestions can be sent to Scott Burns <sburns@nmr.mgh.harvard.edu>
 
 semprmm_pipeline:
-	This is a python program that we use to analyze all of our MRI data. It's a commandline program with the following usage:
+	This is a python program that we use to analyze all of our MRI data. It's run from the command line with the following usage:
 	
 	semprmm_pipeline subject [more subjects] option [more options]
 	
-	
+	It's sort of a meta-pipeline in that it exposes functionality from many different neuroimaging packages.
 	It contains functions for nearly everything we'd like to do with our MR data.  Corresponding options of interest for each function are listed.
 	
-		1. 	Copying DICOM images from Bourget
+		* 	Copying DICOM images from Bourget
 			--copy_dicom
-		2.	Unpacking the DICOM directory in -scanonly mode
+		*	Unpacking the DICOM directory in -scanonly mode
 			--scan_only
-		3.	Parsing the scan.log (output of unpacksdcmdir) and automatically writing a cfg.txt
+		*	Parsing the scan.log (output of unpacksdcmdir) and automatically writing a cfg.txt
 			--scan2cfg,--cfg2info
-		4.	Using the cfg.txt file to perform the full unpack
+		*	Using the cfg.txt file to perform the full unpack
 			--unpack,--unpack_all
-		5.	Setting up SPM batches for preprocessing and 1st-level analysis
-			--setup_preproc,--setup_stats,--setup_outliers,--parallel
-		6.	Running said SPM batches
-			--run_preproc, --run_stats,--run_outliers,--launchpad
-		7.	Setting up and running the cortical reconstruction using FreeSurfer
+		*	Setting up and running SPM batches for preprocessing and 1st-level analysis
+			--setup_preproc,--setup_stats,--setup_outliers,--parallel, --run_preproc, --run_stats,--run_outliers,
+		*	Setting up/running preprocessing,1st level stats with FSFast
+			--setup_fs_preproc,--setup_fs_analysis,--setup_fs_stats,--run_fs_preproc,--run_fs_stats
+		*	Setting up and running the cortical reconstruction using FreeSurfer
 			--setup_recon,--run_recon
-		8.	Setting up and running 2nd-level (group) analyses
+		*	Setting up and running 2nd-level (group) analyses
 			--setup_second,--inc,--exc,--mask,--run_second
-		9.	Running FreeSurfer in "batch mode" to output jpegs of the 2nd-level results overlayed onto fsaverage.
+		*	Running FreeSurfer in "batch mode" to output jpegs of the 2nd-level results overlayed onto fsaverage.
 			--surf_second, --dry, --aparc,--pvalue,--date
-		10.	Combine these jpegs and template HTML files into a small "website" of results which can be readily packaged up and shared with colloborators.
+		*	Combine these jpegs and template HTML files into a small "website" of results which can be readily packaged up and shared with colloborators.
 			--package_second
 			
 	As of right now (20110308), there's a lot of study-dependent code in this pipeline that I'm not ready to pull out. For that reason, I think the take away of this file is that this code contains some pretty good ideas about how to process MRI data in a robust manner. I'm especially proud of my SPM batches in that to process a new subject, I don't have to touch the horrible SPM interface at all. The --surf_second and --package_second are neat as well and may or may not impress your PI.
