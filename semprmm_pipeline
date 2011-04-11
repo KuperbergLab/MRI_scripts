@@ -59,6 +59,51 @@ cond_num = dict({"ATLLoc":
 					"AX":"4",
 					"Misses":"5"}
 					})
+contrasts = dict({"ATLLoc":
+					{"Sentences":(("1"),("0")),
+					"Wordlist":(("2"),("0")),
+					"Nonwords":(("3"),("0")),
+					"Sentences-Wordlist":(("1"),("2")),
+					"Wordlist-Nonwords":(("2"),("3")),
+					"Sentences-Nonwords":(("1"),("3")),
+					"all":(("1","2","3"),("0"))},
+				"MaskedMM":
+					{"Direct":(("1"),("0")),
+					"Indirect":(("2"),("0")),
+					"Unrelated":(("3"),("0")),
+					"InsectPrime":(("4"),("0")),
+					"InsectTarget":(("5"),("0")),
+					"Dir-Unr":(("1"),("3")),
+					"all":(("1","2","3","4","5"),("0"))},
+				"BaleenMM":
+					{"LP_Related":(("1"),("0")),
+					"LP_Unrelated":(("2"),("0")),
+					"LP_UnrelateFiller":(("4"),("0")),
+					"LP_AnimalTarget":(("5"),("0")),
+					"LP_AnimalPrime":(("11"),("0")),
+					"LP_Related-Unrelated":(("1"),("2")),
+					"LP_AnimalTarget-Unrelated":(("5"),("2")),
+					"HP_Related":(("6"),("0")),
+					"HP_Unrelated":(("7"),("0")),
+					"HP_RelatedFiller":(("8"),("0")),
+					"HP_UnrelateFiller":(("9"),("0")),
+					"HP_AnimalTarget":(("10"),("0")),
+					"HP_AnimalPrime":(("12"),("0")),
+					"HP_Related-Unrelated":(("6"),("7")),
+					"HP_RelatedFiller-UnrelatedFiller":(("8"),("9")),
+					"HP_AnimalTarget-Unrelated":(("10"),("7")),
+					"LP_All":(("1","2","4","5","11"),("0")),
+					"HP_All":(("6","7","8","9","10","12"),("0"))},
+				"AXCPT":
+					{"AY":(("1"),("0")),
+					"BX":(("2"),("0")),
+					"BY":(("3"),("0")),
+					"AX":(("4"),("0")),
+					"all":(("1","2","3","4"),("0")),
+					"AY-BY":(("1"),("3")),
+					"BX-BY":(("2"),("3"))}
+					})
+
 batch_dir = "/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/"
 func_dir = "/cluster/kuperberg/SemPrMM/MRI/functionals/"
 dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
@@ -80,7 +125,9 @@ class UserError(Exception):
 class SystemError(Exception):
 	pass
 
+
 ####COPYING/UNPACKING#######
+
 def archive_to_cluster(data):
 	"""
 	data: dict
@@ -225,6 +272,9 @@ def studies_to_setup(data,type):
 	"""
 	returns what studies should be set up. This list depends on the type of processing to be setup.
 	"""
+	if type == "analysis":
+		#setup all
+		return cond_num.keys()
 	if not os.path.exists(info_path(data)):
 		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
 		raise UserError("Broke in studies_to_setup")
@@ -398,7 +448,6 @@ def make_file_exec(path):
 	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
 	
 
-
 def touch_file_path(data,study,type,block,when):
 	"""
 	yet another little method to capture this logic in one place
@@ -441,10 +490,10 @@ def spm_setup(data,type):
 					if not os.path.exists(smooth_dir):
 						os.mkdir(smooth_dir)
 		if "stats" in type and study == "BaleenMM":
-			write_mlab_script(data,study,type,"1")
-			write_mlab_script(data,study,type,"2")
+			spm_write_mlab_script(data,study,type,"1")
+			spm_write_mlab_script(data,study,type,"2")
 		else:
-			write_mlab_script(data,study,type,"")
+			spm_write_mlab_script(data,study,type,"")
 	spm_write_script(data,type)
 
 
@@ -456,7 +505,7 @@ def spm_script_path(data,type):
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
 	if "recon" in type:
-		return os.path.join(script_dir,"recon"+"_"+data["subject"]+".sh")
+		return 
 	elif data["single_study"]:
 		return os.path.join(script_dir,data["single_study"].lower()+"_"+type+"_"+data["subject"]+".sh")
 	else:
@@ -465,6 +514,7 @@ def spm_script_path(data,type):
 
 def spm_write_script(data,type):
 	"""
+	type (string): "preproc","stats","outliers"
 	Writes out the shell script with matlab calls if we're preprocessing or stats processing or with
 	recon-all functions if we're reconstructing.
 	If --parallel was used, then & will be appended to the matlab lines. With the new parallelization
@@ -473,41 +523,32 @@ def spm_write_script(data,type):
 	shell_script = spm_script_path(data,type)
 	commands = []
 	commands.append("#!/bin/sh")
-	if "recon" in type:
-		setup_recon = "recon-all -s " + data["subject"]
-		#find all mprages 
-		mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
-		for mprage in mprages:
-			setup_recon = setup_recon + " -i " + mprage
-		commands.append(setup_recon + " > {0}".format(os.path.join(data["mri_dir"],"scripts","setup_recon.log")))
-		commands.append("nohup recon-all -all -s {0} -mail {1} >& /dev/null &".format(data["subject"],getpass.getuser()))
-	else:
-		if "stats" in type:
-			commands.append("unset DISPLAY")
-		mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
-		if "stats" in type:
-			mlab_cmd += " -nodisplay "
-		if not "studies_to_setup" in data:
-			data["studies_to_setup"] = studies_to_setup(data,type)
-		for study in data["studies_to_setup"]:
-			if study == "BaleenMM" and "stats" in type:
-				job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-					type+"_block1.m")
-				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-					type+"_block1.log")
-				commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,
-					mlab_cmd,data["parallel"]))
-				job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-					type+"_block2.m")
-				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-					type+"_block2.log")
-				commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,
-					mlab_cmd,data["parallel"]))
-			else:
-				job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-				log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
-				commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
-					mlab_cmd,data["parallel"]))
+	if "stats" in type:
+		commands.append("unset DISPLAY")
+	mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
+	if "stats" in type:
+		mlab_cmd += " -nodisplay "
+	if not "studies_to_setup" in data:
+		data["studies_to_setup"] = studies_to_setup(data,type)
+	for study in data["studies_to_setup"]:
+		if study == "BaleenMM" and "stats" in type:
+			job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
+				type+"_block1.m")
+			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
+				type+"_block1.log")
+			commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,
+				mlab_cmd,data["parallel"]))
+			job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
+				type+"_block2.m")
+			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
+				type+"_block2.log")
+			commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,
+				mlab_cmd,data["parallel"]))
+		else:
+			job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
+			commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
+				mlab_cmd,data["parallel"]))
 	try:
 		write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
 	except IOError:
@@ -516,7 +557,7 @@ def spm_write_script(data,type):
 	make_file_exec(shell_script)		
 
 
-def run_art(data):
+def spm_run_art(data):
 	"""
 	This function writes out the ART-specific session file, then a short matlab script, then
 	runs matlab and passes the script into the matlab process to run. We use ART defaults.
@@ -529,7 +570,7 @@ def run_art(data):
 		motions = glob(os.path.join(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
 		if len(images) != len(motions):
 			print("Not the same amount of images and motion files")
-			raise UserError("run_art")
+			raise UserError("spm_run_art")
 		sess_contents = []
 		sess_contents.append("sessions: {0}".format(len(images)))
 		sess_contents.append("global_mean: 1")
@@ -547,7 +588,7 @@ def run_art(data):
 	for session in sessions:
 		art_m.append("art('sess_file','{0}');".format(session))
 	art_m.append("exit;")
-	art_path = os.path.join(data["mri_dir"],"run_art.m")
+	art_path = os.path.join(data["mri_dir"],"spm_run_art.m")
 
 	write_file_with_list(art_path,"\n".join(art_m),data["verbose"])
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
@@ -555,27 +596,16 @@ def run_art(data):
 	proc.communicate()
 	print("Finished ART for {0}".format(data["subject"]))
 
-	
-def specific_batch_path(data,study,type,block):
-	"""
-	another little encapsulating method
-	"""
-	if study == "BaleenMM" and "stats" in type:
-		return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-			type+"_block"+block+"_job.m")
-	else:
-		return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_job.m")
 		
-
-def write_mlab_script(data,study,type,block):
+def spm_write_mlab_script(data,study,type,block):
 	"""
-	This basically just wraps f2f_replace and uses the dictionary from matlab_batch_dict.
+	This basically just wraps f2f_replace and uses the dictionary from spm_matlab_dict.
 	"""
 	if "stats_outliers" in type:
 		good_type = "stats"
 	else:
 		good_type = type
-	batch_dict = matlab_batch_dict(data,study,type,block)
+	batch_dict = spm_matlab_dict(data,study,type,block)
 	if study == "BaleenMM" and "stats" in type:
 		if block is None:
 			raise ProgrammerError("write_batch_files: no block specified for baleenmm stats")
@@ -588,12 +618,12 @@ def write_mlab_script(data,study,type,block):
 	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
-def matlab_batch_dict(data,study,type,block):
+def spm_matlab_dict(data,study,type,block):
 	"""
-	Adds to the dictionary returned by build_funcdir_info.  Any keywords you insert to the SPM batches
+	Adds to the dictionary returned by spm_funcdir_info.  Any keywords you insert to the SPM batches
 	should be added here.
 	"""
-	replace_dict = build_funcdir_info(data,study,type,block)
+	replace_dict = spm_funcdir_info(data,study,type,block)
 	replace_dict["study"] = study.lower()
 	replace_dict["type"] = type
 	if block:
@@ -615,8 +645,8 @@ def matlab_batch_dict(data,study,type,block):
 	return replace_dict
 
 
-def build_funcdir_info(data,study,type,block):
-	"""build_funcdir_info:
+def spm_funcdir_info(data,study,type,block):
+	"""spm_funcdir_info:
 	looks for info.txt and uses the dictionary stored that for everything.
 	The MPRAGEXXX is filled out here"""
 	info = pipeline.load_data(info_path(data),data["verbose"])
@@ -641,26 +671,71 @@ def build_funcdir_info(data,study,type,block):
 	return study_dict	
 
 
-#TODO THIS NEEDS A RENAME/REFACTOR
-def run_mri_script(data,type):
+def spm_run_script(data,type):
 	"""
 	Looks for the write script to run based on type and executes it. This method blocks which is ok
-	because this method is starting in parallel automatically for many subjects. This will block 
-	even if you used --parallel with --setup_*.
+	because this method is starting in parallel automatically for many subjects. This DOES NOT block 
+	if you used --parallel with --setup_*.
 	"""
-	#find all the scripts of this type
-	if type == "recon":
-		scripts = [spm_script_path(data,type)]
-	else:
-		if data["single_study"]:
-			prefix = data["single_study"].lower()+"_"
-		else :
-			prefix = "all_"
-		scripts = glob(os.path.join(data["mri_dir"],"scripts",prefix+type+"_*"))
-	for script in scripts:
-		args = ["nohup", script]
-		print("\nStarting {0}\n".format(script))
-		pipeline.run_process(args).wait()
+	script_to_run = spm_script_path(data,type)
+	if not os.path.exists(script_to_run):
+		raise UserError("spm_run_script: no script found")
+	my_args = ["nohup", script_to_run]
+	print("\nStarting {0}\n".format(script_to_run))
+	return_value = pipeline.run_process(my_args).wait()
+
+
+def spm_write_coreg_mprage(data):
+	commands = []
+	for study in studies_to_setup(data,"preproc"):
+		mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop "
+		study_info = pipeline.load_data(info_path(data),data["verbose"])[study]
+		new_dict = {"par":study,"subject":data["subject"],"MPRAGEXXX":study_info["MPRAGE_runs"][0]}
+		incoming = os.path.join(mri_scripts,"spm_batches","coreg_write.m")
+		outgoing = os.path.join(data["mri_dir"],"scripts","%s_%s.m" % (study,"cowrite"))
+		pipeline.f2f_replace(incoming, outgoing, new_dict,data["verbose"])
+		lf = os.path.join(data["mri_dir"],"scripts","%s_cowrite.log" % (study))
+		mlab_cmd += " < %s > %s " % (outgoing,lf)
+		commands.append(mlab_cmd)
+	script_name = spm_script_path(data,"cowrite")
+	write_file_with_list(script_name,"\n".join(commands),data["verbose"])
+	make_file_exec(script_name)
+	pipeline.run_process(["nohup",script_name],output=sys.stdout).wait()
+
+
+
+#####RECONSTRUCTION####
+
+def recon_script_path(data):
+	script_dir = os.path.join(data["mri_dir"],"scripts")
+	if not os.path.exists(script_dir):
+		os.mkdir(script_dir)
+	return os.path.join(script_dir,"recon"+"_"+data["subject"]+".sh")
+
+
+def recon_write_script(data):
+	script_path = recon_script_path(data)
+	commands = []
+	commands.append("#!/bin/sh")
+	setup_recon = "recon-all -s " + data["subject"]
+	#find all mprages 
+	mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
+	for mprage in mprages:
+		setup_recon = setup_recon + " -i " + mprage
+	commands.append(setup_recon + " > {0}".format(os.path.join(data["mri_dir"],"scripts","setup_recon.log")))
+	commands.append("nohup recon-all -all -s {0} -mail {1} >& /dev/null &".format(data["subject"],getpass.getuser()))
+	write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+	make_file_exec(script_path)
+	
+
+def recon_run(data):
+	script_to_run = recon_script_path(data)
+	if not os.path.exists(script_to_run):
+		raise UserError("recon_run: no recon script made")
+	my_args = ["nohup", script_to_run]
+	print("\nStarting %s" % (script_to_run))
+	return_val = pipeline.run_process(my_args).wait()
+
 
 
 #####FSFAST#####
@@ -689,12 +764,13 @@ def fs_setup(data,type):
 			print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
 		fsd = os.path.join(data["mri_dir"],study)
 		sessid = data["mri_dir"]
+		commands = []
+		commands.append("#!/bin/sh")
 		if type == "preproc":
-			#WRITE SUBJECTNAME
 			sname = [data["subject"]]
 			sname_path = os.path.join(sessid,"subjectname")
 			write_file_with_list(sname_path,"\n".join(sname),data["verbose"])
-			#WRITE .PAR
+			#write .par
 			study_dict = pipeline.load_data(info_path(data))[study]
 			#amount of runs 
 			runsXXX = [key for key in study_dict.keys() if ("XXX" in key and "Run" in key)]
@@ -707,18 +783,150 @@ def fs_setup(data,type):
 				if not os.path.exists(sym_path):
 					os.symlink(real_path,sym_path)
 			#write script
-			preproc_cmd = "preproc-sess -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -s {0} -fsd {1} -per-run -fwhm 8 -surface fsaverage lhrh -sliceorder odd -mni305 -inorm  > {2} {3}"
-			script_path = fs_script_path(data,type,study)
-			commands = []
-			commands.append("#!/bin/sh")
 			lf = fs_logfile(data,type,study)
-			commands.append(preproc_cmd.format(data["subject"], study, lf, data["parallel"]))
+			preproc_cmd = " ".join(["preproc-sess",
+									"-d /cluster/kuperberg/SemPrMM/MRI/functionals/",
+									"-s %s" % data["subject"],
+									"-fsd %s" % study, 
+									"-per-run",
+									"-fwhm 8",
+									"-surface fsaverage lhrh",
+									"-sliceorder siemens ",
+									"-mni305",
+									"> %s %s" % (lf,data["parallel"])])
+			commands.append(preproc_cmd)
 			commands.append("exit $?")
+			script_path = fs_script_path(data,type,study)
 			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 			make_file_exec(script_path)
-		if type == "stats":
-			#write script
-			print("fs_setup:stats NOT IMPLEMENTED")
+		elif type == "analysis":
+			commands.append("cd %s" % func_dir)
+			#so baleen is weird in that we need to do blocks differently
+			if study == "BaleenMM":
+				real_studies = ["BaleenLP","BaleenHP"]
+			else:
+				real_studies = [study]
+			for real_study in real_studies:
+				for space in ["lh","rh","mni305"]:
+					for shape in ["spm","fir"]:
+						fir_wind = dict({"MaskedMM":(-6,18),
+										"ATLLoc":(-6,22),
+										"BaleenMM":(-6,18),
+										"AXCPT":(-4,16)})
+						#config shape_opt
+						if shape == "spm":
+							shape_opt = "-spmhrf 0 -refeventdur 2"
+						else:
+							shape_opt = "-fir %d %d -TER 2" % (fir_wind[study][0],fir_wind[study][1]-fir_wind[study][0])
+						#config nconds
+						if real_study == "BaleenLP":
+							nconds = len([k for k in cond_num[study].keys() if "LP" in k or k == "Misses"])
+						elif real_study == "BaleenHP":
+							nconds = len([k for k in cond_num[study].keys() if "HP" in k or k == "Misses"])
+						else:
+							nconds = len(cond_num[study].keys())
+						#config funcstem
+						funcstem = "fmcpr.odd.sm8"
+						if space != "mni305":
+							funcstem += ".fsaverage.%s -surface fsaverage %s" % (space,space)
+						else:
+							funcstem += ".%s.2mm -mni305" % space
+						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
+						cmd = " ".join(["mkanalysis-sess",
+										"-analysis %s" % aname,
+										"-fsd %s" % study,
+										"-rlf %s" % os.path.basename(fs_rlf_path(data,type,real_study)),
+										"-p %s.par" % study.lower(),
+										"%s" % shape_opt,
+										"-event-related",
+										"-TR 2",
+										"-nconditions %d" % nconds,
+										"-mcextreg",
+										"-hpf 128",
+										"-funcstem %s" % funcstem,
+										"-force"])
+						commands.append(cmd)
+						#mkcontrast-sess
+						for contrast,(a,c) in contrasts[study].iteritems():
+							#print("%s --> %s,%s" % (contrast,a,c))
+							pos_con = " ".join(["-a "+sa for sa in a])
+							neg_con = " ".join(["-c "+sc for sc in c])
+							con_cmd = " ".join(["mkcontrast-sess",
+										"-analysis %s" % aname,
+										"-contrast %s" % contrast,
+										pos_con,
+										neg_con])
+							commands.append(con_cmd)
+				script_path = fs_script_path(data,type,study)
+				write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+				make_file_exec(script_path)
+		elif type == "stats":
+			commands.append("cd %s" % func_dir)
+			lf = fs_logfile(data,type,study)
+			commands.append("rm %s" % lf)
+			commands.append("let z=0")
+			#baleen is weird in that we need to do blocks differently
+			if study == "BaleenMM":
+				real_studies = ["BaleenLP","BaleenHP"]
+			else:
+				real_studies = [study]
+			for real_study in real_studies:
+				fs_make_rlf(data,type,real_study)
+				for space in ["lh","rh","mni305"]:
+					for shape in ["spm","fir"]:
+						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
+						srchdir = func_dir
+						sessid = data["subject"]
+						cmd = " ".join(["selxavg3-sess",
+										"-analysis %s" % aname,
+										"-s %s" % sessid,
+										"-d %s" % srchdir,
+										"-svres",
+										"-nolog",
+										">> %s" % lf])
+						commands.append(cmd)
+						commands.append("let z=z+$?")
+				commands.append("exit $z")
+				script_path = fs_script_path(data,type,study)
+				write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+				make_file_exec(script_path)
+
+
+def fs_make_rlf(data,type,study):
+	"""
+	study can be ATLLoc,MaskedMM,AXCPT,BaleenHP,BaleenLP
+	"""
+	if "Baleen" in study:
+		stud_key = "BaleenMM"
+	else:
+		stud_key = study
+	study_info = pipeline.load_data(info_path(data),False)[stud_key]
+	#find run keys
+	run_keys = [k for k in study_info if ("Run" in k and "XXX" in k)]
+	if study == "BaleenLP":
+		#first four runs
+		good_runs = [study_info[k] for k in run_keys if int(k.partition("Run")[2].partition("XXX")[0]) < 5]
+	elif study == "BaleenHP":
+		#last four runs
+		good_runs = [study_info[k] for k in run_keys if int(k.partition("Run")[2].partition("XXX")[0]) > 4]
+	else:
+		good_runs = [study_info[k] for k in run_keys]
+	good_runs = sorted(good_runs)
+	write_file_with_list(fs_rlf_path(data,type,study),"\n".join(good_runs))
+	
+	
+def fs_rlf_path(data,type,study):
+	if "Baleen" in study:
+		stud_dir = "BaleenMM"
+	else:
+		stud_dir = study
+	if study == "BaleenLP":
+		fname = "rlf1"
+	elif study == "BaleenHP":
+		fname = "rlf2"
+	else:
+		fname = "rlf"
+	return os.path.join(data["mri_dir"],stud_dir,fname)
 
 
 def fs_run(data,type):
@@ -728,25 +936,28 @@ def fs_run(data,type):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
 		my_args = ["nohup", script_to_run]
 		print("Starting {0}\n".format(script_to_run))
+		start_time = time.strftime("%Y-%m-%d %H:%M:%S")
 		return_value = pipeline.run_process(my_args).wait()
 		if return_value:
 			status = "failure"
 		else:
 			status = "success"
 		#open the log file and make that message
-		log_text = "############# {0} ############\n"
+		log_text = "\n".join(["%d errors..." % return_value,start_time,"#### %s ####" % study])+"\n"
 		with open(fs_logfile(data,type,study), "r") as f:
 			log_text += f.read()
 		if not log_text:
 			log_text += "Log couldn't be opened"
 		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
-		subj = "{0} {1} fs-{2} {3}".format(data["subject"],study,type,status)
-		if data["error_email"]:
-			pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
+		subj = "{0} fs-{1} {2}".format(data["subject"],type,status)
+		pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
 
 		
-def fs_script_dir(data):
-	return os.path.join(data["mri_dir"],"scripts")
+def fs_script_dir(data,type=None):
+	if type == "analysis":
+		return os.path.join(func_dir,"fsfast_scripts")
+	else:
+		return os.path.join(data["mri_dir"],"scripts")
 
 
 def fs_logfile(data,type,study):
@@ -754,10 +965,10 @@ def fs_logfile(data,type,study):
 
 
 def fs_script_path(data,type,study):
-	script_dir = fs_script_dir(data)
+	script_dir = fs_script_dir(data,type)
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	return os.path.join(script_dir,"_".join([study.lower(),"fs-"+type,data["subject"]+".sh"]))
+	return os.path.join(script_dir,"_".join([study.lower(),"fs-"+type+".sh"]))
 
 
 ####MEG#####
@@ -1236,24 +1447,30 @@ def process_subject(subject,data):
 			makeMC(data)
 		if data["print_info"]:
 			print_info(data)
+		if data["reg_mprage"]:
+			spm_write_coreg_mprage(data)
 		if data["run_art"]:
-			run_art(data)
+			spm_run_art(data)
 		if data["setup_stats"]:
 			spm_setup(data,"stats")
 		if data["setup_outliers"]:
 			spm_setup(data,"stats_outliers")
+		if data["setup_fs_stats"]:
+			fs_setup(data,"stats")
 		if data["setup_recon"]:
-			spm_write_script(data,"recon")
+			recon_write_script(data)
 		if data["run_preproc"]:
-			run_mri_script(data,"preproc")
+			spm_run_script(data,"preproc")
 		if data["run_fs_preproc"]:
 			fs_run(data,"preproc")
 		if data["run_stats"]:
-			run_mri_script(data,"stats")
+			spm_run_script(data,"stats")
+		if data["run_fs_stats"]:
+			fs_run(data,"stats")
 		if data["run_outliers"]:
-			run_mri_script(data,"stats_outliers")
+			spm_run_script(data,"stats_outliers")
 		if data["run_recon"]:
-			run_mri_script(data,"recon")
+			recon_run(data)
 		if data["setup_bem"]:
 			setup_bem(data)
 		if data["preProc"]:
@@ -1271,8 +1488,8 @@ def process_subject(subject,data):
 		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
 		if data["error_email"]:
 			pipeline.email(sender=add,receiver=add,
-					subject="semprmm_pipeline error with {0}".format(subject),
-					message=str(strerr))
+					subject="semprmm_pipeline error".format(subject),
+					message=data["subject"]+" "+str(strerr))
 
 
 
@@ -1314,7 +1531,9 @@ if __name__ == "__main__":
 	spm_group.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
 		help="Parse exp logs for multiple condition information, must be done before --setup_[stats]")	
 	spm_group.add_option("--run_art",dest="run_art",action="store_true",default=False,
-		help="Run artifact detection for a subject")	
+		help="Run artifact detection for a subject")
+	spm_group.add_option("--reg_mprage",dest="reg_mprage",action="store_true",default=False,
+		help="Register the subject's MPRAGE to each functional run")
 	parser.add_option_group(spm_group)
 	
 	#FSFast options
@@ -1325,6 +1544,10 @@ if __name__ == "__main__":
 		default=False,help="Setup preprocessing using FSFast")
 	fs_group.add_option("--run_fs_preproc",dest="run_fs_preproc",action="store_true",
 		default=False,help="Run preprocessing using FSFast")
+	fs_group.add_option("--run_fs_stats",dest="run_fs_stats",action="store_true",default=False,
+		help="Run 1st-level statistics using FSFast")
+	fs_group.add_option("--setup_fs_analysis",dest="setup_fs_analysis",action="store_true",
+		default=False,help="Setup all paradigms analysis with FSFast")	
 	parser.add_option_group(fs_group)	
 	
 	#Cortical reconstruction options
@@ -1402,8 +1625,8 @@ if __name__ == "__main__":
 		default=False)
 	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*",action="store",
 		type="string",default=None)
-	misc_group.add_option("--no_email",dest="error_email",default=True,action="store_true",
-		help="Don't send email when errors occur, on by default")
+	misc_group.add_option("--error_email",dest="error_email",default=False,action="store_true",
+		help="Send email when errors occur, off by default")
 	parser.add_option_group(misc_group)	
 	
 
@@ -1441,6 +1664,8 @@ if __name__ == "__main__":
 	else:
 		[process_subject(subject,data) for subject in subjects]
 	#group level options
+	if data["setup_fs_analysis"]:
+		fs_setup(data,"analysis")
 	if data["all_second"]:
 		second_level(data,"setup")
 		second_level(data,"run")	
