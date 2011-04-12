@@ -762,10 +762,11 @@ def fs_setup(data,type):
 	for study in studies_to_setup(data,type):
 		if data["verbose"]:
 			print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
-		fsd = os.path.join(data["mri_dir"],study)
-		sessid = data["mri_dir"]
 		commands = []
 		commands.append("#!/bin/sh")
+		if type == "preproc" or type == "stats":
+			fsd = os.path.join(data["mri_dir"],study)
+			sessid = data["mri_dir"]
 		if type == "preproc":
 			sname = [data["subject"]]
 			sname_path = os.path.join(sessid,"subjectname")
@@ -825,25 +826,25 @@ def fs_setup(data,type):
 							nconds = len([k for k in cond_num[study].keys() if "HP" in k or k == "Misses"])
 						else:
 							nconds = len(cond_num[study].keys())
-						#config funcstem
-						funcstem = "fmcpr.odd.sm8"
+						preproc_opt = "-fwhm 8 -stc siemens "
 						if space != "mni305":
-							funcstem += ".fsaverage.%s -surface fsaverage %s" % (space,space)
+							preproc_opt += "-surface fsaverage %s" % space
 						else:
-							funcstem += ".%s.2mm -mni305" % space
+							preproc_opt += "-mni305 2"
 						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
 						cmd = " ".join(["mkanalysis-sess",
 										"-analysis %s" % aname,
 										"-fsd %s" % study,
-										"-rlf %s" % os.path.basename(fs_rlf_path(data,type,real_study)),
+										"-rlf %s" % fs_rlf_name(data,type,real_study),
 										"-p %s.par" % study.lower(),
 										"%s" % shape_opt,
 										"-event-related",
 										"-TR 2",
+										preproc_opt,
 										"-nconditions %d" % nconds,
 										"-mcextreg",
 										"-hpf 128",
-										"-funcstem %s" % funcstem,
+#										"-funcstem %s" % funcstem,
 										"-force"])
 						commands.append(cmd)
 						#mkcontrast-sess
@@ -912,21 +913,17 @@ def fs_make_rlf(data,type,study):
 	else:
 		good_runs = [study_info[k] for k in run_keys]
 	good_runs = sorted(good_runs)
-	write_file_with_list(fs_rlf_path(data,type,study),"\n".join(good_runs))
+	write_file_with_list(os.path.join(data["mri_dir"],stud_key,fs_rlf_name(data,type,study)),"\n".join(good_runs))
 	
 	
-def fs_rlf_path(data,type,study):
-	if "Baleen" in study:
-		stud_dir = "BaleenMM"
-	else:
-		stud_dir = study
+def fs_rlf_name(data,type,study):
 	if study == "BaleenLP":
 		fname = "rlf1"
 	elif study == "BaleenHP":
 		fname = "rlf2"
 	else:
 		fname = "rlf"
-	return os.path.join(data["mri_dir"],stud_dir,fname)
+	return fname
 
 
 def fs_run(data,type):
@@ -1367,6 +1364,8 @@ def subject_type(subjects):
 	# assume first is good
 	if len(subjects) == 1:
 		stype = subjects[0][:2]
+	elif len(subjects) == 0:
+		raise UserError("No subject input")
 	else:
 		stype = subjects[0][:2]
 #		 match = len([x for x in subjects[1:] if x[:2] == stype]) == (len(subjects) - 1)
@@ -1627,6 +1626,9 @@ if __name__ == "__main__":
 		type="string",default=None)
 	misc_group.add_option("--error_email",dest="error_email",default=False,action="store_true",
 		help="Send email when errors occur, off by default")
+	misc_group.add_option("--subject_type",dest="stype",default="",action="store",type="string",
+		help="For group level options, process by subject type (ya,ac,sc)")
+
 	parser.add_option_group(misc_group)	
 	
 
@@ -1656,7 +1658,8 @@ if __name__ == "__main__":
 			parts = mask_str.split(",")
 			masks.append(parts)
 		data["mask"] = masks
-	data['stype'] = subject_type(subjects)
+	if not data["stype"]:
+		data['stype'] = subject_type(subjects)
 		
 	#subject-level options
 	if use_joblib and data["joblib"]:
