@@ -717,13 +717,12 @@ def recon_write_script(data):
 	script_path = recon_script_path(data)
 	commands = []
 	commands.append("#!/bin/sh")
-	setup_recon = "recon-all -s " + data["subject"]
+	recon_cmd = "recon-all -all -s " + data["subject"]
 	#find all mprages 
 	mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
 	for mprage in mprages:
 		setup_recon = setup_recon + " -i " + mprage
-	commands.append(setup_recon + " > {0}".format(os.path.join(data["mri_dir"],"scripts","setup_recon.log")))
-	commands.append("nohup recon-all -all -s {0} -mail {1} >& /dev/null &".format(data["subject"],getpass.getuser()))
+	commands.append(setup_recon + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
 	write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 	make_file_exec(script_path)
 	
@@ -736,6 +735,9 @@ def recon_run(data):
 	print("\nStarting %s" % (script_to_run))
 	return_val = pipeline.run_process(my_args).wait()
 
+
+def recon_logfile(data):
+	return os.path.join(data["mri_dir"],"scripts","recon_"+data["subject"]+".log")
 
 
 #####FSFAST#####
