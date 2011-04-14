@@ -525,9 +525,8 @@ def spm_write_script(data,type):
 	commands.append("#!/bin/sh")
 	if "stats" in type:
 		commands.append("unset DISPLAY")
-	mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
-	if "stats" in type:
 		mlab_cmd += " -nodisplay "
+	mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
 	if not "studies_to_setup" in data:
 		data["studies_to_setup"] = studies_to_setup(data,type)
 	for study in data["studies_to_setup"]:
@@ -549,6 +548,7 @@ def spm_write_script(data,type):
 			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
 			commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
 				mlab_cmd,data["parallel"]))
+	commands.append("wait\n")
 	try:
 		write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
 	except IOError:
@@ -674,16 +674,17 @@ def spm_funcdir_info(data,study,type,block):
 def spm_run_script(data,type):
 	"""
 	Looks for the write script to run based on type and executes it. This method blocks which is ok
-	because this method is starting in parallel automatically for many subjects. This DOES NOT block 
-	if you used --parallel with --setup_*.
+	because this method is starting in parallel automatically for many subjects. This doesn't block
+	but the script does because of wait.
 	"""
 	script_to_run = spm_script_path(data,type)
 	if not os.path.exists(script_to_run):
 		raise UserError("spm_run_script: no script found")
 	my_args = ["nohup", script_to_run]
 	print("\nStarting {0}\n".format(script_to_run))
-	return_value = pipeline.run_process(my_args).wait()
-
+	process = pipeline.run_process(my_args)
+	if data["launchpad"]:
+		process.wait()
 
 def spm_write_coreg_mprage(data):
 	commands = []
@@ -721,8 +722,8 @@ def recon_write_script(data):
 	#find all mprages 
 	mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
 	for mprage in mprages:
-		setup_recon = setup_recon + " -i " + mprage
-	commands.append(setup_recon + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
+		recon_cmd +=  " -i " + mprage
+	commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
 	write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 	make_file_exec(script_path)
 	
@@ -753,7 +754,7 @@ def write_par(data,study,info,run):
 			full_par.append([onset,cond_num[study][cond_name],duration,"1.0",cond_name])
 	full_par.sort(key=lambda x:int(x[0]))
 	par_fname = os.path.join(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
-	writeTable(par_fname,full_par)
+	write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
 	
 
 def fs_setup(data,type):
@@ -928,29 +929,33 @@ def fs_rlf_name(data,type,study):
 	return fname
 
 
+def fs_run_single(data,type,study,script_to_run):
+	   my_args = ["nohup", script_to_run]
+	   print("Starting {0}\n".format(script_to_run))
+	   start_time = time.strftime("%Y-%m-%d %H:%M:%S")
+	   return_value = pipeline.run_process(my_args).wait()
+	   if return_value:
+		   status = "failure"
+	   else:
+		   status = "success"
+	   #open the log file and make that message
+	   log_text = "\n".join(["%d errors..." % return_value,start_time,"#### %s ####" % study])+"\n"
+	   with open(fs_logfile(data,type,study), "r") as f:
+		   log_text += f.read()
+	   if not log_text:
+		   log_text += "Log couldn't be opened"
+	   add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
+	   subj = "{0} fs-{1} {2}".format(data["subject"],type,status)
+	   pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
+	
+
 def fs_run(data,type):
+	scripts = []
 	for study in studies_to_setup(data,type):
 		script_to_run = fs_script_path(data,type,study)
 		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
-		my_args = ["nohup", script_to_run]
-		print("Starting {0}\n".format(script_to_run))
-		start_time = time.strftime("%Y-%m-%d %H:%M:%S")
-		return_value = pipeline.run_process(my_args).wait()
-		if return_value:
-			status = "failure"
-		else:
-			status = "success"
-		#open the log file and make that message
-		log_text = "\n".join(["%d errors..." % return_value,start_time,"#### %s ####" % study])+"\n"
-		with open(fs_logfile(data,type,study), "r") as f:
-			log_text += f.read()
-		if not log_text:
-			log_text += "Log couldn't be opened"
-		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
-		subj = "{0} fs-{1} {2}".format(data["subject"],type,status)
-		pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
-
+ 		fs_run_single(data,type,study,script_to_run)
 		
 def fs_script_dir(data,type=None):
 	if type == "analysis":
@@ -1440,40 +1445,47 @@ def process_subject(subject,data):
 			unpack(data)
 		if data["unpack_all"]:
 			unpack_all(data)
-		if data["setup_preproc"]:
-			spm_setup(data,"preproc")
-		if data["setup_fs_preproc"]:
-			fs_setup(data,"preproc")
 		if data["makeMC"]:
 			makeMC(data)
 		if data["print_info"]:
 			print_info(data)
-		if data["reg_mprage"]:
-			spm_write_coreg_mprage(data)
-		if data["run_art"]:
-			spm_run_art(data)
+		#SETUP
+		if data["setup_preproc"]:
+			spm_setup(data,"preproc")
+		if data["setup_fs_preproc"]:
+			fs_setup(data,"preproc")
 		if data["setup_stats"]:
 			spm_setup(data,"stats")
 		if data["setup_outliers"]:
 			spm_setup(data,"stats_outliers")
 		if data["setup_fs_stats"]:
 			fs_setup(data,"stats")
-		if data["setup_recon"]:
-			recon_write_script(data)
+		#SPM
+		if data["reg_mprage"]:
+			spm_write_coreg_mprage(data)
+		if data["run_art"]:
+			spm_run_art(data)
 		if data["run_preproc"]:
 			spm_run_script(data,"preproc")
-		if data["run_fs_preproc"]:
-			fs_run(data,"preproc")
 		if data["run_stats"]:
 			spm_run_script(data,"stats")
-		if data["run_fs_stats"]:
-			fs_run(data,"stats")
 		if data["run_outliers"]:
 			spm_run_script(data,"stats_outliers")
+		#FSFast
+		if data["run_fs_preproc"]:
+			fs_run(data,"preproc")
+		if data["run_fs_stats"]:
+			fs_run(data,"stats")
+		#recon
+		if data["setup_recon"]:
+			recon_write_script(data)
 		if data["run_recon"]:
 			recon_run(data)
+		#MEG
 		if data["setup_bem"]:
 			setup_bem(data)
+		if data["run_ica"]:
+			run_ica(data)
 		if data["preProc"]:
 			meg_script(data,"preProc")
 		if data["new_preProc"]:
@@ -1482,8 +1494,6 @@ def process_subject(subject,data):
 			meg_script(data,"preAnat")
 		if data["makeInv"]:
 			meg_script(data,"makeInv")
-		if data["run_ica"]:
-			run_ica(data)
 	except Exception as strerr:
 		print "Run-time error: ",type(strerr),strerr
 		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
