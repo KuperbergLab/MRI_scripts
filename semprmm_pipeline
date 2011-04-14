@@ -767,9 +767,11 @@ def fs_setup(data,type):
 			print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
 		commands = []
 		commands.append("#!/bin/sh")
+		
 		if type == "preproc" or type == "stats":
 			fsd = os.path.join(data["mri_dir"],study)
 			sessid = data["mri_dir"]
+		
 		if type == "preproc":
 			sname = [data["subject"]]
 			sname_path = os.path.join(sessid,"subjectname")
@@ -803,6 +805,7 @@ def fs_setup(data,type):
 			script_path = fs_script_path(data,type,study)
 			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 			make_file_exec(script_path)
+		
 		elif type == "analysis":
 			commands.append("cd %s" % func_dir)
 			#so baleen is weird in that we need to do blocks differently
@@ -864,6 +867,7 @@ def fs_setup(data,type):
 				script_path = fs_script_path(data,type,study)
 				write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 				make_file_exec(script_path)
+		
 		elif type == "stats":
 			commands.append("cd %s" % func_dir)
 			lf = fs_logfile(data,type,study)
@@ -890,10 +894,10 @@ def fs_setup(data,type):
 										">> %s" % lf])
 						commands.append(cmd)
 						commands.append("let z=z+$?")
-				commands.append("exit $z")
-				script_path = fs_script_path(data,type,study)
-				write_file_with_list(script_path,"\n".join(commands),data["verbose"])
-				make_file_exec(script_path)
+			commands.append("exit $z")
+			script_path = fs_script_path(data,type,study)
+			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+			make_file_exec(script_path)
 
 
 def fs_make_rlf(data,type,study):
