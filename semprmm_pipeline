@@ -523,10 +523,10 @@ def spm_write_script(data,type):
 	shell_script = spm_script_path(data,type)
 	commands = []
 	commands.append("#!/bin/sh")
+	mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
 	if "stats" in type:
 		commands.append("unset DISPLAY")
 		mlab_cmd += " -nodisplay "
-	mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
 	if not "studies_to_setup" in data:
 		data["studies_to_setup"] = studies_to_setup(data,type)
 	for study in data["studies_to_setup"]:
@@ -674,8 +674,8 @@ def spm_funcdir_info(data,study,type,block):
 def spm_run_script(data,type):
 	"""
 	Looks for the write script to run based on type and executes it. This method blocks which is ok
-	because this method is starting in parallel automatically for many subjects. This doesn't block
-	but the script does because of wait.
+	because this method is starting in parallel automatically for many subjects. This will only 
+	block if --launchpad is used.
 	"""
 	script_to_run = spm_script_path(data,type)
 	if not os.path.exists(script_to_run):
@@ -685,6 +685,7 @@ def spm_run_script(data,type):
 	process = pipeline.run_process(my_args)
 	if data["launchpad"]:
 		process.wait()
+
 
 def spm_write_coreg_mprage(data):
 	commands = []
@@ -702,7 +703,6 @@ def spm_write_coreg_mprage(data):
 	write_file_with_list(script_name,"\n".join(commands),data["verbose"])
 	make_file_exec(script_name)
 	pipeline.run_process(["nohup",script_name],output=sys.stdout).wait()
-
 
 
 #####RECONSTRUCTION####
@@ -1464,6 +1464,11 @@ def process_subject(subject,data):
 			spm_setup(data,"stats_outliers")
 		if data["setup_fs_stats"]:
 			fs_setup(data,"stats")
+		#recon
+		if data["setup_recon"]:
+			recon_write_script(data)
+		if data["run_recon"]:
+			recon_run(data)
 		#SPM
 		if data["reg_mprage"]:
 			spm_write_coreg_mprage(data)
@@ -1480,11 +1485,6 @@ def process_subject(subject,data):
 			fs_run(data,"preproc")
 		if data["run_fs_stats"]:
 			fs_run(data,"stats")
-		#recon
-		if data["setup_recon"]:
-			recon_write_script(data)
-		if data["run_recon"]:
-			recon_run(data)
 		#MEG
 		if data["setup_bem"]:
 			setup_bem(data)
