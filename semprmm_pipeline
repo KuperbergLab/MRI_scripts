@@ -850,7 +850,6 @@ def fs_setup(data,type):
 										"-nconditions %d" % nconds,
 										"-mcextreg",
 										"-hpf 128",
-#										"-funcstem %s" % funcstem,
 										"-force"])
 						commands.append(cmd)
 						#mkcontrast-sess
