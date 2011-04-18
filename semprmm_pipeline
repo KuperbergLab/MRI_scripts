@@ -42,16 +42,16 @@ cond_num = dict({"ATLLoc":
 				"BaleenMM":
 					{"LP_RelatedTarget":"1",
 					"LP_UnrelatedTarget":"2",
-					"LP_UnrelatedFiller":"4",
-					"LP_AnimalTarget":"5",
-					"LP_AnimalPrime":"11",
-					"HP_RelatedTarget":"6",
-					"HP_UnrelatedTarget":"7",
-					"HP_RelatedFiller":"8",
-					"HP_UnrelatedFiller":"9",
-					"HP_AnimalTarget":"10",
-					"HP_AnimalPrime":"12",
-					"Misses":"13"},
+					"LP_UnrelatedFiller":"3",
+					"LP_AnimalTarget":"4",
+					"LP_AnimalPrime":"5",
+					"HP_RelatedTarget":"1",
+					"HP_UnrelatedTarget":"2",
+					"HP_RelatedFiller":"3",
+					"HP_UnrelatedFiller":"4",
+					"HP_AnimalTarget":"5",
+					"HP_AnimalPrime":"6",
+					"Misses":"6"},
 				"AXCPT":
 					{"AY":"1",
 					"BX":"2",
@@ -78,22 +78,22 @@ contrasts = dict({"ATLLoc":
 				"BaleenMM":
 					{"LP_Related":(("1"),("0")),
 					"LP_Unrelated":(("2"),("0")),
-					"LP_UnrelateFiller":(("4"),("0")),
-					"LP_AnimalTarget":(("5"),("0")),
-					"LP_AnimalPrime":(("11"),("0")),
+					"LP_UnrelateFiller":(("3"),("0")),
+					"LP_AnimalTarget":(("4"),("0")),
+					"LP_AnimalPrime":(("5"),("0")),
 					"LP_Related-Unrelated":(("1"),("2")),
-					"LP_AnimalTarget-Unrelated":(("5"),("2")),
-					"HP_Related":(("6"),("0")),
-					"HP_Unrelated":(("7"),("0")),
-					"HP_RelatedFiller":(("8"),("0")),
-					"HP_UnrelateFiller":(("9"),("0")),
-					"HP_AnimalTarget":(("10"),("0")),
-					"HP_AnimalPrime":(("12"),("0")),
-					"HP_Related-Unrelated":(("6"),("7")),
-					"HP_RelatedFiller-UnrelatedFiller":(("8"),("9")),
-					"HP_AnimalTarget-Unrelated":(("10"),("7")),
-					"LP_All":(("1","2","4","5","11"),("0")),
-					"HP_All":(("6","7","8","9","10","12"),("0"))},
+					"LP_AnimalTarget-Unrelated":(("4"),("2")),
+					"HP_Related":(("1"),("0")),
+					"HP_Unrelated":(("2"),("0")),
+					"HP_RelatedFiller":(("3"),("0")),
+					"HP_UnrelateFiller":(("4"),("0")),
+					"HP_AnimalTarget":(("5"),("0")),
+					"HP_AnimalPrime":(("6"),("0")),
+					"HP_Related-Unrelated":(("1"),("2")),
+					"HP_RelatedFiller-UnrelatedFiller":(("3"),("4")),
+					"HP_AnimalTarget-Unrelated":(("5"),("2")),
+					"LP_All":(("1","2","3","4","5"),("0")),
+					"HP_All":(("1","2","3","4","5","6"),("0"))},
 				"AXCPT":
 					{"AY":(("1"),("0")),
 					"BX":(("2"),("0")),
@@ -751,7 +751,11 @@ def write_par(data,study,info,run):
 		onsets = info[cond_onset]
 		duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
 		for onset in onsets.split():
-			full_par.append([onset,cond_num[study][cond_name],duration,"1.0",cond_name])
+			if study == "BaleenMM" and int(run) > 4:
+				code_num = str(int(cond_num[study][cond_name]) + 1)
+			else:
+				code_num = cond_num[study][cond_name]
+			full_par.append([onset,code_num,duration,"1.0",cond_name])
 	full_par.sort(key=lambda x:int(x[0]))
 	par_fname = os.path.join(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
 	write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
@@ -897,7 +901,10 @@ def fs_setup(data,type):
 			script_path = fs_script_path(data,type,study)
 			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 			make_file_exec(script_path)
-
+			
+		elif type == "group":
+			commands.append("cd %s" % func_dir)
+			
 
 def fs_make_rlf(data,type,study):
 	"""
@@ -1562,6 +1569,8 @@ if __name__ == "__main__":
 		help="Run 1st-level statistics using FSFast")
 	fs_group.add_option("--setup_fs_analysis",dest="setup_fs_analysis",action="store_true",
 		default=False,help="Setup all paradigms analysis with FSFast")	
+	fs_group.add_option("--setup_fs_group",dest="setup_fs_group",action="store_true",
+		default=False,help="Setup group level analysis with FSFast")	
 	parser.add_option_group(fs_group)	
 	
 	#Cortical reconstruction options
@@ -1588,7 +1597,7 @@ if __name__ == "__main__":
 		help="Run the new meg preprocessing.")	
 	parser.add_option_group(meg_group)
 	
-	#Second-level options
+	#SPM Second-level options
 	second_group = OptionGroup(parser,"Second-Level Statistics")
 	second_group.add_option("--setup_second",dest="setup_second",action="store_true",default=False,
 		help="Setup second level stats")
@@ -1684,6 +1693,8 @@ if __name__ == "__main__":
 	#group level options
 	if data["setup_fs_analysis"]:
 		fs_setup(data,"analysis")
+	if data["setup_fs_group"]:
+		fs_setup(data,"group")
 	if data["all_second"]:
 		second_level(data,"setup")
 		second_level(data,"run")	
