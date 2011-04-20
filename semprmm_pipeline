@@ -272,7 +272,7 @@ def studies_to_setup(data,type):
 	"""
 	returns what studies should be set up. This list depends on the type of processing to be setup.
 	"""
-	if type == "analysis":
+	if type == "analysis" or type == "group":
 		#setup all
 		return cond_num.keys()
 	if not os.path.exists(info_path(data)):
@@ -405,6 +405,13 @@ def makeMC(data):
 		onset_ind = 5
 		run = vtsd_data[0][4]
 		study = vtsd_data[0][0]
+		if data["stype"] == "sc" or data["stype"] == "ac":
+			if study == "ATLLoc_SC":
+				study = "ATLLoc"
+			elif study == "MaskedMM_SC":
+				study = "MaskedMM"
+			elif study == "AXCPT_SC":
+				study = "AXCPT"
 		sub = codes[study]["on_sub"]
 		uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
 		misses = []
@@ -613,8 +620,12 @@ def spm_write_mlab_script(data,study,type,block):
 			type+"_block"+block+".m")
 		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_block"+block+".m")
 	else:
-		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+		if data["no_unwarp"]:
+			batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+			batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_nounwarp.m")			
+		else:
+			batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+			batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
 	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
@@ -642,6 +653,10 @@ def spm_matlab_dict(data,study,type,block):
 		type,block)
 	replace_dict["email_fail"] =  "{0} {1} {2}{3} failed".format(data["subject"],study,
 		type,block)
+	if data["local"]:
+		replace_dict["location"] = "home/scratch"
+	else:
+		replace_dict["location"] = "cluster/kuperberg/SemPrMM/MRI"
 	return replace_dict
 
 
@@ -682,9 +697,7 @@ def spm_run_script(data,type):
 		raise UserError("spm_run_script: no script found")
 	my_args = ["nohup", script_to_run]
 	print("\nStarting {0}\n".format(script_to_run))
-	process = pipeline.run_process(my_args)
-	if data["launchpad"]:
-		process.wait()
+	return_value = pipeline.run_process(my_args).wait()
 
 
 def spm_write_coreg_mprage(data):
@@ -751,7 +764,7 @@ def write_par(data,study,info,run):
 		onsets = info[cond_onset]
 		duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
 		for onset in onsets.split():
-			if study == "BaleenMM" and int(run) > 4:
+			if study == "BaleenMM" and int(run) > 4 and cond_name == "Misses":
 				code_num = str(int(cond_num[study][cond_name]) + 1)
 			else:
 				code_num = cond_num[study][cond_name]
@@ -761,7 +774,7 @@ def write_par(data,study,info,run):
 	write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
 	
 
-def fs_setup(data,type):
+def fs_setup(data,type,subjects=None):
 	"""
 	All 1st level FSFAST processing goes through this function
 	Try to keep variables inline with FSFAST lingo
@@ -903,7 +916,39 @@ def fs_setup(data,type):
 			make_file_exec(script_path)
 			
 		elif type == "group":
+			#write fsgd
+			fsgd = []
+			fsgd.append("GroupDescriptorFile 1")
+			fsgd.append("Title SemPrMM-%s-Group" % data["stype"])
+			fsgd.append("Class %s plus blue" % data["stype"])
+			fsgd.append("Variables")
+			if not subjects:
+				raise UserError("Must use this with subjects or --subject_list")
+			for sub in subjects:
+				fsgd.append("Input %s %s" % (sub,data["stype"]))
+			fsgd.append("\n")
+			fsgd_path = os.path.join(func_dir,"%s.fsgd" % data["stype"])
+			write_file_with_list(fsgd_path,"\n".join(fsgd),data["verbose"])
+			if study == "BaleenMM":
+				real_studies = ["BaleenLP","BaleenHP"]
+			else:
+				real_studies = [study]
 			commands.append("cd %s" % func_dir)
+			for real_study in real_studies:
+				for space in ["lh","rh","mni305"]:
+					for shape in ["fir","spm"]:
+						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
+						isx_cmd = " ".join(["isxconcat-sess",
+											"-a %s" % aname,
+											"-d %s" % func_dir,
+											"-all-contrasts",
+											"-sf %s.sessid" % data["stype"],
+											"-fsgd %s.fsgd" % data["stype"],
+											"-o %s.group-analysis" % data["stype"]])
+						commands.append(isx_cmd)
+			isx_cmd_path = os.path.join(func_dir, "fsfast_scripts","%s-isxconcat.sh"%study)
+			write_file_with_list(isx_cmd_path,"\n".join(commands),data["verbose"])
+			make_file_exec(isx_cmd_path)
 			
 
 def fs_make_rlf(data,type,study):
@@ -1047,6 +1092,7 @@ def meg_script(data,type,extra=None):
 		running_jobs.append(process)	
 	else:
 		process.communicate()[0]
+	os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 
 def run_ica(data):
@@ -1359,7 +1405,10 @@ def set_paths(data):
 	"""Fairly self-explanatory.  Adds keys to the dictionary for "mri_dir","subject_dir",
 	"dicom_dir",and "subject_dicom".  path prefixes are hard coded.
 	"""
-	data["mri_dir"] = os.path.join(func_dir,data["subject"])+os.sep
+	if data["local"]:
+		data["mri_dir"] = os.path.join("/home/scratch/functionals",data["subject"])+os.sep
+	else:
+		data["mri_dir"] = os.path.join(func_dir,data["subject"])+os.sep
 	data["dicom_dir"] = os.path.join(dicom_dir,data["subject"])+os.sep
 	data["meg_dir"] = os.path.join(meg_dir,data["subject"])+os.sep
 
@@ -1555,6 +1604,8 @@ if __name__ == "__main__":
 		help="Run artifact detection for a subject")
 	spm_group.add_option("--reg_mprage",dest="reg_mprage",action="store_true",default=False,
 		help="Register the subject's MPRAGE to each functional run")
+	spm_group.add_option("--no_unwarp",dest="no_unwarp",action="store_true",default=False,
+		help="Don't do unwarping")
 	parser.add_option_group(spm_group)
 	
 	#FSFast options
@@ -1652,6 +1703,8 @@ if __name__ == "__main__":
 		help="Send email when errors occur, off by default")
 	misc_group.add_option("--subject_type",dest="stype",default="",action="store",type="string",
 		help="For group level options, process by subject type (ya,ac,sc)")
+	misc_group.add_option("--local",dest="local",default=False,action="store_true",
+		help="Use local data (/home/scratch/functionals/")
 
 	parser.add_option_group(misc_group)	
 	
@@ -1694,7 +1747,7 @@ if __name__ == "__main__":
 	if data["setup_fs_analysis"]:
 		fs_setup(data,"analysis")
 	if data["setup_fs_group"]:
-		fs_setup(data,"group")
+		fs_setup(data,"group",subjects)
 	if data["all_second"]:
 		second_level(data,"setup")
 		second_level(data,"run")	
