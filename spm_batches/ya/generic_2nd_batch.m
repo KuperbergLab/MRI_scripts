@@ -46,8 +46,10 @@ try
 	spm_jobman('initcfg');
 	delete('$SPM');
 	output = spm_jobman('run_nogui',matlabbatch);
+	exit_code = 0;
 catch ME
 	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+	exit_code = 1;
 end
-exit;
+exit(exit_code);
 
