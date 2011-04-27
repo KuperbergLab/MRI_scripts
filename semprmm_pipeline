@@ -30,8 +30,7 @@ possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2})
 cond_num = dict({"ATLLoc":
 					{"Sentences":"1",
 					"Wordlist":"2",
-					"Nonwords":"3",
-					"Misses":"4"},
+					"Nonwords":"3"},
 				"MaskedMM":
 					{"DirectlyRelated":"1",
 					"IndirectlyRelated":"2",
@@ -272,7 +271,7 @@ def studies_to_setup(data,type):
 	"""
 	returns what studies should be set up. This list depends on the type of processing to be setup.
 	"""
-	if type == "analysis" or type == "group":
+	if type == "analysis" or type == "group" or type == "glm":
 		#setup all
 		return cond_num.keys()
 	if not os.path.exists(info_path(data)):
@@ -428,7 +427,7 @@ def makeMC(data):
 			#xfm to floats, subtract, round,int,back to string
 			xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
 			if len(xfm_onsets) == 0:
-				print("WARNING: empty onsets for {0}.Please fix manually".format(codes[study][code][0]))
+				print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study, run, codes[study][code][0]))
 			new_dict = {"Run"+run+codes[study][code][0]+"Onsets": " ".join(xfm_onsets),
 				"Run"+run+codes[study][code][0]+"Durations": " ".join(codes[study]["duration"] * len(xfm_onsets))}
 			if study in info:
@@ -779,6 +778,11 @@ def fs_setup(data,type,subjects=None):
 	All 1st level FSFAST processing goes through this function
 	Try to keep variables inline with FSFAST lingo
 	"""
+	fir_wind = dict({"MaskedMM":(6,18),
+					"ATLLoc":(6,22),
+					"BaleenMM":(6,18),
+					"AXCPT":(4,16)})
+
 	for study in studies_to_setup(data,type):
 		if data["verbose"]:
 			print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
@@ -833,15 +837,11 @@ def fs_setup(data,type,subjects=None):
 			for real_study in real_studies:
 				for space in ["lh","rh","mni305"]:
 					for shape in ["spm","fir"]:
-						fir_wind = dict({"MaskedMM":(-6,18),
-										"ATLLoc":(-6,22),
-										"BaleenMM":(-6,18),
-										"AXCPT":(-4,16)})
 						#config shape_opt
 						if shape == "spm":
 							shape_opt = "-spmhrf 0 -refeventdur 2"
 						else:
-							shape_opt = "-fir %d %d -TER 2" % (fir_wind[study][0],fir_wind[study][1]-fir_wind[study][0])
+							shape_opt = "-fir %d %d -TER 2" % (fir_wind[study][0],fir_wind[study][1]+fir_wind[study][0])
 						#config nconds
 						if real_study == "BaleenLP":
 							nconds = len([k for k in cond_num[study].keys() if "LP" in k or k == "Misses"])
@@ -882,6 +882,7 @@ def fs_setup(data,type,subjects=None):
 							commands.append(con_cmd)
 				script_path = fs_script_path(data,type,study)
 				write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+				print("Wrote %s" % script_path)
 				make_file_exec(script_path)
 		
 		elif type == "stats":
@@ -915,19 +916,23 @@ def fs_setup(data,type,subjects=None):
 			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
 			make_file_exec(script_path)
 			
-		elif type == "group":
-			#write fsgd
+		elif type == "group":		
 			fsgd = []
 			fsgd.append("GroupDescriptorFile 1")
 			fsgd.append("Title SemPrMM-%s-Group" % data["stype"])
 			fsgd.append("Class %s plus blue" % data["stype"])
 			fsgd.append("Variables")
+			#take subjects from fuctionals/data["stype"].study.sessid
+			sessid = os.path.join(func_dir,"%s.%s.sessid" % (data["stype"],study))
+			subjects = get_subjects(sessid)
+			print("Getting subjects from %s" % sessid)
 			if not subjects:
-				raise UserError("Must use this with subjects or --subject_list")
+				raise UserError("Couldn't read %s" % sessid)
 			for sub in subjects:
 				fsgd.append("Input %s %s" % (sub,data["stype"]))
 			fsgd.append("\n")
-			fsgd_path = os.path.join(func_dir,"%s.fsgd" % data["stype"])
+			fsgd_path = os.path.join(func_dir,"%s.%s.fsgd" % (data["stype"],study))
+			print("Writing %s" % fsgd_path)
 			write_file_with_list(fsgd_path,"\n".join(fsgd),data["verbose"])
 			if study == "BaleenMM":
 				real_studies = ["BaleenLP","BaleenHP"]
@@ -938,18 +943,62 @@ def fs_setup(data,type,subjects=None):
 				for space in ["lh","rh","mni305"]:
 					for shape in ["fir","spm"]:
 						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
+						lf = os.path.join(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
 						isx_cmd = " ".join(["isxconcat-sess",
 											"-a %s" % aname,
 											"-d %s" % func_dir,
 											"-all-contrasts",
-											"-sf %s.sessid" % data["stype"],
-											"-fsgd %s.fsgd" % data["stype"],
-											"-o %s.group-analysis" % data["stype"]])
+											"-sf %s.%s.sessid" % (data["stype"],study),
+											"-fsgd %s.%s.fsgd" % (data["stype"],study),
+											"-o %s.group-analysis" % data["stype"],
+											">& %s %s" % (lf,data["parallel"])])
 						commands.append(isx_cmd)
+			if data["parallel"]:
+				commands.append("wait")
 			isx_cmd_path = os.path.join(func_dir, "fsfast_scripts","%s-isxconcat.sh"%study)
 			write_file_with_list(isx_cmd_path,"\n".join(commands),data["verbose"])
 			make_file_exec(isx_cmd_path)
 			
+		elif type == "glm":
+			if study == "BaleenMM":
+				real_studies = ["BaleenLP","BaleenHP"]
+			else:
+				real_studies = [study]
+			for real_study in real_studies:
+				for con in contrasts[study].keys():
+					for space in ["lh","rh","mni305"]:
+						for shape in ["fir","spm"]:
+							if space != "mni305":
+								space_opt = "--surf fsaverage %s" % space
+							else:
+								space_opt = ""
+							aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
+							group_dir = os.path.join(func_dir,"%s.group-analysis" % data["stype"])
+							adir = os.path.join(group_dir,aname)
+							con_dir = os.path.join(adir,con)
+							commands.append("cd %s" % con_dir)
+							if shape == "fir":
+								#build XXX
+								conc = lambda x:"00"+str(x) if x < 10 else "0"+str(x)
+								XXX = [conc((x+6)/2) for x in range(fir_wind[study][0],fir_wind[study][1],2)]
+								for cesXXX in XXX:
+									commands.append(" ".join(["mri_glmfit",
+															"--osgm",
+															"--glmdir glm.%s" % cesXXX,
+															"--y ces.%s.nii.gz" % cesXXX,
+															"--mask %s" % os.path.join(adir,"mask.nii.gz"),
+															space_opt]))
+							else:
+								commands.append(" ".join(["mri_glmfit",
+														"--osgm",
+														"--glmdir glm",
+														"--y ces.nii.gz",
+														"--mask %s" % os.path.join(adir,"mask.nii.gz"),
+														space_opt]))
+			glm_path = os.path.join(func_dir,"fsfast_scripts","%s-glmfit.sh" % study)
+			write_file_with_list(glm_path, "\n".join(commands),data["verbose"])
+			make_file_exec(glm_path)
+															
 
 def fs_make_rlf(data,type,study):
 	"""
@@ -1367,7 +1416,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 			pipeline.f2f_replace(ibatch,obatch,replace_dict,data["verbose"])
 			log = os.path.join(job_dir,contrast+".log")
 			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log,data["parallel"]))
-			shell_commands.append("echo {0}:{1} has finished.".format(study,contrast))
+			shell_commands.append("if [ $? -eq 0 ] \nthen\necho {0}:{1} succeeded\nelse\n echo {0}:{1} failed\nfi\n".format(study,contrast))
 			info_fname = os.path.join(con_dir,"info.txt")
 			info = dict({"N": N,"images": good_img,"stype": data["stype"],"contrast": contrast})
 			if mask:
@@ -1446,11 +1495,16 @@ def subject_type(subjects):
 
 def print_info(data):
 	info = pipeline.load_data(info_path(data))
-	for k,v in sorted(info.items()):
-		print("{0}...".format(k))
-		for key,value in sorted(v.items()):
-			print("{0}:{1}".format(key,value))
-		print('\n')
+	if data["single_study"]:
+		info = info[data["single_study"]]
+		for k,v in sorted(info.items()):
+			print("%s:%s" % (k,v))
+	else:
+		for k,v in sorted(info.items()):
+			print("{0}...".format(k))
+			for key,value in sorted(v.items()):
+				print("{0}:{1}".format(key,value))
+			print('\n')
 
 
 
@@ -1619,9 +1673,11 @@ if __name__ == "__main__":
 	fs_group.add_option("--run_fs_stats",dest="run_fs_stats",action="store_true",default=False,
 		help="Run 1st-level statistics using FSFast")
 	fs_group.add_option("--setup_fs_analysis",dest="setup_fs_analysis",action="store_true",
-		default=False,help="Setup all paradigms analysis with FSFast")	
+		default=False,help="Setup all paradigms analysis with FSFast")
 	fs_group.add_option("--setup_fs_group",dest="setup_fs_group",action="store_true",
-		default=False,help="Setup group level analysis with FSFast")	
+		default=False,help="Setup group level analysis with FSFast")
+	fs_group.add_option("--setup_fs_glm",dest="setup_fs_glm",action="store_true",default=False,
+		help="Setup the script to run mri_glmfit")
 	parser.add_option_group(fs_group)	
 	
 	#Cortical reconstruction options
@@ -1748,6 +1804,8 @@ if __name__ == "__main__":
 		fs_setup(data,"analysis")
 	if data["setup_fs_group"]:
 		fs_setup(data,"group",subjects)
+	if data["setup_fs_glm"]:
+		fs_setup(data,"glm")
 	if data["all_second"]:
 		second_level(data,"setup")
 		second_level(data,"run")	
