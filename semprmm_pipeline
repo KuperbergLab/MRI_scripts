@@ -22,11 +22,10 @@ except ImportError:
 	use_joblib = False
 import shutil
 from readInput import readTable
-from writeOutput import writeTable
 import pipeline as pipeline
 
-VER = "1.0"
-possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenMM": 8, "AXCPT": 2})
+possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenLP": 4, "BaleenHP":4, "AXCPT": 2})
+
 cond_num = dict({"ATLLoc":
 					{"Sentences":"1",
 					"Wordlist":"2",
@@ -38,19 +37,21 @@ cond_num = dict({"ATLLoc":
 					"InsectPrime":"4",
 					"InsectTarget":"5",
 					"Misses":"6"},
-				"BaleenMM":
-					{"LP_RelatedTarget":"1",
-					"LP_UnrelatedTarget":"2",
-					"LP_UnrelatedFiller":"3",
-					"LP_AnimalTarget":"4",
-					"LP_AnimalPrime":"5",
-					"HP_RelatedTarget":"1",
-					"HP_UnrelatedTarget":"2",
-					"HP_RelatedFiller":"3",
-					"HP_UnrelatedFiller":"4",
-					"HP_AnimalTarget":"5",
-					"HP_AnimalPrime":"6",
+				"BaleenLP":
+					{"RelatedTarget":"1",
+					"UnrelatedTarget":"2",
+					"UnrelatedFiller":"3",
+					"AnimalTarget":"4",
+					"AnimalPrime":"5",
 					"Misses":"6"},
+				"BaleenHP":
+					{"RelatedTarget":"1",
+					"UnrelatedTarget":"2",
+					"RelatedFiller":"3",
+					"UnrelatedFiller":"4",
+					"AnimalTarget":"5",
+					"AnimalPrime":"6",
+					"Misses":"7"},
 				"AXCPT":
 					{"AY":"1",
 					"BX":"2",
@@ -58,6 +59,7 @@ cond_num = dict({"ATLLoc":
 					"AX":"4",
 					"Misses":"5"}
 					})
+					
 contrasts = dict({"ATLLoc":
 					{"Sentences":(("1"),("0")),
 					"Wordlist":(("2"),("0")),
@@ -74,25 +76,26 @@ contrasts = dict({"ATLLoc":
 					"InsectTarget":(("5"),("0")),
 					"Dir-Unr":(("1"),("3")),
 					"all":(("1","2","3","4","5"),("0"))},
-				"BaleenMM":
-					{"LP_Related":(("1"),("0")),
-					"LP_Unrelated":(("2"),("0")),
-					"LP_UnrelateFiller":(("3"),("0")),
-					"LP_AnimalTarget":(("4"),("0")),
-					"LP_AnimalPrime":(("5"),("0")),
-					"LP_Related-Unrelated":(("1"),("2")),
-					"LP_AnimalTarget-Unrelated":(("4"),("2")),
-					"HP_Related":(("1"),("0")),
-					"HP_Unrelated":(("2"),("0")),
-					"HP_RelatedFiller":(("3"),("0")),
-					"HP_UnrelateFiller":(("4"),("0")),
-					"HP_AnimalTarget":(("5"),("0")),
-					"HP_AnimalPrime":(("6"),("0")),
-					"HP_Related-Unrelated":(("1"),("2")),
-					"HP_RelatedFiller-UnrelatedFiller":(("3"),("4")),
-					"HP_AnimalTarget-Unrelated":(("5"),("2")),
-					"LP_All":(("1","2","3","4","5"),("0")),
-					"HP_All":(("1","2","3","4","5","6"),("0"))},
+				"BaleenLP":
+					{"Related":(("1"),("0")),
+					"Unrelated":(("2"),("0")),
+					"UnrelateFiller":(("3"),("0")),
+					"AnimalTarget":(("4"),("0")),
+					"AnimalPrime":(("5"),("0")),
+					"Related-Unrelated":(("1"),("2")),
+					"AnimalTarget-Unrelated":(("4"),("2")),
+					"All":(("1","2","3","4","5"),("0"))},
+				"BaleenHP":	
+					{"Related":(("1"),("0")),
+					"Unrelated":(("2"),("0")),
+					"RelatedFiller":(("3"),("0")),
+					"UnrelateFiller":(("4"),("0")),
+					"AnimalTarget":(("5"),("0")),
+					"AnimalPrime":(("6"),("0")),
+					"Related-Unrelated":(("1"),("2")),
+					"RelatedFiller-UnrelatedFiller":(("3"),("4")),
+					"AnimalTarget-Unrelated":(("5"),("2")),
+					"All":(("1","2","3","4","5","6"),("0"))},
 				"AXCPT":
 					{"AY":(("1"),("0")),
 					"BX":(("2"),("0")),
@@ -225,6 +228,18 @@ def scan2cfg(data):
 				["ge_functionals_axcpt_sc","ok","140"]]
 	good_lines = pipeline.scan_to_cfg(dir_map,dir_map,scan_list,data["scan_path"])
 	good_lines.sort(key=lambda x:int(x.split()[0]))
+	#split baleen lines into LP and HP
+	for i,line in enumerate(good_lines[:]):
+		if line.split()[1] == "BaleenMM":
+			run_num = int(line.split()[3].partition(".nii")[0].partition("BaleenMM")[2])
+			if run_num < 5:
+				new_study = "BaleenLP"
+				new_run = run_num
+			else:
+				new_study = "BaleenHP"
+				new_run = run_num - 4
+			filetype = line.split()[2]
+			good_lines[i] = "%s %s %s %s" % (line.split()[0],new_study,filetype,"%s%d.%s" % (new_study,new_run,filetype))
 	fieldmaps = [v for v in good_lines if v.split()[1] == "FieldMap"]
 	if len(fieldmaps) % 2 == 1:
 		print("Odd amount of fieldmaps. --scan2cfg cannot continue. Copy/paste/edit as needed.")
@@ -232,12 +247,12 @@ def scan2cfg(data):
 			print(line)
 		return
 	good_fieldmaps = []
-	func_names = ["MaskedMM","BaleenMM","ATLLoc","AXCPT"]
+	func_names = ["MaskedMM","BaleenHP","ATLLoc","AXCPT"]
 	for fm in fieldmaps:
 		ind = good_lines.index(fm)
 		all_prev_func = [r for r in good_lines[0:ind] if r.split()[1] in func_names]
 		if len(all_prev_func) < 1:
-			print("ALERT: odd field maps. Copy/paste/edit the dump below.")
+			print("ALERT: no func runs for the field maps. Copy/paste/edit the dump below.")
 			for line in good_lines:
 				print(line)
 			return
@@ -253,16 +268,16 @@ def scan2cfg(data):
 			postfix = "Phase"
 		good_fieldmaps.append("{0} {1} {2} FieldMap_{3}_{4}.{5}".format(parts[0],parts[1],parts[2],
 			func,postfix,parts[2]))
+	#now we have fieldmaps for BaleenHP, but not LP, so just copy the index
+	for i,map in enumerate(good_fieldmaps[:]):
+		if "BaleenHP" in map.split()[3]:
+			fname = map.split()[3].replace("BaleenHP","BaleenLP")
+			good_fieldmaps.append("%s FieldMap %s %s" % (map.split()[0],map.split()[2],fname))
 	not_fieldmaps = [v for v in good_lines if v.split()[1] != "FieldMap"]
-	for fm in good_fieldmaps:
-		not_fieldmaps.append(fm)
+	not_fieldmaps.extend(good_fieldmaps)
 	good_lines = not_fieldmaps
 	good_lines.sort(key=lambda x:int(x.split()[0]))
-	try:
-		write_file_with_list(data["cfg_path"],"\n".join(good_lines),data["verbose"])
-	except:
-		print("Failure in scan2cfg")
-		raise
+	write_file_with_list(data["cfg_path"],"\n".join(good_lines),data["verbose"])
 
 
 ####GENERAL FUNCTIONAL####
@@ -279,7 +294,7 @@ def studies_to_setup(data,type):
 		raise UserError("Broke in studies_to_setup")
 	info = pipeline.load_data(info_path(data),data["verbose"])
 	if data["single_study"]:
-		studies = [data["single_study"]]
+		studies = data["single_study"]
 	else:		
 		if "stats" in type or "art" in type:
 			studies = [k for k,v in info.iteritems() if os.path.exists(
@@ -319,7 +334,7 @@ def cfg2info(data):
 			for run in runs:
 				run_num = run[3].split(".")[0].split(study)[1]
 				study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
-			if not (study == "AXCPT" and data["stype"] == "ac"):
+			if not (study == "AXCPT" and (data["stype"] == "ac" or data["stype"] == "sc")):
 				if len(runs) == possible_studies[study]:
 					study_dict["complete"] = True
 				else:
@@ -357,18 +372,21 @@ def makeMC(data):
 				"3":("Nonwords",False),
 				"duration": "4",
 				"on_sub":0.4},
-			"BaleenMM":{
-				"1":("LP_RelatedTarget",False),
-				"2":("LP_UnrelatedTarget",False),
-				"4":("LP_UnrelatedFiller",False),
-				"5":("LP_AnimalTarget",True),
-				"6":("HP_RelatedTarget",False),
-				"7":("HP_UnrelatedTarget",False),
-				"8":("HP_RelatedFiller",False),
-				"9":("HP_UnrelatedFiller",False),
-				"10":("HP_AnimalTarget",True),
-				"11":("LP_AnimalPrime",True),
-				"12":("HP_AnimalPrime",True),
+			"BaleenLP":{
+				"1":("RelatedTarget",False),
+				"2":("UnrelatedTarget",False),
+				"4":("UnrelatedFiller",False),
+				"5":("AnimalTarget",True),
+				"11":("AnimalPrime",True),
+				"duration":"2",
+				"on_sub":1},
+			"BaleenHP":{
+				"6":("RelatedTarget",False),
+				"7":("UnrelatedTarget",False),
+				"8":("RelatedFiller",False),
+				"9":("UnrelatedFiller",False),
+				"10":("AnimalTarget",True),
+				"12":("AnimalPrime",True),
 				"duration": "2",
 				"on_sub":1},
 			"MaskedMM":{
@@ -404,21 +422,29 @@ def makeMC(data):
 		onset_ind = 5
 		run = vtsd_data[0][4]
 		study = vtsd_data[0][0]
+		if study == "BaleenMM":
+			if int(run) < 5:
+				study_key = "BaleenLP"
+			else:
+				study_key = "BaleenHP"
+				run = str(int(run) - 4)
+		else:
+			study_key = study
 		if data["stype"] == "sc" or data["stype"] == "ac":
 			if study == "ATLLoc_SC":
-				study = "ATLLoc"
+				study_key = "ATLLoc"
 			elif study == "MaskedMM_SC":
-				study = "MaskedMM"
+				study_key = "MaskedMM"
 			elif study == "AXCPT_SC":
-				study = "AXCPT"
-		sub = codes[study]["on_sub"]
+				study_key = "AXCPT"
+		sub = codes[study_key]["on_sub"]
 		uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
 		misses = []
 		for code in uncodes:
 			#get raw data
 			good_onsets = []
 			for trial in [x for x in vtsd_data if x[code_ind] == code]:
-				task = codes[study][code][1]
+				task = codes[study_key][code][1]
 				response =  trial[response_ind] != "0.000"
 				if (task and response) or (not task and not response):
 					good_onsets.append(trial[onset_ind])
@@ -427,23 +453,24 @@ def makeMC(data):
 			#xfm to floats, subtract, round,int,back to string
 			xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
 			if len(xfm_onsets) == 0:
-				print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study, run, codes[study][code][0]))
-			new_dict = {"Run"+run+codes[study][code][0]+"Onsets": " ".join(xfm_onsets),
-				"Run"+run+codes[study][code][0]+"Durations": " ".join(codes[study]["duration"] * len(xfm_onsets))}
-			if study in info:
-				info[study].update(new_dict)
-		#do misses
-		if len(misses) > 0:
-			xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
-			miss_dur = [codes[study]["duration"]] * len(xfm_misses)
-			print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study,run,len(xfm_misses)))
-		else:
-			trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
-
-			xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study]["duration"])))]
-			miss_dur = ["2"]
-		info[study].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
-					"Run"+run+"MissesDurations": " ".join(miss_dur)})
+				print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study_key, run, codes[study_key][code][0]))
+			new_dict = {"Run"+run+codes[study_key][code][0]+"Onsets": " ".join(xfm_onsets),
+				"Run"+run+codes[study_key][code][0]+"Durations": " ".join(codes[study_key]["duration"] * len(xfm_onsets))}
+			if study_key in info:
+				info[study_key].update(new_dict)
+		if study_key != "ATLLoc":
+			#do misses
+			if len(misses) > 0:
+				xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
+				miss_dur = [codes[study_key]["duration"]] * len(xfm_misses)
+				print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study_key,run,len(xfm_misses)))
+			else:
+				trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
+	
+				xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study_key]["duration"])))]
+				miss_dur = ["2"]
+			info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
+						"Run"+run+"MissesDurations": " ".join(miss_dur)})
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
@@ -454,15 +481,11 @@ def make_file_exec(path):
 	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
 	
 
-def touch_file_path(data,study,type,block,when):
+def touch_file_path(data,study,type,when):
 	"""
 	yet another little method to capture this logic in one place
 	"""
-	if block:
-		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_block"+block+"_"+when)
-	else:
-		s = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
-	return s
+	return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 
 
 
@@ -482,24 +505,14 @@ def spm_setup(data,type):
 		if not os.path.exists(job_dir):
 			os.mkdir(job_dir)
 		if "stats" in type:
-			stat_dirs = []
-			if study != "BaleenMM":
-				stat_dirs.append(os.path.join(data["mri_dir"],study,type))
-			else:
-				for block in ["1","2"]:
-					stat_dirs.append(os.path.join(data["mri_dir"],study,type+block))
+			stat_dir = os.path.join(data["mri_dir"],study,type)
+			if not os.path.exists(stat_dir):
+					os.mkdir(stat_dir)
 			for smooth in ["6mm","8mm"]:
-				for stat_dir in stat_dirs:
-					if not os.path.exists(stat_dir):
-						os.mkdir(stat_dir)
-					smooth_dir = os.path.join(stat_dir,smooth)
-					if not os.path.exists(smooth_dir):
-						os.mkdir(smooth_dir)
-		if "stats" in type and study == "BaleenMM":
-			spm_write_mlab_script(data,study,type,"1")
-			spm_write_mlab_script(data,study,type,"2")
-		else:
-			spm_write_mlab_script(data,study,type,"")
+				smooth_dir = os.path.join(stat_dir,smooth)
+				if not os.path.exists(smooth_dir):
+					os.mkdir(smooth_dir)
+		spm_write_mlab_script(data,study,type)
 	spm_write_script(data,type)
 
 
@@ -536,30 +549,12 @@ def spm_write_script(data,type):
 	if not "studies_to_setup" in data:
 		data["studies_to_setup"] = studies_to_setup(data,type)
 	for study in data["studies_to_setup"]:
-		if study == "BaleenMM" and "stats" in type:
-			job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-				type+"_block1.m")
-			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-				type+"_block1.log")
-			commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,
-				mlab_cmd,data["parallel"]))
-			job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-				type+"_block2.m")
-			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-				type+"_block2.log")
-			commands.append("{2} < {0} > {1} {3}".format(job_file,log_file,
-				mlab_cmd,data["parallel"]))
-		else:
-			job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-			log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
-			commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
-				mlab_cmd,data["parallel"]))
+		job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
+		commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
+			mlab_cmd,data["parallel"]))
 	commands.append("wait\n")
-	try:
-		write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
-	except IOError:
-		print(commands)
-		raise SystemError("Cannot write shell script. See text above traceback for shell commands.")
+	write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
 	make_file_exec(shell_script)		
 
 
@@ -575,8 +570,7 @@ def spm_run_art(data):
 		images = glob(os.path.join(data["mri_dir"],study,"*",study+"*.nii"))
 		motions = glob(os.path.join(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
 		if len(images) != len(motions):
-			print("Not the same amount of images and motion files")
-			raise UserError("spm_run_art")
+			raise UserError("spm_run_art: Not the same amount of images and motion files")
 		sess_contents = []
 		sess_contents.append("sessions: {0}".format(len(images)))
 		sess_contents.append("global_mean: 1")
@@ -603,7 +597,7 @@ def spm_run_art(data):
 	print("Finished ART for {0}".format(data["subject"]))
 
 		
-def spm_write_mlab_script(data,study,type,block):
+def spm_write_mlab_script(data,study,type):
 	"""
 	This basically just wraps f2f_replace and uses the dictionary from spm_matlab_dict.
 	"""
@@ -611,47 +605,33 @@ def spm_write_mlab_script(data,study,type,block):
 		good_type = "stats"
 	else:
 		good_type = type
-	batch_dict = spm_matlab_dict(data,study,type,block)
-	if study == "BaleenMM" and "stats" in type:
-		if block is None:
-			raise ProgrammerError("write_batch_files: no block specified for baleenmm stats")
-		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+
-			type+"_block"+block+".m")
-		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_block"+block+".m")
+	batch_dict = spm_matlab_dict(data,study,type)
+	if data["no_unwarp"]:
+		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_nounwarp.m")			
 	else:
-		if data["no_unwarp"]:
-			batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-			batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_nounwarp.m")			
-		else:
-			batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-			batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
 	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
-def spm_matlab_dict(data,study,type,block):
+def spm_matlab_dict(data,study,type):
 	"""
 	Adds to the dictionary returned by spm_funcdir_info.  Any keywords you insert to the SPM batches
 	should be added here.
 	"""
-	replace_dict = spm_funcdir_info(data,study,type,block)
+	replace_dict = spm_funcdir_info(data,study,type)
 	replace_dict["study"] = study.lower()
 	replace_dict["type"] = type
-	if block:
-		replace_dict["block"] = "_block"+block
-	else:
-		replace_dict["block"] = "<none>"
 	if "stats" in type:
 		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type,"6mm","SPM.mat")
 		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type,"8mm","SPM.mat")
-	if block:
-		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type+block,"6mm","SPM.mat")
-		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type+block,"8mm","SPM.mat")
-	replace_dict["run_file"] = touch_file_path(data,study,type,block,"run")
-	replace_dict["start_file"] = touch_file_path(data,study,type,block,"start")
-	replace_dict["email_success"] = "{0} {1} {2}{3} succeeded".format(data["subject"],study,
-		type,block)
-	replace_dict["email_fail"] =  "{0} {1} {2}{3} failed".format(data["subject"],study,
-		type,block)
+	replace_dict["run_file"] = touch_file_path(data,study,type,"run")
+	replace_dict["start_file"] = touch_file_path(data,study,type,"start")
+	replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
+		type)
+	replace_dict["email_fail"] =  "{0} {1} {2} failed".format(data["subject"],study,
+		type)
 	if data["local"]:
 		replace_dict["location"] = "home/scratch"
 	else:
@@ -659,14 +639,14 @@ def spm_matlab_dict(data,study,type,block):
 	return replace_dict
 
 
-def spm_funcdir_info(data,study,type,block):
+def spm_funcdir_info(data,study,type):
 	"""spm_funcdir_info:
 	looks for info.txt and uses the dictionary stored that for everything.
 	The MPRAGEXXX is filled out here"""
 	info = pipeline.load_data(info_path(data),data["verbose"])
 	study_dict = info[study];
 	study_dict["subject"] = data["subject"]
-	study_dict["stat_folder"] = type+block
+	study_dict["stat_folder"] = type
 	if "stats" in type:
 		# we need to insert MRs into study_dict
 		run_keys = [k for k,v in study_dict.iteritems() if "Run" in k]
@@ -770,7 +750,8 @@ def write_par(data,study,info,run):
 			full_par.append([onset,code_num,duration,"1.0",cond_name])
 	full_par.sort(key=lambda x:int(x[0]))
 	par_fname = os.path.join(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
-	write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
+	if not data["no_par"]:
+		write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
 	
 
 def fs_setup(data,type,subjects=None):
@@ -780,7 +761,8 @@ def fs_setup(data,type,subjects=None):
 	"""
 	fir_wind = dict({"MaskedMM":(6,18),
 					"ATLLoc":(6,22),
-					"BaleenMM":(6,18),
+					"BaleenHP":(6,18),
+					"BaleenLP":(6,18),					
 					"AXCPT":(4,16)})
 
 	for study in studies_to_setup(data,type):
@@ -829,88 +811,68 @@ def fs_setup(data,type,subjects=None):
 		
 		elif type == "analysis":
 			commands.append("cd %s" % func_dir)
-			#so baleen is weird in that we need to do blocks differently
-			if study == "BaleenMM":
-				real_studies = ["BaleenLP","BaleenHP"]
-			else:
-				real_studies = [study]
-			for real_study in real_studies:
-				for space in ["lh","rh","mni305"]:
-					for shape in ["spm","fir"]:
-						#config shape_opt
-						if shape == "spm":
-							shape_opt = "-spmhrf 0 -refeventdur 2"
-						else:
-							shape_opt = "-fir %d %d -TER 2" % (fir_wind[study][0],fir_wind[study][1]+fir_wind[study][0])
-						#config nconds
-						if real_study == "BaleenLP":
-							nconds = len([k for k in cond_num[study].keys() if "LP" in k or k == "Misses"])
-						elif real_study == "BaleenHP":
-							nconds = len([k for k in cond_num[study].keys() if "HP" in k or k == "Misses"])
-						else:
-							nconds = len(cond_num[study].keys())
-						preproc_opt = "-fwhm 8 -stc siemens "
-						if space != "mni305":
-							preproc_opt += "-surface fsaverage %s" % space
-						else:
-							preproc_opt += "-mni305 2"
-						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
-						cmd = " ".join(["mkanalysis-sess",
-										"-analysis %s" % aname,
-										"-fsd %s" % study,
-										"-rlf %s" % fs_rlf_name(data,type,real_study),
-										"-p %s.par" % study.lower(),
-										"%s" % shape_opt,
-										"-event-related",
-										"-TR 2",
-										preproc_opt,
-										"-nconditions %d" % nconds,
-										"-mcextreg",
-										"-hpf 128",
-										"-force"])
-						commands.append(cmd)
-						#mkcontrast-sess
-						for contrast,(a,c) in contrasts[study].iteritems():
-							#print("%s --> %s,%s" % (contrast,a,c))
-							pos_con = " ".join(["-a "+sa for sa in a])
-							neg_con = " ".join(["-c "+sc for sc in c])
-							con_cmd = " ".join(["mkcontrast-sess",
-										"-analysis %s" % aname,
-										"-contrast %s" % contrast,
-										pos_con,
-										neg_con])
-							commands.append(con_cmd)
-				script_path = fs_script_path(data,type,study)
-				write_file_with_list(script_path,"\n".join(commands),data["verbose"])
-				print("Wrote %s" % script_path)
-				make_file_exec(script_path)
+			for space in ["lh","rh","mni305"]:
+				for shape in ["spm","fir"]:
+					#config shape_opt
+					if shape == "spm":
+						shape_opt = "-spmhrf 0 -refeventdur 2"
+					else:
+						shape_opt = "-fir %d %d -TER 2" % (fir_wind[study][0],fir_wind[study][1]+fir_wind[study][0])
+					nconds = len(cond_num[study].keys())
+					preproc_opt = "-fwhm 8 -stc siemens "
+					if space != "mni305":
+						preproc_opt += "-surface fsaverage %s" % space
+					else:
+						preproc_opt += "-mni305 2"
+					aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+					cmd = " ".join(["mkanalysis-sess",
+									"-analysis %s" % aname,
+									"-fsd %s" % study,
+									"-p %s.par" % study.lower(),
+									"%s" % shape_opt,
+									"-event-related",
+									"-TR 2",
+									preproc_opt,
+									"-nconditions %d" % nconds,
+									"-mcextreg",
+									"-hpf 128",
+									"-force"])
+					commands.append(cmd)
+					#mkcontrast-sess
+					for contrast,(a,c) in contrasts[study].iteritems():
+						#print("%s --> %s,%s" % (contrast,a,c))
+						pos_con = " ".join(["-a "+sa for sa in a])
+						neg_con = " ".join(["-c "+sc for sc in c])
+						con_cmd = " ".join(["mkcontrast-sess",
+									"-analysis %s" % aname,
+									"-contrast %s" % contrast,
+									pos_con,
+									neg_con])
+						commands.append(con_cmd)
+			script_path = fs_script_path(data,type,study)
+			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+			print("Wrote %s" % script_path)
+			make_file_exec(script_path)
 		
 		elif type == "stats":
 			commands.append("cd %s" % func_dir)
 			lf = fs_logfile(data,type,study)
 			commands.append("rm %s" % lf)
 			commands.append("let z=0")
-			#baleen is weird in that we need to do blocks differently
-			if study == "BaleenMM":
-				real_studies = ["BaleenLP","BaleenHP"]
-			else:
-				real_studies = [study]
-			for real_study in real_studies:
-				fs_make_rlf(data,type,real_study)
-				for space in ["lh","rh","mni305"]:
-					for shape in ["spm","fir"]:
-						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
-						srchdir = func_dir
-						sessid = data["subject"]
-						cmd = " ".join(["selxavg3-sess",
-										"-analysis %s" % aname,
-										"-s %s" % sessid,
-										"-d %s" % srchdir,
-										"-svres",
-										"-nolog",
-										">> %s" % lf])
-						commands.append(cmd)
-						commands.append("let z=z+$?")
+			for space in ["lh","rh","mni305"]:
+				for shape in ["spm","fir"]:
+					aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+					srchdir = func_dir
+					sessid = data["subject"]
+					cmd = " ".join(["selxavg3-sess",
+									"-analysis %s" % aname,
+									"-s %s" % sessid,
+									"-d %s" % srchdir,
+									"-svres",
+									"-nolog",
+									">> %s" % lf])
+					commands.append(cmd)
+					commands.append("let z=z+$?")
 			commands.append("exit $z")
 			script_path = fs_script_path(data,type,study)
 			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
@@ -934,25 +896,19 @@ def fs_setup(data,type,subjects=None):
 			fsgd_path = os.path.join(func_dir,"%s.%s.fsgd" % (data["stype"],study))
 			print("Writing %s" % fsgd_path)
 			write_file_with_list(fsgd_path,"\n".join(fsgd),data["verbose"])
-			if study == "BaleenMM":
-				real_studies = ["BaleenLP","BaleenHP"]
-			else:
-				real_studies = [study]
-			commands.append("cd %s" % func_dir)
-			for real_study in real_studies:
-				for space in ["lh","rh","mni305"]:
-					for shape in ["fir","spm"]:
-						aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
-						lf = os.path.join(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
-						isx_cmd = " ".join(["isxconcat-sess",
-											"-a %s" % aname,
-											"-d %s" % func_dir,
-											"-all-contrasts",
-											"-sf %s.%s.sessid" % (data["stype"],study),
-											"-fsgd %s.%s.fsgd" % (data["stype"],study),
-											"-o %s.group-analysis" % data["stype"],
-											">& %s %s" % (lf,data["parallel"])])
-						commands.append(isx_cmd)
+			for space in ["lh","rh","mni305"]:
+				for shape in ["fir","spm"]:
+					aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+					lf = os.path.join(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
+					isx_cmd = " ".join(["isxconcat-sess",
+										"-a %s" % aname,
+										"-d %s" % func_dir,
+										"-all-contrasts",
+										"-sf %s.%s.sessid" % (data["stype"],study),
+										"-fsgd %s.%s.fsgd" % (data["stype"],study),
+										"-o %s.group-analysis" % data["stype"],
+										">& %s %s" % (lf,data["parallel"])])
+					commands.append(isx_cmd)
 			if data["parallel"]:
 				commands.append("wait")
 			isx_cmd_path = os.path.join(func_dir, "fsfast_scripts","%s-isxconcat.sh"%study)
@@ -960,78 +916,40 @@ def fs_setup(data,type,subjects=None):
 			make_file_exec(isx_cmd_path)
 			
 		elif type == "glm":
-			if study == "BaleenMM":
-				real_studies = ["BaleenLP","BaleenHP"]
-			else:
-				real_studies = [study]
-			for real_study in real_studies:
-				for con in contrasts[study].keys():
-					for space in ["lh","rh","mni305"]:
-						for shape in ["fir","spm"]:
-							if space != "mni305":
-								space_opt = "--surf fsaverage %s" % space
-							else:
-								space_opt = ""
-							aname = "%s.%s.%s.sm8.%s" % (data["stype"],real_study,shape,space)
-							group_dir = os.path.join(func_dir,"%s.group-analysis" % data["stype"])
-							adir = os.path.join(group_dir,aname)
-							con_dir = os.path.join(adir,con)
-							commands.append("cd %s" % con_dir)
-							if shape == "fir":
-								#build XXX
-								conc = lambda x:"00"+str(x) if x < 10 else "0"+str(x)
-								XXX = [conc((x+6)/2) for x in range(fir_wind[study][0],fir_wind[study][1],2)]
-								for cesXXX in XXX:
-									commands.append(" ".join(["mri_glmfit",
-															"--osgm",
-															"--glmdir glm.%s" % cesXXX,
-															"--y ces.%s.nii.gz" % cesXXX,
-															"--mask %s" % os.path.join(adir,"mask.nii.gz"),
-															space_opt]))
-							else:
+			for con in contrasts[study].keys():
+				for space in ["lh","rh","mni305"]:
+					for shape in ["fir","spm"]:
+						if space != "mni305":
+							space_opt = "--surf fsaverage %s" % space
+						else:
+							space_opt = ""
+						aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+						group_dir = os.path.join(func_dir,"%s.group-analysis" % data["stype"])
+						adir = os.path.join(group_dir,aname)
+						con_dir = os.path.join(adir,con)
+						commands.append("cd %s" % con_dir)
+						if shape == "fir":
+							#build XXX
+							conc = lambda x:"00"+str(x) if x < 10 else "0"+str(x)
+							XXX = [conc((x+6)/2) for x in range(fir_wind[study][0],fir_wind[study][1],2)]
+							for cesXXX in XXX:
 								commands.append(" ".join(["mri_glmfit",
 														"--osgm",
-														"--glmdir glm",
-														"--y ces.nii.gz",
+														"--glmdir glm.%s" % cesXXX,
+														"--y ces.%s.nii.gz" % cesXXX,
 														"--mask %s" % os.path.join(adir,"mask.nii.gz"),
 														space_opt]))
+						else:
+							commands.append(" ".join(["mri_glmfit",
+													"--osgm",
+													"--glmdir glm",
+													"--y ces.nii.gz",
+													"--mask %s" % os.path.join(adir,"mask.nii.gz"),
+													space_opt]))
 			glm_path = os.path.join(func_dir,"fsfast_scripts","%s-glmfit.sh" % study)
 			write_file_with_list(glm_path, "\n".join(commands),data["verbose"])
 			make_file_exec(glm_path)
 															
-
-def fs_make_rlf(data,type,study):
-	"""
-	study can be ATLLoc,MaskedMM,AXCPT,BaleenHP,BaleenLP
-	"""
-	if "Baleen" in study:
-		stud_key = "BaleenMM"
-	else:
-		stud_key = study
-	study_info = pipeline.load_data(info_path(data),False)[stud_key]
-	#find run keys
-	run_keys = [k for k in study_info if ("Run" in k and "XXX" in k)]
-	if study == "BaleenLP":
-		#first four runs
-		good_runs = [study_info[k] for k in run_keys if int(k.partition("Run")[2].partition("XXX")[0]) < 5]
-	elif study == "BaleenHP":
-		#last four runs
-		good_runs = [study_info[k] for k in run_keys if int(k.partition("Run")[2].partition("XXX")[0]) > 4]
-	else:
-		good_runs = [study_info[k] for k in run_keys]
-	good_runs = sorted(good_runs)
-	write_file_with_list(os.path.join(data["mri_dir"],stud_key,fs_rlf_name(data,type,study)),"\n".join(good_runs))
-	
-	
-def fs_rlf_name(data,type,study):
-	if study == "BaleenLP":
-		fname = "rlf1"
-	elif study == "BaleenHP":
-		fname = "rlf2"
-	else:
-		fname = "rlf"
-	return fname
-
 
 def fs_run_single(data,type,study,script_to_run):
 	   my_args = ["nohup", script_to_run]
@@ -1051,16 +969,16 @@ def fs_run_single(data,type,study,script_to_run):
 	   add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
 	   subj = "{0} fs-{1} {2}".format(data["subject"],type,status)
 	   pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
-	
+
 
 def fs_run(data,type):
-	scripts = []
 	for study in studies_to_setup(data,type):
 		script_to_run = fs_script_path(data,type,study)
 		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
- 		fs_run_single(data,type,study,script_to_run)
-		
+		fs_run_single(data,type,study,script_to_run)
+
+
 def fs_script_dir(data,type=None):
 	if type == "analysis":
 		return os.path.join(func_dir,"fsfast_scripts")
@@ -1225,23 +1143,21 @@ def second_level(data,type):
 		"BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
 		"BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
 		["UnRelFillvRelFill","0009"]],"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
-	study_stats = dict({"ATLLoc": "stats_outliers","MaskedMM": "stats_outliers",
-		"BaleenLP": "stats_outliers1","BaleenHP": "stats_outliers2","AXCPT": "stats_outliers"})
 	if data["date"]:
 		date_dir = data["date"]
 	else:
 		date_dir = time.strftime("%Y%m%d")
 	if type == "setup":
-		second_setup(data,prefix,date_dir,study_contrasts,study_stats)
+		second_setup(data,prefix,date_dir,study_contrasts)
 	if type == "run":
-		second_run(data,prefix,date_dir,study_contrasts,study_stats)
+		second_run(data,prefix,date_dir,study_contrasts)
 	if type == "surf":
-		second_surf(data,prefix,date_dir,study_contrasts,study_stats)
+		second_surf(data,prefix,date_dir,study_contrasts)
 	if type == "package":
-		second_package(data,prefix,date_dir,study_contrasts,study_stats)
+		second_package(data,prefix,date_dir,study_contrasts)
 
 		
-def second_package(data,prefix,date,study_contrasts,study_stats):
+def second_package(data,prefix,date,study_contrasts):
 	"""
 	This copies images and copy/replaces the HTML files to the date directory.
 	"""
@@ -1292,7 +1208,7 @@ def second_package(data,prefix,date,study_contrasts,study_stats):
 				os.path.join(study_dir,contrast+".html"),replace_dict,data["verbose"])
 
 			
-def second_surf(data,prefix,date,study_contrasts,study_stats):
+def second_surf(data,prefix,date,study_contrasts):
 	"""
 	This copy/replaces the make_images.sh script and runs each one for each paradigm/contrast.
 	"""
@@ -1354,7 +1270,7 @@ def second_surf(data,prefix,date,study_contrasts,study_stats):
 					sys.exit("Surf canceled by user...Goodbye")
 
 			
-def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
+def second_setup(data,prefix,date_dir,study_contrasts):
 	"""
 	This copy/replaces the generic_2nd_level.m script for each paradigm/contrast and writes out a 
 	script to run each in matlab. This is the 2nd-level cousin to --spm_setup.
@@ -1387,13 +1303,13 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 				real_study = "BaleenMM"
 			else:
 				real_study = study
-			search_term = os.path.join(func_dir,data["stype"]+"*",real_study,study_stats[study],"8mm",
+			search_term = os.path.join(func_dir,data["stype"]+"*",real_study,"stats_outliers","8mm",
 				"con_"+XXXX+".img")
 			all_img = glob(search_term)
 			#add included subjecdt images
 			if data["good_sub"]:
 				for sub in data["good_sub"]:
-					all_img.extend(glob(os.path.join(func_dir,sub,real_study,study_stats[study],
+					all_img.extend(glob(os.path.join(func_dir,sub,real_study,"stats_outliers",
 						"8mm","con_"+XXXX+".img")))
 			#remove excluded subject images
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
@@ -1430,7 +1346,7 @@ def second_setup(data,prefix,date_dir,study_contrasts,study_stats):
 	make_file_exec(shell_path)
 
 
-def second_run(data,prefix,date_dir,study_contrasts,study_stats):
+def second_run(data,prefix,date_dir,study_contrasts):
 	"""
 	Runs the script made by --setup_second.  That script's output is hooked into sys.stdout (which 
 	probably the terminal)
@@ -1496,9 +1412,10 @@ def subject_type(subjects):
 def print_info(data):
 	info = pipeline.load_data(info_path(data))
 	if data["single_study"]:
-		info = info[data["single_study"]]
-		for k,v in sorted(info.items()):
-			print("%s:%s" % (k,v))
+		for study in data["single_study"]:
+			info = info[study]
+			for k,v in sorted(info.items()):
+				print("%s:%s" % (k,v))
 	else:
 		for k,v in sorted(info.items()):
 			print("{0}...".format(k))
@@ -1560,8 +1477,7 @@ def process_subject(subject,data):
 			unpack_all(data)
 		if data["makeMC"]:
 			makeMC(data)
-		if data["print_info"]:
-			print_info(data)
+
 		#SETUP
 		if data["setup_preproc"]:
 			spm_setup(data,"preproc")
@@ -1607,10 +1523,13 @@ def process_subject(subject,data):
 			meg_script(data,"preAnat")
 		if data["makeInv"]:
 			meg_script(data,"makeInv")
+			
+		if data["print_info"]:
+			print_info(data)
 	except Exception as strerr:
-		print "Run-time error: ",type(strerr),strerr
-		add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
+		print "Run-time error (%s): " % subject ,type(strerr),strerr
 		if data["error_email"]:
+			add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
 			pipeline.email(sender=add,receiver=add,
 					subject="semprmm_pipeline error".format(subject),
 					message=data["subject"]+" "+str(strerr))
@@ -1678,6 +1597,8 @@ if __name__ == "__main__":
 		default=False,help="Setup group level analysis with FSFast")
 	fs_group.add_option("--setup_fs_glm",dest="setup_fs_glm",action="store_true",default=False,
 		help="Setup the script to run mri_glmfit")
+	fs_group.add_option("--no_par",dest="no_par",action="store_true",default=False,
+		help="Don't write par files with --setup_fs_preproc")
 	parser.add_option_group(fs_group)	
 	
 	#Cortical reconstruction options
@@ -1753,8 +1674,7 @@ if __name__ == "__main__":
 		help="Print subject's info.txt")
 	misc_group.add_option("--verbose",dest="verbose",help="Print info",action="store_true",
 		default=False)
-	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*",action="store",
-		type="string",default=None)
+	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*",action="append",default=None)
 	misc_group.add_option("--error_email",dest="error_email",default=False,action="store_true",
 		help="Send email when errors occur, off by default")
 	misc_group.add_option("--subject_type",dest="stype",default="",action="store",type="string",
