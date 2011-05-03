@@ -9,6 +9,7 @@ License: BSD,3 clause
 
 from optparse import OptionParser,OptionGroup
 import os
+from os.path import join as pj
 from pprint import pprint
 from glob import glob
 import getpass
@@ -82,7 +83,7 @@ contrasts = dict({"ATLLoc":
 					"UnrelateFiller":(("3"),("0")),
 					"AnimalTarget":(("4"),("0")),
 					"AnimalPrime":(("5"),("0")),
-					"Related-Unrelated":(("1"),("2")),
+					"Unrelated-Related":(("2"),("1")),
 					"AnimalTarget-Unrelated":(("4"),("2")),
 					"All":(("1","2","3","4","5"),("0"))},
 				"BaleenHP":	
@@ -92,8 +93,8 @@ contrasts = dict({"ATLLoc":
 					"UnrelateFiller":(("4"),("0")),
 					"AnimalTarget":(("5"),("0")),
 					"AnimalPrime":(("6"),("0")),
-					"Related-Unrelated":(("1"),("2")),
-					"RelatedFiller-UnrelatedFiller":(("3"),("4")),
+					"Unrelated-Related":(("2"),("1")),
+					"UnrelatedFiller-RelatedFiller":(("4"),("3")),
 					"AnimalTarget-Unrelated":(("5"),("2")),
 					"All":(("1","2","3","4","5","6"),("0"))},
 				"AXCPT":
@@ -182,7 +183,7 @@ def cfg_path(data):
 	data: dict with keys:"subject_dir"
 	Returns path to cfg file.
 	"""
-	return os.path.join(data["mri_dir"], "cfg.txt")
+	return pj(data["mri_dir"], "cfg.txt")
 
 
 def scan_path(data):
@@ -190,7 +191,7 @@ def scan_path(data):
 	data: dict with "subject_dir"
 	returns path to scan.log file
 	"""
-	return os.path.join(data["mri_dir"], "scan.log")
+	return pj(data["mri_dir"], "scan.log")
 
 
 def unpack_all(data):
@@ -277,7 +278,7 @@ def scan2cfg(data):
 	not_fieldmaps.extend(good_fieldmaps)
 	good_lines = not_fieldmaps
 	good_lines.sort(key=lambda x:int(x.split()[0]))
-	write_file_with_list(data["cfg_path"],"\n".join(good_lines),data["verbose"])
+	write_file_with_list(data["cfg_path"],"\n".join(good_lines))
 
 
 ####GENERAL FUNCTIONAL####
@@ -298,7 +299,7 @@ def studies_to_setup(data,type):
 	else:		
 		if "stats" in type or "art" in type:
 			studies = [k for k,v in info.iteritems() if os.path.exists(
-				touch_file_path(data,k,"preproc","","run"))]
+				touch_file_path(data,k,"preproc","run"))]
 		elif "preproc" in type:
 			studies = [k for k,v in info.iteritems() if v["was_run"]]
 	return studies
@@ -308,7 +309,7 @@ def info_path(data):
 	"""
 	just a little method to encapsulate this path
 	"""
-	return os.path.join(data["mri_dir"],"info.txt")
+	return pj(data["mri_dir"],"info.txt")
 
 
 def cfg2info(data):
@@ -406,7 +407,7 @@ def makeMC(data):
 				"on_sub": 0}
 			}
 	#first, just glob all the vtsd_logs from mri_vtsd/data["subject"]
-	vtsd_logs = glob(os.path.join(mri_vtsd,data["subject"],"*.vtsd_log"))
+	vtsd_logs = glob(pj(mri_vtsd,data["subject"],"*.vtsd_log"))
 	if len(vtsd_logs) == 0:
 		raise UserError("Hey dummy, no vtsd logs. Try again after copying")
 	info = pipeline.load_data(info_path(data),data["verbose"])
@@ -485,8 +486,7 @@ def touch_file_path(data,study,type,when):
 	"""
 	yet another little method to capture this logic in one place
 	"""
-	return os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
-
+	return pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 
 
 #####SPM#####
@@ -501,15 +501,15 @@ def spm_setup(data,type):
 		raise UserError("Broke in spm_setup")
 	data["studies_to_setup"] = studies_to_setup(data,type)
 	for study in data["studies_to_setup"]:
-		job_dir = os.path.join(data["mri_dir"],study,"jobs")
+		job_dir = pj(data["mri_dir"],study,"jobs")
 		if not os.path.exists(job_dir):
 			os.mkdir(job_dir)
 		if "stats" in type:
-			stat_dir = os.path.join(data["mri_dir"],study,type)
+			stat_dir = pj(data["mri_dir"],study,type)
 			if not os.path.exists(stat_dir):
 					os.mkdir(stat_dir)
 			for smooth in ["6mm","8mm"]:
-				smooth_dir = os.path.join(stat_dir,smooth)
+				smooth_dir = pj(stat_dir,smooth)
 				if not os.path.exists(smooth_dir):
 					os.mkdir(smooth_dir)
 		spm_write_mlab_script(data,study,type)
@@ -520,15 +520,15 @@ def spm_script_path(data,type):
 	"""
 	This function just encapsulates the little bit of logic needed to name a shell script.
 	"""
-	script_dir = os.path.join(data["mri_dir"],"scripts")
+	script_dir = pj(data["mri_dir"],"scripts")
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
 	if "recon" in type:
 		return 
 	elif data["single_study"]:
-		return os.path.join(script_dir,data["single_study"].lower()+"_"+type+"_"+data["subject"]+".sh")
+		return pj(script_dir,data["single_study"].lower()+"_"+type+"_"+data["subject"]+".sh")
 	else:
-		return os.path.join(script_dir,"all_"+type+"_"+data["subject"]+".sh")
+		return pj(script_dir,"all_"+type+"_"+data["subject"]+".sh")
 
 
 def spm_write_script(data,type):
@@ -549,12 +549,12 @@ def spm_write_script(data,type):
 	if not "studies_to_setup" in data:
 		data["studies_to_setup"] = studies_to_setup(data,type)
 	for study in data["studies_to_setup"]:
-		job_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		log_file = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
+		job_file = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		log_file = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
 		commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
 			mlab_cmd,data["parallel"]))
 	commands.append("wait\n")
-	write_file_with_list(shell_script,"\n".join(commands),data["verbose"])
+	write_file_with_list(shell_script,"\n".join(commands))
 	make_file_exec(shell_script)		
 
 
@@ -567,8 +567,8 @@ def spm_run_art(data):
 	sessions = []
 	for study in studies:
 		#glob the images
-		images = glob(os.path.join(data["mri_dir"],study,"*",study+"*.nii"))
-		motions = glob(os.path.join(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
+		images = glob(pj(data["mri_dir"],study,"*",study+"*.nii"))
+		motions = glob(pj(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
 		if len(images) != len(motions):
 			raise UserError("spm_run_art: Not the same amount of images and motion files")
 		sess_contents = []
@@ -581,16 +581,16 @@ def spm_run_art(data):
 			sess_contents.append("session {0} image {1}".format(str(i+1),im))
 			sess_contents.append("session {0} motion {1}".format(str(i+1),mo))
 		sess_contents.append("end")
-		sess_path = os.path.join(data["mri_dir"],study,"art_sess.txt")
+		sess_path = pj(data["mri_dir"],study,"art_sess.txt")
 		sessions.append(sess_path)
-		write_file_with_list(sess_path,"\n".join(sess_contents),data["verbose"])
+		write_file_with_list(sess_path,"\n".join(sess_contents))
 	art_m = []
 	for session in sessions:
 		art_m.append("art('sess_file','{0}');".format(session))
 	art_m.append("exit;")
-	art_path = os.path.join(data["mri_dir"],"spm_run_art.m")
+	art_path = pj(data["mri_dir"],"spm_run_art.m")
 
-	write_file_with_list(art_path,"\n".join(art_m),data["verbose"])
+	write_file_with_list(art_path,"\n".join(art_m))
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
 	proc = pipeline.run_process(my_args,output=sys.stdout,error=sys.stderr)
 	proc.communicate()
@@ -607,11 +607,11 @@ def spm_write_mlab_script(data,study,type):
 		good_type = type
 	batch_dict = spm_matlab_dict(data,study,type)
 	if data["no_unwarp"]:
-		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+"_nounwarp.m")			
+		batch_o = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+"_nounwarp.m")			
 	else:
-		batch_o = os.path.join(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		batch_i = os.path.join(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+		batch_o = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
+		batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
 	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
@@ -624,8 +624,8 @@ def spm_matlab_dict(data,study,type):
 	replace_dict["study"] = study.lower()
 	replace_dict["type"] = type
 	if "stats" in type:
-		replace_dict["SixSPM"] = os.path.join(data["mri_dir"],study,type,"6mm","SPM.mat")
-		replace_dict["EightSPM"] = os.path.join(data["mri_dir"],study,type,"8mm","SPM.mat")
+		replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
+		replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"8mm","SPM.mat")
 	replace_dict["run_file"] = touch_file_path(data,study,type,"run")
 	replace_dict["start_file"] = touch_file_path(data,study,type,"start")
 	replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
@@ -685,14 +685,14 @@ def spm_write_coreg_mprage(data):
 		mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop "
 		study_info = pipeline.load_data(info_path(data),data["verbose"])[study]
 		new_dict = {"par":study,"subject":data["subject"],"MPRAGEXXX":study_info["MPRAGE_runs"][0]}
-		incoming = os.path.join(mri_scripts,"spm_batches","coreg_write.m")
-		outgoing = os.path.join(data["mri_dir"],"scripts","%s_%s.m" % (study,"cowrite"))
+		incoming = pj(mri_scripts,"spm_batches","coreg_write.m")
+		outgoing = pj(data["mri_dir"],"scripts","%s_%s.m" % (study,"cowrite"))
 		pipeline.f2f_replace(incoming, outgoing, new_dict,data["verbose"])
-		lf = os.path.join(data["mri_dir"],"scripts","%s_cowrite.log" % (study))
+		lf = pj(data["mri_dir"],"scripts","%s_cowrite.log" % (study))
 		mlab_cmd += " < %s > %s " % (outgoing,lf)
 		commands.append(mlab_cmd)
 	script_name = spm_script_path(data,"cowrite")
-	write_file_with_list(script_name,"\n".join(commands),data["verbose"])
+	write_file_with_list(script_name,"\n".join(commands))
 	make_file_exec(script_name)
 	pipeline.run_process(["nohup",script_name],output=sys.stdout).wait()
 
@@ -700,10 +700,10 @@ def spm_write_coreg_mprage(data):
 #####RECONSTRUCTION####
 
 def recon_script_path(data):
-	script_dir = os.path.join(data["mri_dir"],"scripts")
+	script_dir = pj(data["mri_dir"],"scripts")
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	return os.path.join(script_dir,"recon"+"_"+data["subject"]+".sh")
+	return pj(script_dir,"recon"+"_"+data["subject"]+".sh")
 
 
 def recon_write_script(data):
@@ -712,11 +712,11 @@ def recon_write_script(data):
 	commands.append("#!/bin/sh")
 	recon_cmd = "recon-all -all -s " + data["subject"]
 	#find all mprages 
-	mprages = glob(os.path.join(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
+	mprages = glob(pj(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
 	for mprage in mprages:
 		recon_cmd +=  " -i " + mprage
 	commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
-	write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+	write_file_with_list(script_path,"\n".join(commands))
 	make_file_exec(script_path)
 	
 
@@ -730,7 +730,7 @@ def recon_run(data):
 
 
 def recon_logfile(data):
-	return os.path.join(data["mri_dir"],"scripts","recon_"+data["subject"]+".log")
+	return pj(data["mri_dir"],"scripts","recon_"+data["subject"]+".log")
 
 
 #####FSFAST#####
@@ -749,7 +749,7 @@ def write_par(data,study,info,run):
 				code_num = cond_num[study][cond_name]
 			full_par.append([onset,code_num,duration,"1.0",cond_name])
 	full_par.sort(key=lambda x:int(x[0]))
-	par_fname = os.path.join(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
+	par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
 	if not data["no_par"]:
 		write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
 	
@@ -772,13 +772,13 @@ def fs_setup(data,type,subjects=None):
 		commands.append("#!/bin/sh")
 		
 		if type == "preproc" or type == "stats":
-			fsd = os.path.join(data["mri_dir"],study)
+			fsd = pj(data["mri_dir"],study)
 			sessid = data["mri_dir"]
 		
 		if type == "preproc":
 			sname = [data["subject"]]
-			sname_path = os.path.join(sessid,"subjectname")
-			write_file_with_list(sname_path,"\n".join(sname),data["verbose"])
+			sname_path = pj(sessid,"subjectname")
+			write_file_with_list(sname_path,"\n".join(sname))
 			#write .par
 			study_dict = pipeline.load_data(info_path(data))[study]
 			#amount of runs 
@@ -787,8 +787,8 @@ def fs_setup(data,type,subjects=None):
 				run = runXXX.partition("Run")[2].partition("XXX")[0]
 				write_par(data,study,study_dict,run)
 				#*.nii -> f.nii
-				real_path = os.path.join(fsd,study_dict[runXXX],study+run+".nii")
-				sym_path = os.path.join(fsd,study_dict[runXXX],"f.nii")
+				real_path = pj(fsd,study_dict[runXXX],study+run+".nii")
+				sym_path = pj(fsd,study_dict[runXXX],"f.nii")
 				if not os.path.exists(sym_path):
 					os.symlink(real_path,sym_path)
 			#write script
@@ -806,7 +806,7 @@ def fs_setup(data,type,subjects=None):
 			commands.append(preproc_cmd)
 			commands.append("exit $?")
 			script_path = fs_script_path(data,type,study)
-			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+			write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
 		
 		elif type == "analysis":
@@ -850,8 +850,7 @@ def fs_setup(data,type,subjects=None):
 									neg_con])
 						commands.append(con_cmd)
 			script_path = fs_script_path(data,type,study)
-			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
-			print("Wrote %s" % script_path)
+			write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
 		
 		elif type == "stats":
@@ -864,18 +863,18 @@ def fs_setup(data,type,subjects=None):
 					aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
 					srchdir = func_dir
 					sessid = data["subject"]
+					logfile = pj(data["mri_dir"],"scripts",aname+".log")
 					cmd = " ".join(["selxavg3-sess",
 									"-analysis %s" % aname,
 									"-s %s" % sessid,
 									"-d %s" % srchdir,
-									"-svres",
-									"-nolog",
+									"-log %s" % logfile,
 									">> %s" % lf])
 					commands.append(cmd)
 					commands.append("let z=z+$?")
 			commands.append("exit $z")
 			script_path = fs_script_path(data,type,study)
-			write_file_with_list(script_path,"\n".join(commands),data["verbose"])
+			write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
 			
 		elif type == "group":		
@@ -885,7 +884,7 @@ def fs_setup(data,type,subjects=None):
 			fsgd.append("Class %s plus blue" % data["stype"])
 			fsgd.append("Variables")
 			#take subjects from fuctionals/data["stype"].study.sessid
-			sessid = os.path.join(func_dir,"%s.%s.sessid" % (data["stype"],study))
+			sessid = pj(func_dir,"%s.%s.sessid" % (data["stype"],study))
 			subjects = get_subjects(sessid)
 			print("Getting subjects from %s" % sessid)
 			if not subjects:
@@ -893,26 +892,26 @@ def fs_setup(data,type,subjects=None):
 			for sub in subjects:
 				fsgd.append("Input %s %s" % (sub,data["stype"]))
 			fsgd.append("\n")
-			fsgd_path = os.path.join(func_dir,"%s.%s.fsgd" % (data["stype"],study))
+			fsgd_path = pj(func_dir,"%s.%s.fsgd" % (data["stype"],study))
 			print("Writing %s" % fsgd_path)
-			write_file_with_list(fsgd_path,"\n".join(fsgd),data["verbose"])
+			write_file_with_list(fsgd_path,"\n".join(fsgd))
 			for space in ["lh","rh","mni305"]:
 				for shape in ["fir","spm"]:
 					aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
-					lf = os.path.join(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
+					lf = pj(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
 					isx_cmd = " ".join(["isxconcat-sess",
 										"-a %s" % aname,
 										"-d %s" % func_dir,
 										"-all-contrasts",
-										"-sf %s.%s.sessid" % (data["stype"],study),
-										"-fsgd %s.%s.fsgd" % (data["stype"],study),
+										"-sf %s" % sessid,
+										"-fsgd %s" % fsgd_path,
 										"-o %s.group-analysis" % data["stype"],
 										">& %s %s" % (lf,data["parallel"])])
 					commands.append(isx_cmd)
 			if data["parallel"]:
 				commands.append("wait")
-			isx_cmd_path = os.path.join(func_dir, "fsfast_scripts","%s-isxconcat.sh"%study)
-			write_file_with_list(isx_cmd_path,"\n".join(commands),data["verbose"])
+			isx_cmd_path = pj(func_dir, "fsfast_scripts","%s-isxconcat.sh"%study)
+			write_file_with_list(isx_cmd_path,"\n".join(commands))
 			make_file_exec(isx_cmd_path)
 			
 		elif type == "glm":
@@ -924,77 +923,89 @@ def fs_setup(data,type,subjects=None):
 						else:
 							space_opt = ""
 						aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
-						group_dir = os.path.join(func_dir,"%s.group-analysis" % data["stype"])
-						adir = os.path.join(group_dir,aname)
-						con_dir = os.path.join(adir,con)
+						group_dir = pj(func_dir,"%s.group-analysis" % data["stype"])
+						adir = pj(group_dir,aname)
+						con_dir = pj(adir,con)
 						commands.append("cd %s" % con_dir)
 						if shape == "fir":
 							#build XXX
 							conc = lambda x:"00"+str(x) if x < 10 else "0"+str(x)
-							XXX = [conc((x+6)/2) for x in range(fir_wind[study][0],fir_wind[study][1],2)]
+							XXX = [conc((x+6)/2) for x in range(-1*fir_wind[study][0],fir_wind[study][1],2)]
 							for cesXXX in XXX:
 								commands.append(" ".join(["mri_glmfit",
 														"--osgm",
 														"--glmdir glm.%s" % cesXXX,
 														"--y ces.%s.nii.gz" % cesXXX,
-														"--mask %s" % os.path.join(adir,"mask.nii.gz"),
+														"--mask %s" % pj(adir,"mask.nii.gz"),
 														space_opt]))
 						else:
 							commands.append(" ".join(["mri_glmfit",
 													"--osgm",
 													"--glmdir glm",
 													"--y ces.nii.gz",
-													"--mask %s" % os.path.join(adir,"mask.nii.gz"),
+													"--mask %s" % pj(adir,"mask.nii.gz"),
 													space_opt]))
-			glm_path = os.path.join(func_dir,"fsfast_scripts","%s-glmfit.sh" % study)
-			write_file_with_list(glm_path, "\n".join(commands),data["verbose"])
+			glm_path = pj(func_dir,"fsfast_scripts","%s-glmfit.sh" % study)
+			write_file_with_list(glm_path, "\n".join(commands))
 			make_file_exec(glm_path)
 															
 
+
 def fs_run_single(data,type,study,script_to_run):
-	   my_args = ["nohup", script_to_run]
-	   print("Starting {0}\n".format(script_to_run))
-	   start_time = time.strftime("%Y-%m-%d %H:%M:%S")
-	   return_value = pipeline.run_process(my_args).wait()
-	   if return_value:
-		   status = "failure"
-	   else:
-		   status = "success"
-	   #open the log file and make that message
-	   log_text = "\n".join(["%d errors..." % return_value,start_time,"#### %s ####" % study])+"\n"
-	   with open(fs_logfile(data,type,study), "r") as f:
-		   log_text += f.read()
-	   if not log_text:
-		   log_text += "Log couldn't be opened"
-	   add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
-	   subj = "{0} fs-{1} {2}".format(data["subject"],type,status)
-	   pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
+	my_args = [script_to_run]
+	print("Starting %s \n" % script_to_run )
+	start_time = time.strftime("%Y-%m-%d %H:%M:%S")
+	return_value = pipeline.run_process(my_args).wait()
+	if return_value:
+	   status = "failure"
+	else:
+	   status = "success"
+	#open the log file and make that message
+	log_text = "\n".join(["%d errors..." % return_value,start_time,"#### %s ####" % study])+"\n"
+	with open(fs_logfile(data,type,study), "r") as f:
+	   log_text += f.read()
+	if not log_text:
+	   log_text += "Log couldn't be opened"
+	add = "%s@nmr.mgh.harvard.edu" % getpass.getuser()
+	subj = "%s fs-%s %s" % (data["subject"],type,status)
+	pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
 
 
 def fs_run(data,type):
+	scripts_to_run = []
+	studies = []
 	for study in studies_to_setup(data,type):
 		script_to_run = fs_script_path(data,type,study)
 		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
-		fs_run_single(data,type,study,script_to_run)
+		if not data["joblib"]:
+			fs_run_single(data,type,study,script_to_run)
+		else:
+			scripts_to_run.append(script_to_run)
+			studies.append(study)
+	if use_joblib:
+		if data["joblib"]:
+			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(fs_run_single)(data,type,study,script_to_run) for (study,script_to_run) in zip(studies,scripts_to_run))
+	else:
+		raise UserError("joblib is not installed, please re-run without --ncores")
 
 
 def fs_script_dir(data,type=None):
 	if type == "analysis":
-		return os.path.join(func_dir,"fsfast_scripts")
+		return pj(func_dir,"fsfast_scripts")
 	else:
-		return os.path.join(data["mri_dir"],"scripts")
+		return pj(data["mri_dir"],"scripts")
 
 
 def fs_logfile(data,type,study):
-	return os.path.join(fs_script_dir(data),"{0}_fs-{1}.log".format(study.lower(),type))
+	return pj(fs_script_dir(data),"{0}_fs-{1}.log".format(study.lower(),type))
 
 
 def fs_script_path(data,type,study):
 	script_dir = fs_script_dir(data,type)
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	return os.path.join(script_dir,"_".join([study.lower(),"fs-"+type+".sh"]))
+	return pj(script_dir,"_".join([study.lower(),"fs-"+type+".sh"]))
 
 
 ####MEG#####
@@ -1015,23 +1026,22 @@ def meg_script(data,type,extra=None):
 	extra: list of extra arguments (e.g. for "preProc2", extra would be [{preBlinkTime},
 	{postBlinkTime}])
 	"""
-	script_path = os.path.join(meg_scripts,type+".sh")
+	script_path = pj(meg_scripts,type+".sh")
 	if not os.path.exists(script_path):
 		raise UserError("meg_script: can not locate {0}".format(type))
 	my_args = [script_path,data["subject"]]
 	if type == "preProc":
-		#look for fif
-		fif = glob(os.path.join(data["meg_dir"],"*_raw.fif"))
+		fif = glob(pj(data["meg_dir"],"*_raw.fif"))
 		#filter our blink and emptyroom
 		fif = [x for x in fif if x.find("Blink") == -1 and x.find("emptyroom") == -1]
 		N_fif = len(fif)
 		if data["verbose"]:
 			print("Fifs:\n{0}".format("\n".join(fif)))
-		icamat = glob(os.path.join(data["meg_dir"],"*_raw_ica.mat"))
+		icamat = glob(pj(data["meg_dir"],"*_raw_ica.mat"))
 		N_icamat = len(icamat)
 		if data["verbose"]:
 			print("ICA mat:\n{0}".format("\n".join(icamat)))
-		blinks = glob(os.path.join(data["meg_dir"],"*.blinks"))
+		blinks = glob(pj(data["meg_dir"],"*.blinks"))
 		N_blinks = len(blinks)
 		if data["verbose"]:
 			print("Blinks:\n{0}".format("\n".join(blinks)))
@@ -1044,14 +1054,17 @@ def meg_script(data,type,extra=None):
 	if type == "preAnat":
 		setup_bem(data)
 		#check that flash was unpacked
-		if os.path.exists(os.path.join(data["mri_dir"],"MEFLASH")):
+		if os.path.exists(pj(data["mri_dir"],"MEFLASH")):
 			extra = ["FLASH"]
 		else:
 			extra = ["WATER"]
 	if extra:
 		my_args.extend(extra)
-	#start the process 
-	log_file = "{0}{1}_{2}.log".format(data["meg_dir"],data["subject"],type)
+	#start the process
+	log_dir = pj(data["meg_dir"],"logs")
+	if not os.path.isdir(log_dir):
+		os.mkdir(log_dir)
+	log_file = pj(log_dir,"%s_%s.log" % (data["subject"],type))
 	print("Logging to {0}".format(log_file))
 	f = open(log_file,"w")
 	process = pipeline.run_process(my_args,output=f,error=f)
@@ -1066,10 +1079,10 @@ def run_ica(data):
 	"""
 	just writes out the run_ica script for a subject and runs it.
 	"""
-	iscript = os.path.join(meg_scripts,"generic_runica.m")
-	oscript = os.path.join(data["meg_dir"],data["subject"]+"_ica.m")
+	iscript = pj(meg_scripts,"generic_runica.m")
+	oscript = pj(data["meg_dir"],data["subject"]+"_ica.m")
 	pipeline.f2f_replace(iscript,oscript,dict({"subject": data["subject"]}),data["verbose"])
-	log = os.path.join(data["meg_dir"],data["subject"]+"_ica.log")
+	log = pj(data["meg_dir"],data["subject"]+"_ica.log")
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", oscript,
 		">", log]
 	try:
@@ -1088,17 +1101,17 @@ def setup_bem(data):
 	#must have env var set
 	if os.getenv("SUBJECTS_DIR") is None:
 		raise UserError("$SUBJECTS_DIR is not set")
-	recon_dir = os.path.join(os.getenv("SUBJECTS_DIR"),data["subject"])
+	recon_dir = pj(os.getenv("SUBJECTS_DIR"),data["subject"])
 	#if the recon hasn"t run yet quit
 	if not os.path.exists(recon_dir):
 		raise UserError("Reconstruction folders not setup. Start recon and try again later.")
-	bem_dir = os.path.join(recon_dir,"bem")
+	bem_dir = pj(recon_dir,"bem")
 	if not os.path.exists(bem_dir):
-		os.mkdir(os.path.join(recon_dir,"bem"))
-	flash_dcm_dir = os.path.join(bem_dir,"flash_dcm")
+		os.mkdir(pj(recon_dir,"bem"))
+	flash_dcm_dir = pj(bem_dir,"flash_dcm")
 	if not os.path.exists(flash_dcm_dir):	
 		os.mkdir(flash_dcm_dir)
-	flash_org_dir = os.path.join(bem_dir,"flash_org")	
+	flash_org_dir = pj(bem_dir,"flash_org")	
 	if not os.path.exists(flash_org_dir):	
 		os.mkdir(flash_org_dir)
 	try:
@@ -1115,13 +1128,13 @@ def setup_bem(data):
 		raise ProgrammerError("Could not open scan.log file")
 	if dcm:
 		(sub_dcm,dash,after) = dcm.rpartition("-")
-		search_dir = os.path.join(data["dicom_dir"],sub_dcm+"*.dcm")
+		search_dir = pj(data["dicom_dir"],sub_dcm+"*.dcm")
 		flash_dcms = glob(search_dir)
 		flash_dcms.sort()
 		for flash_dcm in flash_dcms:
 			(path,slash,filename) = flash_dcm.rpartition("/")
 			try:
-				sympath = os.path.join(flash_dcm_dir,filename)
+				sympath = pj(flash_dcm_dir,filename)
 				os.symlink(flash_dcm,sympath)
 			except OSError:
 				pass
@@ -1136,7 +1149,7 @@ def second_level(data,type):
 	"""
 	All second level functions pass through here.
 	"""
-	prefix = os.path.join(func_dir,"SecondLevelStats")
+	prefix = pj(func_dir,"SecondLevelStats")
 	study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
 		["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
 		"MaskedMM": [["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
@@ -1162,8 +1175,8 @@ def second_package(data,prefix,date,study_contrasts):
 	This copies images and copy/replaces the HTML files to the date directory.
 	"""
 	print("Packaging second level surf analysis....\n")
-	package_dir = os.path.join(prefix,"surf_analysis_"+date)
-	surf_dir = os.path.join(mri_scripts,"surf_analysis")
+	package_dir = pj(prefix,"surf_analysis_"+date)
+	surf_dir = pj(mri_scripts,"surf_analysis")
 	if not os.path.exists(package_dir):
 		os.mkdir(package_dir)
 	if data["single_study"]:
@@ -1171,41 +1184,41 @@ def second_package(data,prefix,date,study_contrasts):
 	else:
 		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
 	#copy index.html
-	shutil.copyfile(os.path.join(surf_dir,"index.html"),
-		os.path.join(package_dir,"index.html"))
+	shutil.copyfile(pj(surf_dir,"index.html"),
+		pj(package_dir,"index.html"))
 	for study in studies:
-		date_dir = os.path.join(prefix,data["stype"],study,date)
+		date_dir = pj(prefix,data["stype"],study,date)
 		#copy <study>.html
-		shutil.copyfile(os.path.join(surf_dir,study+".html"),
-			os.path.join(package_dir,study+".html"))
+		shutil.copyfile(pj(surf_dir,study+".html"),
+			pj(package_dir,study+".html"))
 		#within package_dir, make study/
-		study_dir = os.path.join(package_dir,study)
+		study_dir = pj(package_dir,study)
 		if not os.path.exists(study_dir):
 			os.mkdir(study_dir)
 		for [contrast,XXXX] in study_contrasts[study]:
 			print("{0}:\t{1}...".format(study,contrast))
 			#within study_dir, make con/
-			con_dir = os.path.join(date_dir,contrast)
-			res_con_dir = os.path.join(study_dir,contrast)
+			con_dir = pj(date_dir,contrast)
+			res_con_dir = pj(study_dir,contrast)
 			if not os.path.exists(res_con_dir):
 				os.mkdir(res_con_dir)
 			#data_con_dir points to data contrast directory
-			img_con_dir = os.path.join(con_dir,"img")
+			img_con_dir = pj(con_dir,"img")
 			#within every data_con_dir is which holds all jpgs
 			#we want to copy these jpgs to res_con_dir
 			print("Copying images...")
-			jpgs = glob(os.path.join(img_con_dir,"*.jpg"))
+			jpgs = glob(pj(img_con_dir,"*.jpg"))
 			for jpg in jpgs:
 				shutil.copy(jpg,res_con_dir)
-			info_fname = os.path.join(con_dir,"info.txt")
+			info_fname = pj(con_dir,"info.txt")
 			info = pipeline.load_data(info_fname,data["verbose"])
 			#now, make the <con>.html file
 			replace_dict = dict({"N": str(info["N"]),"pvalue": str(info["pvalue"]),
 				"contrast": info["contrast"],"study": study,"stype": info["stype"],
 				"images": "\n".join(["<li>{0}</li>".format(x) for x in info["images"]]),
 				"mask": info["mask"]})
-			pipeline.f2f_replace(os.path.join(surf_dir,"contrast.html"),
-				os.path.join(study_dir,contrast+".html"),replace_dict,data["verbose"])
+			pipeline.f2f_replace(pj(surf_dir,"contrast.html"),
+				pj(study_dir,contrast+".html"),replace_dict,data["verbose"])
 
 			
 def second_surf(data,prefix,date,study_contrasts):
@@ -1220,23 +1233,23 @@ def second_surf(data,prefix,date,study_contrasts):
 	else:
 		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
 	for study in studies:
-		date_dir = os.path.join(prefix,data["stype"],study,date)
+		date_dir = pj(prefix,data["stype"],study,date)
 		for [contrast,XXXX] in study_contrasts[study]:
 			print("\n{0}:\t{1}...".format(study,contrast))
-			con_dir = os.path.join(date_dir,contrast)
+			con_dir = pj(date_dir,contrast)
 			#first, check that --setup_second has been run by looking for con_dir
 			if not os.path.exists(con_dir):
 				print("ERROR:--setup_second hasn't been run.")
 				print("Do this and try again or pass in a specific date by --date=YYYYMMDD")
 				break
 			#next, check that SPM has been run and that spmT_0001.img exists
-			t_img_exists = len(glob(os.path.join(con_dir,"spmT_0001.img"))) == 1
+			t_img_exists = len(glob(pj(con_dir,"spmT_0001.img"))) == 1
 			if not t_img_exists:
 				print("ERROR:SPM hasn't been run on {0}:{1}".format(study,contrast))
 				break
 			#spmT_0001.img exists, let's proceed
 			#look for the pickled data
-			info_fname = os.path.join(con_dir,"info.txt")
+			info_fname = pj(con_dir,"info.txt")
 			info = pipeline.load_data(info_fname,data["verbose"])
 			script_dict = dict({})
 			if not "pvalue" in info:
@@ -1250,14 +1263,14 @@ def second_surf(data,prefix,date,study_contrasts):
 			script_dict["tvalue"] = str(info["tvalue"])
 			script_dict["aparc"] = data["aparc"]
 			script_dict["con_dir"] = con_dir
-			new_script_path = os.path.join(con_dir,"make_images.sh")
-			pipeline.f2f_replace(os.path.join(mri_scripts,"surf_analysis","make_images.sh"),
+			new_script_path = pj(con_dir,"make_images.sh")
+			pipeline.f2f_replace(pj(mri_scripts,"surf_analysis","make_images.sh"),
 				new_script_path,script_dict,data["verbose"])
 			make_file_exec(new_script_path)
 			#copy lh_tiffs and rh_tiffs
 			for surf_script in ["lh_tiff","rh_tiff"]:
-				tiffs_path = os.path.join(mri_scripts,"surf_analysis",surf_script)
-				new_tiffs_path = os.path.join(con_dir,surf_script)
+				tiffs_path = pj(mri_scripts,"surf_analysis",surf_script)
+				new_tiffs_path = pj(con_dir,surf_script)
 				shutil.copyfile(tiffs_path,new_tiffs_path)
 			pipeline.save_data(info,info_fname,data["verbose"])
 			if not data["dry"]:
@@ -1284,18 +1297,18 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 	else:
 		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
 	for study in studies:
-		new_dir = os.path.join(prefix,data['stype'],study,date_dir)
+		new_dir = pj(prefix,data['stype'],study,date_dir)
 		#make the new dir
 		if not os.path.exists(new_dir):
 			os.mkdir(new_dir)
-		job_dir = os.path.join(new_dir,"jobs")
+		job_dir = pj(new_dir,"jobs")
 		if not os.path.exists(job_dir):
 			os.mkdir(job_dir)
 		print("\n{0}:\t{1} contrasts".format(study,len(study_contrasts[study])))
 		for [contrast,XXXX] in study_contrasts[study]:
 			replace_dict = dict()
 			replace_dict["contrast"] = contrast
-			con_dir = os.path.join(new_dir,contrast)
+			con_dir = pj(new_dir,contrast)
 			replace_dict["con_dir"] = con_dir
 			if not os.path.exists(con_dir):
 				os.mkdir(con_dir)
@@ -1303,13 +1316,13 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 				real_study = "BaleenMM"
 			else:
 				real_study = study
-			search_term = os.path.join(func_dir,data["stype"]+"*",real_study,"stats_outliers","8mm",
+			search_term = pj(func_dir,data["stype"]+"*",real_study,"stats_outliers","8mm",
 				"con_"+XXXX+".img")
 			all_img = glob(search_term)
 			#add included subjecdt images
 			if data["good_sub"]:
 				for sub in data["good_sub"]:
-					all_img.extend(glob(os.path.join(func_dir,sub,real_study,"stats_outliers",
+					all_img.extend(glob(pj(func_dir,sub,real_study,"stats_outliers",
 						"8mm","con_"+XXXX+".img")))
 			#remove excluded subject images
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
@@ -1326,14 +1339,14 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 			replace_dict["mask"] = mask
 			replace_dict["email_fail"] = "{0} {1} 2nd Level failed".format(study,contrast)
 			replace_dict["SPM"] = "{0}/SPM.mat".format(con_dir)
-			ibatch = os.path.join(batch_dir,data["stype"],"generic_2nd_batch.m")
-			obatch = os.path.join(job_dir,contrast+".m")
+			ibatch = pj(batch_dir,data["stype"],"generic_2nd_batch.m")
+			obatch = pj(job_dir,contrast+".m")
 			#make batch
 			pipeline.f2f_replace(ibatch,obatch,replace_dict,data["verbose"])
-			log = os.path.join(job_dir,contrast+".log")
+			log = pj(job_dir,contrast+".log")
 			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log,data["parallel"]))
 			shell_commands.append("if [ $? -eq 0 ] \nthen\necho {0}:{1} succeeded\nelse\n echo {0}:{1} failed\nfi\n".format(study,contrast))
-			info_fname = os.path.join(con_dir,"info.txt")
+			info_fname = pj(con_dir,"info.txt")
 			info = dict({"N": N,"images": good_img,"stype": data["stype"],"contrast": contrast})
 			if mask:
 				info["mask"] = mask
@@ -1342,7 +1355,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 			pipeline.save_data(info,info_fname,data["verbose"])
 			print("{0} -> {1} subjects".format(contrast,N))	
 	shell_path = second_script(data)
-	write_file_with_list(shell_path,"\n".join(shell_commands),data["verbose"])
+	write_file_with_list(shell_path,"\n".join(shell_commands))
 	make_file_exec(shell_path)
 
 
@@ -1361,7 +1374,7 @@ def second_script(data):
 	"""
 	returns the path to the second-level script.
 	"""
-	return os.path.join(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
+	return pj(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 
 
 #####MISC#####
@@ -1371,11 +1384,11 @@ def set_paths(data):
 	"dicom_dir",and "subject_dicom".  path prefixes are hard coded.
 	"""
 	if data["local"]:
-		data["mri_dir"] = os.path.join("/home/scratch/functionals",data["subject"])+os.sep
+		data["mri_dir"] = pj("/home/scratch/functionals",data["subject"])+os.sep
 	else:
-		data["mri_dir"] = os.path.join(func_dir,data["subject"])+os.sep
-	data["dicom_dir"] = os.path.join(dicom_dir,data["subject"])+os.sep
-	data["meg_dir"] = os.path.join(meg_dir,data["subject"])+os.sep
+		data["mri_dir"] = pj(func_dir,data["subject"])+os.sep
+	data["dicom_dir"] = pj(dicom_dir,data["subject"])+os.sep
+	data["meg_dir"] = pj(meg_dir,data["subject"])+os.sep
 
 
 def get_subjects(sub_list):
@@ -1427,15 +1440,14 @@ def print_info(data):
 
 ######IO#######
 
-def write_file_with_list(path,lines,verbose=None):
+def write_file_with_list(path,lines):
 	"""
 	Any file writing should go through here.
 	"""
 	try:
 		with open(path,'w') as f:
 			f.writelines(lines)
-		if verbose:
-			print("Wrote {0}".format(path))
+		print("Wrote %s" % os.sep.join(path.split(os.sep)[5:]))
 	except IOError:
 		raise
 
@@ -1451,7 +1463,7 @@ def list_from_file(path,verbose=None):
 			if verbose:
 				print("Reading from {0}".format(path))
 	except IOError:
-		print("Cannot open {0}".path)
+		print("Cannot open %s"  % path)
 		raise
 	return all_lines
 
@@ -1523,6 +1535,8 @@ def process_subject(subject,data):
 			meg_script(data,"preAnat")
 		if data["makeInv"]:
 			meg_script(data,"makeInv")
+		if data["makeSTC"]:
+			meg_script(data,"makeSTC")
 			
 		if data["print_info"]:
 			print_info(data)
@@ -1622,7 +1636,9 @@ if __name__ == "__main__":
 	meg_group.add_option("--setup_bem",dest="setup_bem",help="Setup BEM folders/dicoms",
 		action="store_true",default=False)
 	meg_group.add_option("--new_preProc",dest="new_preProc",action="store_true",default=False,
-		help="Run the new meg preprocessing.")	
+		help="Run the new meg preprocessing.")
+	meg_group.add_option("--makeSTC",dest="makeSTC",action="store_true",default=False,
+		help="Run the makeSTC script")
 	parser.add_option_group(meg_group)
 	
 	#SPM Second-level options
@@ -1664,6 +1680,8 @@ if __name__ == "__main__":
 		help="For use with --setup_*.Make the script so jobs run in parallel")
 	par_group.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
 		help="Use with --run_*, pipeline only exits when all jobs finish")
+	par_group.add_option("--single_subject",dest="single_subject",action="store_true",default=False,
+		help="Disable subject-level parallelization, useful for running within-subject parallelism")
 	parser.add_option_group(par_group)
 	
 	#Miscellaneous options
@@ -1713,9 +1731,12 @@ if __name__ == "__main__":
 		data["mask"] = masks
 	if not data["stype"]:
 		data['stype'] = subject_type(subjects)
-		
+	
+	if len(subjects) == 1:
+		data["single_subject"] = True
+	
 	#subject-level options
-	if use_joblib and data["joblib"]:
+	if use_joblib and data["joblib"] and not data["single_subject"]:
 		Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
 	else:
 		[process_subject(subject,data) for subject in subjects]
