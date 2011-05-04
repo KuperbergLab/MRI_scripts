@@ -976,7 +976,7 @@ def fs_run(data,type):
 	studies = []
 	for study in studies_to_setup(data,type):
 		script_to_run = fs_script_path(data,type,study)
-		if not os.path.exists(script_to_run):
+		if not os.path.exists(sqcript_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
 		if not data["joblib"]:
 			fs_run_single(data,type,study,script_to_run)
@@ -1031,6 +1031,9 @@ def meg_script(data,type,extra=None):
 		raise UserError("meg_script: can not locate {0}".format(type))
 	my_args = [script_path,data["subject"]]
 	if type == "preProc":
+		bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
+		if not os.path.isfile(bad_chan_path):
+			raise UserError("%s wasn't found, make it and try again" % bad_chan_path)
 		fif = glob(pj(data["meg_dir"],"*_raw.fif"))
 		#filter our blink and emptyroom
 		fif = [x for x in fif if x.find("Blink") == -1 and x.find("emptyroom") == -1]
@@ -1050,6 +1053,7 @@ def meg_script(data,type,extra=None):
 		if not (N_fif == N_icamat == N_blinks):
 			raise UserError("Unequal amount of fif,ica.mat,and blink files.\nTry Again")
 		# DEFAULT EYE BLINK ARGUMENTS FOR PREPROC1
+		
 		extra = ["-0.1","0.3"]
 	if type == "preAnat":
 		setup_bem(data)
@@ -1060,6 +1064,11 @@ def meg_script(data,type,extra=None):
 			extra = ["WATER"]
 	if extra:
 		my_args.extend(extra)
+	if type == "makeInv":
+		cor_search = pj(os.environ["SUBJECTS_DIR"],data["subject"],"mri","T1-neuromag","sets","COR-*.fif")
+		cor_files = glob(cor_search)
+		if len(cor_files) < 1:
+			raise UserError("No good COR file found in SUBJECTS_DIR/%s/mri/T1-neuromag/sets/" % data["subject"])
 	#start the process
 	log_dir = pj(data["meg_dir"],"logs")
 	if not os.path.isdir(log_dir):
@@ -1082,7 +1091,9 @@ def run_ica(data):
 	iscript = pj(meg_scripts,"generic_runica.m")
 	oscript = pj(data["meg_dir"],data["subject"]+"_ica.m")
 	pipeline.f2f_replace(iscript,oscript,dict({"subject": data["subject"]}),data["verbose"])
-	log = pj(data["meg_dir"],data["subject"]+"_ica.log")
+	log = pj(data["meg_dir"],"logs",data["subject"]+"_ica.log")
+	if not os.path.isdir(pj(data["meg_dir"],"logs")):
+		os.mkdir(pj(data["meg_dir"],"logs"))
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", oscript,
 		">", log]
 	try:
@@ -1509,10 +1520,10 @@ def process_subject(subject,data):
 		#SPM
 		if data["reg_mprage"]:
 			spm_write_coreg_mprage(data)
-		if data["run_art"]:
-			spm_run_art(data)
 		if data["run_preproc"]:
 			spm_run_script(data,"preproc")
+		if data["run_art"]:
+			spm_run_art(data)
 		if data["run_stats"]:
 			spm_run_script(data,"stats")
 		if data["run_outliers"]:
@@ -1568,6 +1579,16 @@ if __name__ == "__main__":
 	copy_group.add_option("--cfg2info",dest="cfg2info",action="store_true",default=False,
 		help="Convert cfg to info dictionary")
 	parser.add_option_group(copy_group)
+
+	
+	#full-stream options
+	stream_group = OptionGroup(parser,"Full stream options")
+	stream_group.add_option("--spm_all",dest="spm",action="store_true",default=False,
+		help="Wraps --setup_preproc,--run_preproc,--run_art,--setup_outliers,--run_outliers")
+	stream_group.add_option("--fs_all",dest="fs",action="store_true",default=False,
+		help="Wraps --setup_fs_preproc,--setup_fs_stats,--run_fs_stats--because fs_stats does preproc automatically")
+	parser.add_option_group(stream_group)
+
 
 	#SPM options
 	spm_group = OptionGroup(parser,"SPM Preprocessing/1st Level Statistics")
@@ -1680,8 +1701,6 @@ if __name__ == "__main__":
 		help="For use with --setup_*.Make the script so jobs run in parallel")
 	par_group.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
 		help="Use with --run_*, pipeline only exits when all jobs finish")
-	par_group.add_option("--single_subject",dest="single_subject",action="store_true",default=False,
-		help="Disable subject-level parallelization, useful for running within-subject parallelism")
 	parser.add_option_group(par_group)
 	
 	#Miscellaneous options
@@ -1692,7 +1711,7 @@ if __name__ == "__main__":
 		help="Print subject's info.txt")
 	misc_group.add_option("--verbose",dest="verbose",help="Print info",action="store_true",
 		default=False)
-	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*",action="append",default=None)
+	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*, can use multiple times",action="append",default=None)
 	misc_group.add_option("--error_email",dest="error_email",default=False,action="store_true",
 		help="Send email when errors occur, off by default")
 	misc_group.add_option("--subject_type",dest="stype",default="",action="store",type="string",
@@ -1731,12 +1750,20 @@ if __name__ == "__main__":
 		data["mask"] = masks
 	if not data["stype"]:
 		data['stype'] = subject_type(subjects)
-	
-	if len(subjects) == 1:
-		data["single_subject"] = True
+		
+	if data["spm"]:
+		data["setup_preproc"] = True
+		data["run_preproc"] = True
+		data["run_art"] = True
+		data["setup_outliers"] = True
+		data["run_outliers" ] = True
+	if data["fs"]:
+		data["setup_fs_preproc"] = True
+		data["setup_fs_stats"] = True
+		data["run_fs_stats"] = True
 	
 	#subject-level options
-	if use_joblib and data["joblib"] and not data["single_subject"]:
+	if use_joblib and data["joblib"] and len(subjects) > 1:
 		Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
 	else:
 		[process_subject(subject,data) for subject in subjects]
