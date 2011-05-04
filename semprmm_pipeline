@@ -976,7 +976,7 @@ def fs_run(data,type):
 	studies = []
 	for study in studies_to_setup(data,type):
 		script_to_run = fs_script_path(data,type,study)
-		if not os.path.exists(sqcript_to_run):
+		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
 		if not data["joblib"]:
 			fs_run_single(data,type,study,script_to_run)
