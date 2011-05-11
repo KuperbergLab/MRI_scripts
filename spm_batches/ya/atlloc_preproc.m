@@ -278,13 +278,7 @@ matlabbatch{6}.spm.spatial.smooth.fwhm = [8 8 8];
 matlabbatch{6}.spm.spatial.smooth.dtype = 0;
 matlabbatch{6}.spm.spatial.smooth.im = 0;
 matlabbatch{6}.spm.spatial.smooth.prefix = 's8';
-matlabbatch{7}.spm.tools.sendmail.recipient = 'sburns@nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.subject = '$email_success';
-matlabbatch{7}.spm.tools.sendmail.message = 'thank you';
-matlabbatch{7}.spm.tools.sendmail.attachments = {};
-matlabbatch{7}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.params.zip = 'No';
+
 
 %run it
 try
@@ -293,7 +287,8 @@ try
 	fclose(fopen('$start_file','w'));
 	output = spm_jobman('run_nogui',matlabbatch);
 	fclose(fopen('$run_file','w'));
+	ec = 0;
 catch ME
-	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+	ec = 1;
 end
-exit;
+exit(ec);

@@ -592,7 +592,7 @@ matlabbatch{3}.spm.spatial.coreg.estwrite.ref(1).tgt_spec{1}(2).value = 'e';
 matlabbatch{3}.spm.spatial.coreg.estwrite.ref(1).sname = 'Realign: Estimate & Reslice: Mean Image';
 matlabbatch{3}.spm.spatial.coreg.estwrite.ref(1).src_exbranch = substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{3}.spm.spatial.coreg.estwrite.ref(1).src_output = substruct('.','rmean');
-matlabbatch{3}.spm.spatial.coreg.estwrite.source = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MPRAGE/005/MPRAGE1.nii,1'};
+matlabbatch{3}.spm.spatial.coreg.estwrite.source = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/MPRAGE/$MPRAGEXXX/MPRAGE1.nii,1'};
 matlabbatch{3}.spm.spatial.coreg.estwrite.other = {''};
 matlabbatch{3}.spm.spatial.coreg.estwrite.eoptions.cost_fun = 'nmi';
 matlabbatch{3}.spm.spatial.coreg.estwrite.eoptions.sep = [4 2];
@@ -697,13 +697,6 @@ matlabbatch{6}.spm.spatial.smooth.fwhm = [8 8 8];
 matlabbatch{6}.spm.spatial.smooth.dtype = 0;
 matlabbatch{6}.spm.spatial.smooth.im = 0;
 matlabbatch{6}.spm.spatial.smooth.prefix = 's8';
-matlabbatch{7}.spm.tools.sendmail.recipient = 'sburns@nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.subject = '$email_success';
-matlabbatch{7}.spm.tools.sendmail.message = 'thank you';
-matlabbatch{7}.spm.tools.sendmail.attachments = {};
-matlabbatch{7}.spm.tools.sendmail.params.smtp = 'mail.nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.params.email = 'sburns@nmr.mgh.harvard.edu';
-matlabbatch{7}.spm.tools.sendmail.params.zip = 'No';
 
 try
 	spm('defaults','fmri');
@@ -711,8 +704,9 @@ try
 	fclose(fopen('$start_file','w'));
 	output = spm_jobman('run_nogui',matlabbatch);
 	fclose(fopen('$run_file','w'));
+	ec = 0;
 catch ME
-	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+	ec = 1;
 end
-exit;
+exit(ec);
 
