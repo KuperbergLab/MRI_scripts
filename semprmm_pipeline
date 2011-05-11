@@ -287,21 +287,20 @@ def studies_to_setup(data,type):
 	"""
 	returns what studies should be set up. This list depends on the type of processing to be setup.
 	"""
-	if type == "analysis" or type == "group" or type == "glm":
+	if data["single_study"]:
+		return data["single_study"]
+	if type == "analysis" or type == "group" or type == "glm" or type == "image" or type == "group_image":
 		#setup all
 		return cond_num.keys()
 	if not os.path.exists(info_path(data)):
 		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
 		raise UserError("Broke in studies_to_setup")
 	info = pipeline.load_data(info_path(data),data["verbose"])
-	if data["single_study"]:
-		studies = data["single_study"]
-	else:		
-		if "stats" in type or "art" in type:
-			studies = [k for k,v in info.iteritems() if os.path.exists(
-				touch_file_path(data,k,"preproc","run"))]
-		elif "preproc" in type:
-			studies = [k for k,v in info.iteritems() if v["was_run"]]
+	if "stats" in type or "art" in type:
+		studies = [k for k,v in info.iteritems() if os.path.exists(
+			touch_file_path(data,k,"preproc","run"))]
+	elif "preproc" in type:
+		studies = [k for k,v in info.iteritems() if v["was_run"]]
 	return studies
 
 
@@ -587,6 +586,12 @@ def spm_run_art(data):
 	art_m = []
 	for session in sessions:
 		art_m.append("art('sess_file','{0}');".format(session))
+		study = session.split(os.sep)[-2]
+		search_path = pj(os.sep.join(session.split(os.sep)[:-1]),"0*")
+		runs = glob(search_path)
+		runs.sort()
+		for run_path in runs:
+			art_m.append("art2tpef('%s','%s');" % (study,run_path))
 	art_m.append("exit;")
 	art_path = pj(data["mri_dir"],"spm_run_art.m")
 
@@ -743,10 +748,10 @@ def write_par(data,study,info,run):
 		onsets = info[cond_onset]
 		duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
 		for onset in onsets.split():
-			if study == "BaleenMM" and int(run) > 4 and cond_name == "Misses":
-				code_num = str(int(cond_num[study][cond_name]) + 1)
-			else:
-				code_num = cond_num[study][cond_name]
+# 			if study == "BaleenMM" and int(run) > 4 and cond_name == "Misses":
+# 				code_num = str(int(cond_num[study][cond_name]) + 1)
+# 			else:
+			code_num = cond_num[study][cond_name]
 			full_par.append([onset,code_num,duration,"1.0",cond_name])
 	full_par.sort(key=lambda x:int(x[0]))
 	par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
@@ -776,21 +781,7 @@ def fs_setup(data,type,subjects=None):
 			sessid = data["mri_dir"]
 		
 		if type == "preproc":
-			sname = [data["subject"]]
-			sname_path = pj(sessid,"subjectname")
-			write_file_with_list(sname_path,"\n".join(sname))
-			#write .par
-			study_dict = pipeline.load_data(info_path(data))[study]
-			#amount of runs 
-			runsXXX = [key for key in study_dict.keys() if ("XXX" in key and "Run" in key)]
-			for runXXX in runsXXX:
-				run = runXXX.partition("Run")[2].partition("XXX")[0]
-				write_par(data,study,study_dict,run)
-				#*.nii -> f.nii
-				real_path = pj(fsd,study_dict[runXXX],study+run+".nii")
-				sym_path = pj(fsd,study_dict[runXXX],"f.nii")
-				if not os.path.exists(sym_path):
-					os.symlink(real_path,sym_path)
+			#NO NEED TO CALL THIS
 			#write script
 			lf = fs_logfile(data,type,study)
 			preproc_cmd = " ".join(["preproc-sess",
@@ -830,12 +821,13 @@ def fs_setup(data,type,subjects=None):
 									"-fsd %s" % study,
 									"-p %s.par" % study.lower(),
 									"%s" % shape_opt,
+									"-tpexclude %s" % study.lower()+".tpef",
 									"-event-related",
 									"-TR 2",
 									preproc_opt,
 									"-nconditions %d" % nconds,
 									"-mcextreg",
-									"-hpf 128",
+									"-hpf .0078", #seconds!
 									"-force"])
 					commands.append(cmd)
 					#mkcontrast-sess
@@ -854,6 +846,21 @@ def fs_setup(data,type,subjects=None):
 			make_file_exec(script_path)
 		
 		elif type == "stats":
+			sname = [data["subject"]]
+			sname_path = pj(sessid,"subjectname")
+			write_file_with_list(sname_path,"\n".join(sname))
+			#write .par
+			study_dict = pipeline.load_data(info_path(data))[study]
+			#amount of runs 
+			runsXXX = [key for key in study_dict.keys() if ("XXX" in key and "Run" in key)]
+			for runXXX in runsXXX:
+				run = runXXX.partition("Run")[2].partition("XXX")[0]
+				write_par(data,study,study_dict,run)
+				#*.nii -> f.nii
+				real_path = pj(fsd,study_dict[runXXX],study+run+".nii")
+				sym_path = pj(fsd,study_dict[runXXX],"f.nii")
+				if not os.path.exists(sym_path):
+					os.symlink(real_path,sym_path)
 			commands.append("cd %s" % func_dir)
 			lf = fs_logfile(data,type,study)
 			commands.append("rm %s" % lf)
@@ -886,17 +893,18 @@ def fs_setup(data,type,subjects=None):
 			#take subjects from fuctionals/data["stype"].study.sessid
 			sessid = pj(func_dir,"%s.%s.sessid" % (data["stype"],study))
 			subjects = get_subjects(sessid)
-			print("Getting subjects from %s" % sessid)
 			if not subjects:
 				raise UserError("Couldn't read %s" % sessid)
 			for sub in subjects:
 				fsgd.append("Input %s %s" % (sub,data["stype"]))
 			fsgd.append("\n")
 			fsgd_path = pj(func_dir,"%s.%s.fsgd" % (data["stype"],study))
-			print("Writing %s" % fsgd_path)
-			write_file_with_list(fsgd_path,"\n".join(fsgd))
+			write_file_with_list(fsgd_path,"\n".join(fsgd),True)
 			for space in ["lh","rh","mni305"]:
 				for shape in ["fir","spm"]:
+					commands = []
+					commands.append("#!/bin/sh")
+					commands.append("cd %s" % func_dir)
 					aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
 					lf = pj(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
 					isx_cmd = " ".join(["isxconcat-sess",
@@ -906,13 +914,15 @@ def fs_setup(data,type,subjects=None):
 										"-sf %s" % sessid,
 										"-fsgd %s" % fsgd_path,
 										"-o %s.group-analysis" % data["stype"],
-										">& %s %s" % (lf,data["parallel"])])
+										">& %s" % lf])
 					commands.append(isx_cmd)
-			if data["parallel"]:
-				commands.append("wait")
-			isx_cmd_path = pj(func_dir, "fsfast_scripts","%s-isxconcat.sh"%study)
-			write_file_with_list(isx_cmd_path,"\n".join(commands))
-			make_file_exec(isx_cmd_path)
+					isx_cmd_path = pj(func_dir, "fsfast_scripts","%s-isxconcat.%s.sh" % (study,aname))
+					if data["launchpad"]:
+						write_file_with_list(isx_cmd_path,"\n".join(commands),True)
+						print("""pbsubmit -c "%s" -n 1 -mail sburns@nmr.mgh.harvard.edu """ % isx_cmd_path)
+					else:
+						write_file_with_list(isx_cmd_path,"\n".join(commands))
+					make_file_exec(isx_cmd_path)
 			
 		elif type == "glm":
 			for con in contrasts[study].keys():
@@ -926,36 +936,104 @@ def fs_setup(data,type,subjects=None):
 						group_dir = pj(func_dir,"%s.group-analysis" % data["stype"])
 						adir = pj(group_dir,aname)
 						con_dir = pj(adir,con)
+						commands = []
+						commands.append("#!/bin/sh")
 						commands.append("cd %s" % con_dir)
 						if shape == "fir":
 							#build XXX
 							conc = lambda x:"00"+str(x) if x < 10 else "0"+str(x)
-							XXX = [conc((x+6)/2) for x in range(-1*fir_wind[study][0],fir_wind[study][1],2)]
+							XXX = [conc((x+6)/2) for x in range(-1*fir_wind[study][0],fir_wind[study][1],2)] 
 							for cesXXX in XXX:
+								if data["wls"]:
+									wls_opt = "--wls cesvar.%s.nii.gz" % cesXXX
+									glmdir = "glm.%s.wls" % cesXXX
+								else:
+									wls_opt = ""
+									glmdir = "glm.%s" % cesXXX
 								commands.append(" ".join(["mri_glmfit",
 														"--osgm",
-														"--glmdir glm.%s" % cesXXX,
+														"--glmdir %s" % glmdir,
 														"--y ces.%s.nii.gz" % cesXXX,
+														wls_opt,
 														"--mask %s" % pj(adir,"mask.nii.gz"),
 														space_opt]))
 						else:
+							if data["wls"]:
+								wls_opt = "--wls cesvar.nii.gz"
+								glmdir = "glm.wls"
+							else:
+								wls_opt = ""
+								glmdir = "glm"
 							commands.append(" ".join(["mri_glmfit",
 													"--osgm",
-													"--glmdir glm",
+													"--glmdir %s" % glmdir,
 													"--y ces.nii.gz",
+													wls_opt,
 													"--mask %s" % pj(adir,"mask.nii.gz"),
 													space_opt]))
-			glm_path = pj(func_dir,"fsfast_scripts","%s-glmfit.sh" % study)
-			write_file_with_list(glm_path, "\n".join(commands))
-			make_file_exec(glm_path)
-															
+						if data["wls"]:
+							wls_opt = "-wls"
+						else:
+							wls_opt =""
+						glm_path = pj(func_dir,"fsfast_scripts","%s-glmfit%s.%s.sh" % (study,wls_opt,aname))
+						if data["launchpad"]:
+							write_file_with_list(glm_path, "\n".join(commands),True)
+							print("""pbsubmit -c "%s" -n 1 -mail sburns@nmr.mgh.harvard.edu """ % glm_path)
+						else:
+							write_file_with_list(glm_path, "\n".join(commands))
+						make_file_exec(glm_path)
+				
+		elif type == "image":#this is subject-specific
+			for con in ["Unrelated-Related"]:#contrasts[study].keys()
+				for space in ["lh","rh"]:
+					for shape in ["spm"]:
+						aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+						con_dir = pj(data["mri_dir"],study,aname,con)
+						replace = {"con_dir":con_dir,"hemil":space,"overlay":"sig.nii.gz","subject":"fsaverage","thresh":"0.1"}
+						iscript = pj(mri_scripts,"surf_analysis","make_fs_images.sh")
+						oscript = pj(con_dir,"make_images.sh")
+						pipeline.f2f_replace(iscript,oscript,replace,data["verbose"])
+						make_file_exec(oscript)
+						commands.append(oscript)
+			script_path = pj(data["mri_dir"],"scripts","%s-fs-images.sh" % study)
+			write_file_with_list(script_path,"\n".join(commands))
+			make_file_exec(script_path)
+			#os.system("""xvfb-run -s "-screen 0 2048x2048x24" %s""" % script_path)	
+
+			
+		elif type == "group_image":
+			for con in contrasts[study].keys():
+				for space in ["lh","rh"]:
+					for shape in ["spm"]: #only spm for now
+						aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+						group_dir = pj(func_dir,"%s.group-analysis" % data["stype"])
+						adir = pj(group_dir,aname)
+						if data["wls"]:
+							glm_dir = "glm.wls"
+						else:
+							glm_dir = "glm"
+						con_dir= pj(adir,con,glm_dir,"osgm")						
+						replace = {"con_dir":con_dir,"hemil":space,"overlay":"sig.mgh","subject":"fsaverage","thresh":"1.3"}
+						iscript = pj(mri_scripts,"surf_analysis","make_fs_images.sh")
+						oscript = pj(con_dir,"make_images.sh")
+						pipeline.f2f_replace(iscript,oscript,replace,data["verbose"])
+						make_file_exec(oscript)
+						commands.append(oscript)
+			if data["wls"]:
+				image_path = pj(func_dir,"fsfast_scripts","%s-image-wls.sh" % study)
+			else:
+				image_path = pj(func_dir,"fsfast_scripts","%s-image.sh" % study)
+			write_file_with_list(image_path, "\n".join(commands))
+			make_file_exec(image_path)
 
 
 def fs_run_single(data,type,study,script_to_run):
 	my_args = [script_to_run]
-	print("Starting %s \n" % script_to_run )
-	start_time = time.strftime("%Y-%m-%d %H:%M:%S")
+	start_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) began %s" % (start_time,script_to_run) )
 	return_value = pipeline.run_process(my_args).wait()
+	finish_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) finish %s" % (finish_time,script_to_run) )
 	if return_value:
 	   status = "failure"
 	else:
@@ -978,17 +1056,15 @@ def fs_run(data,type):
 		script_to_run = fs_script_path(data,type,study)
 		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
-		if not data["joblib"]:
+		if data["group_parallel"]:
 			fs_run_single(data,type,study,script_to_run)
 		else:
 			scripts_to_run.append(script_to_run)
 			studies.append(study)
-	if use_joblib:
+	if use_joblib and data["subject_parallel"]:
 		if data["joblib"]:
 			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(fs_run_single)(data,type,study,script_to_run) for (study,script_to_run) in zip(studies,scripts_to_run))
-	else:
-		raise UserError("joblib is not installed, please re-run without --ncores")
-
+			
 
 def fs_script_dir(data,type=None):
 	if type == "analysis":
@@ -1005,7 +1081,7 @@ def fs_script_path(data,type,study):
 	script_dir = fs_script_dir(data,type)
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	return pj(script_dir,"_".join([study.lower(),"fs-"+type+".sh"]))
+	return pj(script_dir,"_".join([study,"fs-"+type+".sh"]))
 
 
 ####MEG#####
@@ -1094,6 +1170,7 @@ def run_ica(data):
 	log = pj(data["meg_dir"],"logs",data["subject"]+"_ica.log")
 	if not os.path.isdir(pj(data["meg_dir"],"logs")):
 		os.mkdir(pj(data["meg_dir"],"logs"))
+	os.system("chgrp -R lingua %s" % data["meg_dir"])
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", oscript,
 		">", log]
 	try:
@@ -1102,6 +1179,8 @@ def run_ica(data):
 	except:
 		print("Unexpected error when running ICA")
 		raise
+	finally:
+		os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 
 def setup_bem(data):
@@ -1128,7 +1207,7 @@ def setup_bem(data):
 	try:
 		scanlog_path = scan_path(data)
 		all_lines = list_from_file(scanlog_path,data["verbose"])
-		dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line and " err " not in line]
+		dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]
 		if len(dcm) > 1:
 			ProgrammerError("More than one MEFLASH5 with 8 frames...check scan.log")
 		elif len(dcm) == 0:
@@ -1323,17 +1402,14 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 			replace_dict["con_dir"] = con_dir
 			if not os.path.exists(con_dir):
 				os.mkdir(con_dir)
-			if "Baleen" in study:
-				real_study = "BaleenMM"
-			else:
-				real_study = study
-			search_term = pj(func_dir,data["stype"]+"*",real_study,"stats_outliers","8mm",
+			search_term = pj(func_dir,data["stype"]+"*",study,"stats_outliers","8mm",
 				"con_"+XXXX+".img")
 			all_img = glob(search_term)
+			all_img.sort()
 			#add included subjecdt images
 			if data["good_sub"]:
 				for sub in data["good_sub"]:
-					all_img.extend(glob(pj(func_dir,sub,real_study,"stats_outliers",
+					all_img.extend(glob(pj(func_dir,sub,study,"stats_outliers",
 						"8mm","con_"+XXXX+".img")))
 			#remove excluded subject images
 			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
@@ -1451,14 +1527,15 @@ def print_info(data):
 
 ######IO#######
 
-def write_file_with_list(path,lines):
+def write_file_with_list(path,lines,quiet=False):
 	"""
 	Any file writing should go through here.
 	"""
 	try:
 		with open(path,'w') as f:
 			f.writelines(lines)
-		print("Wrote %s" % os.sep.join(path.split(os.sep)[5:]))
+		if not quiet:
+			print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines.split("\n"))))
 	except IOError:
 		raise
 
@@ -1512,6 +1589,8 @@ def process_subject(subject,data):
 			spm_setup(data,"stats_outliers")
 		if data["setup_fs_stats"]:
 			fs_setup(data,"stats")
+		if data["setup_fs_image"]:
+			fs_setup(data,"image")
 		#recon
 		if data["setup_recon"]:
 			recon_write_script(data)
@@ -1634,6 +1713,12 @@ if __name__ == "__main__":
 		help="Setup the script to run mri_glmfit")
 	fs_group.add_option("--no_par",dest="no_par",action="store_true",default=False,
 		help="Don't write par files with --setup_fs_preproc")
+	fs_group.add_option("--setup_fs_group_image",dest="setup_fs_group_image",default=False,action="store_true",
+		help="Write script to batch tksurfer image production")
+	fs_group.add_option("--setup_fs_image",dest="setup_fs_image",default=False,action="store_true",
+		help="Write script to batch tksurfer image production PER SUBJECT")
+	fs_group.add_option("--wls",dest="wls",default=False,action="store_true",
+		help="With --setup_fs_glm, compute with weighted least squares")
 	parser.add_option_group(fs_group)	
 	
 	#Cortical reconstruction options
@@ -1714,7 +1799,7 @@ if __name__ == "__main__":
 	misc_group.add_option("--study",dest="single_study",help="Use with --setup_*, can use multiple times",action="append",default=None)
 	misc_group.add_option("--error_email",dest="error_email",default=False,action="store_true",
 		help="Send email when errors occur, off by default")
-	misc_group.add_option("--subject_type",dest="stype",default="",action="store",type="string",
+	misc_group.add_option("--type",dest="stype",default="",action="store",type="string",
 		help="For group level options, process by subject type (ya,ac,sc)")
 	misc_group.add_option("--local",dest="local",default=False,action="store_true",
 		help="Use local data (/home/scratch/functionals/")
@@ -1762,8 +1847,19 @@ if __name__ == "__main__":
 		data["setup_fs_stats"] = True
 		data["run_fs_stats"] = True
 	
+	#determine parallelism
+	if len(subjects) > 1 and data["joblib"]:
+		data["group_parallel"] = True
+		data["subject_parallel"] = False
+	elif data["joblib"] and len(subjects) == 1:
+		data["group_parallel"] = False
+		data["subject_parallel"] = True
+	else:
+		data["group_parallel"] = True
+		data["subject_parallel"] = False
+	
 	#subject-level options
-	if use_joblib and data["joblib"] and len(subjects) > 1:
+	if use_joblib and data["joblib"] and data["group_parallel"]:
 		Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
 	else:
 		[process_subject(subject,data) for subject in subjects]
@@ -1774,6 +1870,8 @@ if __name__ == "__main__":
 		fs_setup(data,"group",subjects)
 	if data["setup_fs_glm"]:
 		fs_setup(data,"glm")
+	if data["setup_fs_group_image"]:
+		fs_setup(data,"group_image")
 	if data["all_second"]:
 		second_level(data,"setup")
 		second_level(data,"run")	
