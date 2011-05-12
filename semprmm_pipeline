@@ -285,22 +285,22 @@ def scan2cfg(data):
 	
 def studies_to_setup(data,type):
 	"""
-	returns what studies should be set up. This list depends on the type of processing to be setup.
+	returns what studies should be set up. 
+	This list depends on the type of processing to be setup.
 	"""
 	if data["single_study"]:
 		return data["single_study"]
-	if type == "analysis" or type == "group" or type == "glm" or type == "image" or type == "group_image":
-		#setup all
+	if type in ["fs_analysis", "fs_group", "fs_glm", "fs_image", "fs_group_image"]:
 		return cond_num.keys()
 	if not os.path.exists(info_path(data)):
 		print("No info.txt for {0}, rerun --cfg2info".format(data["subject"]))
 		raise UserError("Broke in studies_to_setup")
 	info = pipeline.load_data(info_path(data),data["verbose"])
-	if "stats" in type or "art" in type:
+	if type in ["spm_stats", 'spm_stats_outliers', 'spm_art']:
 		studies = [k for k,v in info.iteritems() if os.path.exists(
 			touch_file_path(data,k,"preproc","run"))]
-	elif "preproc" in type:
-		studies = [k for k,v in info.iteritems() if v["was_run"]]
+	elif type in ["fs_preproc", "spm_preproc", "fs_stats"]:
+		studies = [k for k,v in info.iteritems() if v["was_run"] and v['complete']]
 	return studies
 
 
@@ -488,7 +488,27 @@ def touch_file_path(data,study,type,when):
 	return pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 
 
+def run_script(data, stream, study, script_to_run, log):
+	my_args = [script_to_run]
+	start_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) began %s" % (start_time,script_to_run) )
+	return_value = pipeline.run_process(my_args).wait()
+	finish_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) finish %s" % (finish_time,script_to_run) )
+	if return_value:
+	   status = "failure"
+	else:
+	   status = "success"
+	log_text = '\n'.join(["%d errors..."% return_value,
+						"Start: %s" % start_time,
+						"Finish: %s" % finish_time, study])+'\n'
+	with open(log, 'r') as f:
+		log_text += f.read()
+	add = "%s@nmr.mgh.harvard.edu" % getpass.getuser()
+	subj = "%s %s %s" % (data["subject"],stream, status)
+	pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
 #####SPM#####
+
 
 def spm_setup(data,type):
 	"""
@@ -498,8 +518,7 @@ def spm_setup(data,type):
 	if not os.path.exists(data["mri_dir"]):
 		print("Hey dummy, no MRI dir for {0}".format(data["subject"]))
 		raise UserError("Broke in spm_setup")
-	data["studies_to_setup"] = studies_to_setup(data,type)
-	for study in data["studies_to_setup"]:
+	for study in studies_to_setup(data, "spm_"+type):
 		job_dir = pj(data["mri_dir"],study,"jobs")
 		if not os.path.exists(job_dir):
 			os.mkdir(job_dir)
@@ -512,25 +531,20 @@ def spm_setup(data,type):
 				if not os.path.exists(smooth_dir):
 					os.mkdir(smooth_dir)
 		spm_write_mlab_script(data,study,type)
-	spm_write_script(data,type)
+		spm_write_script(data,study,type)
 
 
-def spm_script_path(data,type):
+def spm_script_path(data,study,type):
 	"""
 	This function just encapsulates the little bit of logic needed to name a shell script.
 	"""
 	script_dir = pj(data["mri_dir"],"scripts")
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	if "recon" in type:
-		return 
-	elif data["single_study"]:
-		return pj(script_dir,data["single_study"].lower()+"_"+type+"_"+data["subject"]+".sh")
-	else:
-		return pj(script_dir,"all_"+type+"_"+data["subject"]+".sh")
+	return pj(script_dir,"_".join([study,"spm"+"-"+type+".sh"]))
 
 
-def spm_write_script(data,type):
+def spm_write_script(data,study,type):
 	"""
 	type (string): "preproc","stats","outliers"
 	Writes out the shell script with matlab calls if we're preprocessing or stats processing or with
@@ -538,23 +552,16 @@ def spm_write_script(data,type):
 	If --parallel was used, then & will be appended to the matlab lines. With the new parallelization
 	scheme I've got with joblib, this could be dangerous, use at your own risk.
 	"""
-	shell_script = spm_script_path(data,type)
+	shell_script = spm_script_path(data,study,type)
 	commands = []
 	commands.append("#!/bin/sh")
 	mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
 	if "stats" in type:
 		commands.append("unset DISPLAY")
 		mlab_cmd += " -nodisplay "
-	if not "studies_to_setup" in data:
-		data["studies_to_setup"] = studies_to_setup(data,type)
-	for study in data["studies_to_setup"]:
-		job_file = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		log_file = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".log")
-		commands.append("{2} < {0}  > {1} {3}".format(job_file,log_file,
-			mlab_cmd,data["parallel"]))
-	commands.append("wait\n")
+	commands.append("%s < %s > %s " % (mlab_cmd, spm_jobfile(data,study,type), spm_logfile(data,study,type)))	
 	write_file_with_list(shell_script,"\n".join(commands))
-	make_file_exec(shell_script)		
+	make_file_exec(shell_script)
 
 
 def spm_run_art(data):
@@ -611,13 +618,20 @@ def spm_write_mlab_script(data,study,type):
 	else:
 		good_type = type
 	batch_dict = spm_matlab_dict(data,study,type)
-	if data["no_unwarp"]:
-		batch_o = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
-		batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+"_nounwarp.m")			
+	if data["unwarp"]:
+		batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+"_unwarp.m")			
 	else:
-		batch_o = pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+".m")
 		batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+	batch_o = spm_jobfile(data,study,type)
 	pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
+
+
+def spm_jobfile(data,study,type):
+	return pj(data["mri_dir"],study,"jobs",study+"_"+type+".m")
+
+
+def spm_logfile(data,study,type):
+	return pj(data["mri_dir"],study,"jobs",study+"_"+type+".log")
 
 
 def spm_matlab_dict(data,study,type):
@@ -670,18 +684,27 @@ def spm_funcdir_info(data,study,type):
 	return study_dict	
 
 
-def spm_run_script(data,type):
+def spm_run(data,type):
 	"""
 	Looks for the write script to run based on type and executes it. This method blocks which is ok
 	because this method is starting in parallel automatically for many subjects. This will only 
 	block if --launchpad is used.
 	"""
-	script_to_run = spm_script_path(data,type)
-	if not os.path.exists(script_to_run):
-		raise UserError("spm_run_script: no script found")
-	my_args = ["nohup", script_to_run]
-	print("\nStarting {0}\n".format(script_to_run))
-	return_value = pipeline.run_process(my_args).wait()
+	scripts_to_run = []
+	studies = []
+	for study in studies_to_setup(data,"spm_"+type):
+		script_to_run = spm_script_path(data,study,type)
+		if not os.path.exists(script_to_run):
+			raise UserError("spm_run: no script found for %s" % study)
+		if data["group_parallel"]:
+			run_script(data,"spm-%s"%type, study,
+							script_to_run,spm_logfile(data,study,type))
+		else:
+			scripts_to_run.append(script_to_run)
+			studies.append(study)
+	if use_joblib and data["subject_parallel"]:
+		if data["joblib"]:
+			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(run_script)(data,"spm-%s"%type,study,script_to_run,spm_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
 
 
 def spm_write_coreg_mprage(data):
@@ -756,7 +779,7 @@ def write_par(data,study,info,run):
 	full_par.sort(key=lambda x:int(x[0]))
 	par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
 	if not data["no_par"]:
-		write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]))
+		write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]), True)
 	
 
 def fs_setup(data,type,subjects=None):
@@ -769,8 +792,7 @@ def fs_setup(data,type,subjects=None):
 					"BaleenHP":(6,18),
 					"BaleenLP":(6,18),					
 					"AXCPT":(4,16)})
-
-	for study in studies_to_setup(data,type):
+	for study in studies_to_setup(data,"fs_"+type):
 		if data["verbose"]:
 			print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
 		commands = []
@@ -781,8 +803,6 @@ def fs_setup(data,type,subjects=None):
 			sessid = data["mri_dir"]
 		
 		if type == "preproc":
-			#NO NEED TO CALL THIS
-			#write script
 			lf = fs_logfile(data,type,study)
 			preproc_cmd = " ".join(["preproc-sess",
 									"-d /cluster/kuperberg/SemPrMM/MRI/functionals/",
@@ -848,7 +868,7 @@ def fs_setup(data,type,subjects=None):
 		elif type == "stats":
 			sname = [data["subject"]]
 			sname_path = pj(sessid,"subjectname")
-			write_file_with_list(sname_path,"\n".join(sname))
+			write_file_with_list(sname_path,"\n".join(sname),True)
 			#write .par
 			study_dict = pipeline.load_data(info_path(data))[study]
 			#amount of runs 
@@ -1027,43 +1047,22 @@ def fs_setup(data,type,subjects=None):
 			make_file_exec(image_path)
 
 
-def fs_run_single(data,type,study,script_to_run):
-	my_args = [script_to_run]
-	start_time = time.strftime("%Y%m%d %H:%M:%S")
-	print("(%s) began %s" % (start_time,script_to_run) )
-	return_value = pipeline.run_process(my_args).wait()
-	finish_time = time.strftime("%Y%m%d %H:%M:%S")
-	print("(%s) finish %s" % (finish_time,script_to_run) )
-	if return_value:
-	   status = "failure"
-	else:
-	   status = "success"
-	#open the log file and make that message
-	log_text = "\n".join(["%d errors..." % return_value,start_time,"#### %s ####" % study])+"\n"
-	with open(fs_logfile(data,type,study), "r") as f:
-	   log_text += f.read()
-	if not log_text:
-	   log_text += "Log couldn't be opened"
-	add = "%s@nmr.mgh.harvard.edu" % getpass.getuser()
-	subj = "%s fs-%s %s" % (data["subject"],type,status)
-	pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
-
-
 def fs_run(data,type):
 	scripts_to_run = []
 	studies = []
-	for study in studies_to_setup(data,type):
+	for study in studies_to_setup(data,"fs_"+type):
 		script_to_run = fs_script_path(data,type,study)
 		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
 		if data["group_parallel"]:
-			fs_run_single(data,type,study,script_to_run)
+			run_script(data,"fs-%s"%type,study,
+				script_to_run,fs_logfile(data,study,type))
 		else:
 			scripts_to_run.append(script_to_run)
 			studies.append(study)
 	if use_joblib and data["subject_parallel"]:
 		if data["joblib"]:
-			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(fs_run_single)(data,type,study,script_to_run) for (study,script_to_run) in zip(studies,scripts_to_run))
+			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(run_script)(data,"fs-%s"%type,study,script_to_run,fs_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
 			
 
 def fs_script_dir(data,type=None):
@@ -1560,83 +1559,83 @@ def process_subject(subject,data):
 	"""
 	This processes options on a single-subject basis.
 	"""
-	try:
-		data["subject"] = subject
-		set_paths(data)
-		if data["copy_dicom"]:		
-			archive_to_cluster(data)
-		if data["scan_only"]:
-			scan_only(data)
-		if data["scan2cfg"]:
-			scan2cfg(data)
-		if data["cfg2info"]:
-			cfg2info(data)
-		if data["unpack"]:
-			unpack(data)
-		if data["unpack_all"]:
-			unpack_all(data)
-		if data["makeMC"]:
-			makeMC(data)
+	#try:
+	data["subject"] = subject
+	set_paths(data)
+	if data["copy_dicom"]:		
+		archive_to_cluster(data)
+	if data["scan_only"]:
+		scan_only(data)
+	if data["scan2cfg"]:
+		scan2cfg(data)
+	if data["cfg2info"]:
+		cfg2info(data)
+	if data["unpack"]:
+		unpack(data)
+	if data["unpack_all"]:
+		unpack_all(data)
+	if data["makeMC"]:
+		makeMC(data)
 
-		#SETUP
-		if data["setup_preproc"]:
-			spm_setup(data,"preproc")
-		if data["setup_fs_preproc"]:
-			fs_setup(data,"preproc")
-		if data["setup_stats"]:
-			spm_setup(data,"stats")
-		if data["setup_outliers"]:
-			spm_setup(data,"stats_outliers")
-		if data["setup_fs_stats"]:
-			fs_setup(data,"stats")
-		if data["setup_fs_image"]:
-			fs_setup(data,"image")
-		#recon
-		if data["setup_recon"]:
-			recon_write_script(data)
-		if data["run_recon"]:
-			recon_run(data)
-		#SPM
-		if data["reg_mprage"]:
-			spm_write_coreg_mprage(data)
-		if data["run_preproc"]:
-			spm_run_script(data,"preproc")
-		if data["run_art"]:
-			spm_run_art(data)
-		if data["run_stats"]:
-			spm_run_script(data,"stats")
-		if data["run_outliers"]:
-			spm_run_script(data,"stats_outliers")
-		#FSFast
-		if data["run_fs_preproc"]:
-			fs_run(data,"preproc")
-		if data["run_fs_stats"]:
-			fs_run(data,"stats")
-		#MEG
-		if data["setup_bem"]:
-			setup_bem(data)
-		if data["run_ica"]:
-			run_ica(data)
-		if data["preProc"]:
-			meg_script(data,"preProc")
-		if data["new_preProc"]:
-			new_preProc(data)
-		if data["preAnat"]:
-			meg_script(data,"preAnat")
-		if data["makeInv"]:
-			meg_script(data,"makeInv")
-		if data["makeSTC"]:
-			meg_script(data,"makeSTC")
-			
-		if data["print_info"]:
-			print_info(data)
-	except Exception as strerr:
-		print "Run-time error (%s): " % subject ,type(strerr),strerr
-		if data["error_email"]:
-			add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
-			pipeline.email(sender=add,receiver=add,
-					subject="semprmm_pipeline error".format(subject),
-					message=data["subject"]+" "+str(strerr))
+	#SETUP
+	if data["setup_preproc"]:
+		spm_setup(data,"preproc")
+	if data["setup_fs_preproc"]:
+		fs_setup(data,"preproc")
+	if data["setup_stats"]:
+		spm_setup(data,"stats")
+	if data["setup_outliers"]:
+		spm_setup(data,"stats_outliers")
+	if data["setup_fs_stats"]:
+		fs_setup(data,"stats")
+	if data["setup_fs_image"]:
+		fs_setup(data,"image")
+	#recon
+	if data["setup_recon"]:
+		recon_write_script(data)
+	if data["run_recon"]:
+		recon_run(data)
+	#SPM
+	if data["reg_mprage"]:
+		spm_write_coreg_mprage(data)
+	if data["run_preproc"]:
+		spm_run(data,"preproc")
+	if data["run_art"]:
+		spm_run_art(data)
+	if data["run_stats"]:
+		spm_run(data,"stats")
+	if data["run_outliers"]:
+		spm_run(data,"stats_outliers")
+	#FSFast
+	if data["run_fs_preproc"]:
+		fs_run(data,"preproc")
+	if data["run_fs_stats"]:
+		fs_run(data,"stats")
+	#MEG
+	if data["setup_bem"]:
+		setup_bem(data)
+	if data["run_ica"]:
+		run_ica(data)
+	if data["preProc"]:
+		meg_script(data,"preProc")
+	if data["new_preProc"]:
+		new_preProc(data)
+	if data["preAnat"]:
+		meg_script(data,"preAnat")
+	if data["makeInv"]:
+		meg_script(data,"makeInv")
+	if data["makeSTC"]:
+		meg_script(data,"makeSTC")
+		
+	if data["print_info"]:
+		print_info(data)
+# 	except Exception as strerr:
+# 		print "Run-time error (%s): " % subject ,type(strerr),strerr
+# 		if data["error_email"]:
+# 			add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
+# 			pipeline.email(sender=add,receiver=add,
+# 					subject="semprmm_pipeline error".format(subject),
+# 					message=data["subject"]+" "+str(strerr))
 
 
 
@@ -1691,8 +1690,8 @@ if __name__ == "__main__":
 		help="Run artifact detection for a subject")
 	spm_group.add_option("--reg_mprage",dest="reg_mprage",action="store_true",default=False,
 		help="Register the subject's MPRAGE to each functional run")
-	spm_group.add_option("--no_unwarp",dest="no_unwarp",action="store_true",default=False,
-		help="Don't do unwarping")
+	spm_group.add_option("--unwarp",dest="unwarp",action="store_true",default=False,
+		help="Use with --setup_preproc, do unwarping")
 	parser.add_option_group(spm_group)
 	
 	#FSFast options
