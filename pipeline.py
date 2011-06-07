@@ -16,6 +16,7 @@ import string
 import pickle
 from email.mime.text import MIMEText
 import smtplib
+import getpass
 
 class ProgrammerError(Exception):
 	pass
@@ -66,8 +67,7 @@ def mirror(src, dest, block=True):
 	process = run_process(job)
 	if block:
 		output = process.communicate()[0]
-	
-	
+		
 def scan_only(src,targ,scan):
 	"""
 	src: dicom directory
@@ -128,7 +128,6 @@ def unpack(src,targ,cfg_path,output=None,verbose=False):
 	process = run_process(args,output)
 	output = process.communicate()[0]
 
-	
 def load_data(path,verbose=False):
 	"""
 	Read the file at path as pickled object and return the object.
@@ -154,8 +153,7 @@ def save_data(data,path,verbose=False):
 	except:
 		print("Couldn't save data to {0}".format(path))
 		raise
-	
-	
+		
 def f2f_replace(incoming,outgoing,replace,verbose=False):
 	"""
 	incoming: path to the "template" file that contains keywords
@@ -184,7 +182,6 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
 		raise		
 	except:
 		raise
-
 	
 def run_process(my_args,output=PIPE,error=PIPE,input=PIPE,verbose=False):
 	"""
@@ -208,7 +205,28 @@ def wait_to_finish(running_jobs,loop_time=30):
 	while len(running_jobs) > 0:
 		running_jobs[:] = [process for process in running_jobs if process.poll() is None]
 		time.sleep(loop_time)
-		
+				
+def run_script(study, stream, subject, script_to_run, log=None):
+	my_args = [script_to_run]
+	start_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) began %s" % (start_time,script_to_run) )
+	return_value = run_process(my_args).wait()
+	finish_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) finish %s" % (finish_time,script_to_run) )
+	if return_value:
+	   status = "failure"
+	else:
+	   status = "success"
+	log_text = '\n'.join(["%d errors..."% return_value,
+						"Start: %s" % start_time,
+						"Finish: %s" % finish_time,
+						study])+'\n'
+	if log:
+		with open(log, 'r') as f:
+			log_text += f.read()
+	add = "%s@nmr.mgh.harvard.edu" % getpass.getuser()
+	subj = "%s %s %s" % (subject, stream, status)
+	email(sender=add,receiver=add,subject=subj,message=log_text)
 		
 def email(sender,receiver,subject=None,message=None):
 	#construct the message
@@ -227,3 +245,29 @@ def email(sender,receiver,subject=None,message=None):
 	finally:
 		server.quit()
 
+def write_file_with_list(path,lines,quiet=False):
+	"""
+	Any file writing should go through here.
+	"""
+	try:
+		with open(path,'w') as f:
+			f.writelines(lines)
+		if not quiet:
+			print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines.split("\n"))))
+	except IOError:
+		raise
+
+def list_from_file(path,verbose=None):
+	"""
+	Any file reading should go through here. Returns a list from the file split at newlines.
+	"""
+	try: 
+		with open(path,'r') as f:
+			all_lines = f.read()
+			all_lines = all_lines.splitlines()
+			if verbose:
+				print("Reading from {0}".format(path))
+	except IOError:
+		print("Cannot open %s"  % path)
+		raise
+	return all_lines
