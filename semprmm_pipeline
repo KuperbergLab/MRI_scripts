@@ -278,7 +278,7 @@ def scan2cfg(data):
 	not_fieldmaps.extend(good_fieldmaps)
 	good_lines = not_fieldmaps
 	good_lines.sort(key=lambda x:int(x.split()[0]))
-	write_file_with_list(data["cfg_path"],"\n".join(good_lines))
+	pipeline.write_file_with_list(data["cfg_path"],"\n".join(good_lines))
 
 
 ####GENERAL FUNCTIONAL####
@@ -334,7 +334,7 @@ def cfg2info(data):
 			for run in runs:
 				run_num = run[3].split(".")[0].split(study)[1]
 				study_dict["Run"+run_num+"XXX"] = prepend_zero(run[0])
-			if not (study == "AXCPT" and (data["stype"] == "ac" or data["stype"] == "sc")):
+			if not (study == "AXCPT" and (data["stype"] in ['ac', 'sc'])):
 				if len(runs) == possible_studies[study]:
 					study_dict["complete"] = True
 				else:
@@ -430,7 +430,7 @@ def makeMC(data):
 				run = str(int(run) - 4)
 		else:
 			study_key = study
-		if data["stype"] == "sc" or data["stype"] == "ac":
+		if data["stype"] in ['ac', 'sc']:
 			if study == "ATLLoc_SC":
 				study_key = "ATLLoc"
 			elif study == "MaskedMM_SC":
@@ -469,8 +469,9 @@ def makeMC(data):
 	
 				xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study_key]["duration"])))]
 				miss_dur = ["2"]
-			info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
-						"Run"+run+"MissesDurations": " ".join(miss_dur)})
+			if study_key in info:
+				info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
+							"Run"+run+"MissesDurations": " ".join(miss_dur)})
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
@@ -487,28 +488,7 @@ def touch_file_path(data,study,type,when):
 	"""
 	return pj(data["mri_dir"],study,"jobs",study.lower()+"_"+type+"_"+when)
 
-
-def run_script(data, stream, study, script_to_run, log):
-	my_args = [script_to_run]
-	start_time = time.strftime("%Y%m%d %H:%M:%S")
-	print("(%s) began %s" % (start_time,script_to_run) )
-	return_value = pipeline.run_process(my_args).wait()
-	finish_time = time.strftime("%Y%m%d %H:%M:%S")
-	print("(%s) finish %s" % (finish_time,script_to_run) )
-	if return_value:
-	   status = "failure"
-	else:
-	   status = "success"
-	log_text = '\n'.join(["%d errors..."% return_value,
-						"Start: %s" % start_time,
-						"Finish: %s" % finish_time, study])+'\n'
-	with open(log, 'r') as f:
-		log_text += f.read()
-	add = "%s@nmr.mgh.harvard.edu" % getpass.getuser()
-	subj = "%s %s %s" % (data["subject"],stream, status)
-	pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
 #####SPM#####
-
 
 def spm_setup(data,type):
 	"""
@@ -560,7 +540,7 @@ def spm_write_script(data,study,type):
 		commands.append("unset DISPLAY")
 		mlab_cmd += " -nodisplay "
 	commands.append("%s < %s > %s " % (mlab_cmd, spm_jobfile(data,study,type), spm_logfile(data,study,type)))	
-	write_file_with_list(shell_script,"\n".join(commands))
+	pipeline.write_file_with_list(shell_script,"\n".join(commands))
 	make_file_exec(shell_script)
 
 
@@ -569,7 +549,7 @@ def spm_run_art(data):
 	This function writes out the ART-specific session file, then a short matlab script, then
 	runs matlab and passes the script into the matlab process to run. We use ART defaults.
 	"""
-	studies = studies_to_setup(data,"art")
+	studies = studies_to_setup(data,"spm_art")
 	sessions = []
 	for study in studies:
 		#glob the images
@@ -589,7 +569,7 @@ def spm_run_art(data):
 		sess_contents.append("end")
 		sess_path = pj(data["mri_dir"],study,"art_sess.txt")
 		sessions.append(sess_path)
-		write_file_with_list(sess_path,"\n".join(sess_contents))
+		pipeline.write_file_with_list(sess_path,"\n".join(sess_contents))
 	art_m = []
 	for session in sessions:
 		art_m.append("art('sess_file','{0}');".format(session))
@@ -602,7 +582,7 @@ def spm_run_art(data):
 	art_m.append("exit;")
 	art_path = pj(data["mri_dir"],"spm_run_art.m")
 
-	write_file_with_list(art_path,"\n".join(art_m))
+	pipeline.write_file_with_list(art_path,"\n".join(art_m))
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
 	proc = pipeline.run_process(my_args,output=sys.stdout,error=sys.stderr)
 	proc.communicate()
@@ -697,19 +677,20 @@ def spm_run(data,type):
 		if not os.path.exists(script_to_run):
 			raise UserError("spm_run: no script found for %s" % study)
 		if data["group_parallel"]:
-			run_script(data,"spm-%s"%type, study,
+			pipeline.run_script(study,"spm-%s"%type, data['subject'],
 							script_to_run,spm_logfile(data,study,type))
 		else:
 			scripts_to_run.append(script_to_run)
 			studies.append(study)
 	if use_joblib and data["subject_parallel"]:
 		if data["joblib"]:
-			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(run_script)(data,"spm-%s"%type,study,script_to_run,spm_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
+			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"spm-%s"%type,data['subject'],script_to_run,spm_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
 
 
 def spm_write_coreg_mprage(data):
 	commands = []
-	for study in studies_to_setup(data,"preproc"):
+	commands.append("#!/bin/sh")
+	for study in ['ATLLoc']:
 		mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop "
 		study_info = pipeline.load_data(info_path(data),data["verbose"])[study]
 		new_dict = {"par":study,"subject":data["subject"],"MPRAGEXXX":study_info["MPRAGE_runs"][0]}
@@ -719,8 +700,8 @@ def spm_write_coreg_mprage(data):
 		lf = pj(data["mri_dir"],"scripts","%s_cowrite.log" % (study))
 		mlab_cmd += " < %s > %s " % (outgoing,lf)
 		commands.append(mlab_cmd)
-	script_name = spm_script_path(data,"cowrite")
-	write_file_with_list(script_name,"\n".join(commands))
+	script_name = spm_script_path(data,'ATLLoc', "cowrite")
+	pipeline.write_file_with_list(script_name,"\n".join(commands))
 	make_file_exec(script_name)
 	pipeline.run_process(["nohup",script_name],output=sys.stdout).wait()
 
@@ -744,7 +725,7 @@ def recon_write_script(data):
 	for mprage in mprages:
 		recon_cmd +=  " -i " + mprage
 	commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
-	write_file_with_list(script_path,"\n".join(commands))
+	pipeline.write_file_with_list(script_path,"\n".join(commands))
 	make_file_exec(script_path)
 	
 
@@ -779,7 +760,7 @@ def write_par(data,study,info,run):
 	full_par.sort(key=lambda x:int(x[0]))
 	par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
 	if not data["no_par"]:
-		write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]), True)
+		pipeline.write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]), True)
 	
 
 def fs_setup(data,type,subjects=None):
@@ -817,7 +798,7 @@ def fs_setup(data,type,subjects=None):
 			commands.append(preproc_cmd)
 			commands.append("exit $?")
 			script_path = fs_script_path(data,type,study)
-			write_file_with_list(script_path,"\n".join(commands))
+			pipeline.write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
 		
 		elif type == "analysis":
@@ -847,7 +828,6 @@ def fs_setup(data,type,subjects=None):
 									preproc_opt,
 									"-nconditions %d" % nconds,
 									"-mcextreg",
-									"-hpf .0078", #seconds!
 									"-force"])
 					commands.append(cmd)
 					#mkcontrast-sess
@@ -862,13 +842,13 @@ def fs_setup(data,type,subjects=None):
 									neg_con])
 						commands.append(con_cmd)
 			script_path = fs_script_path(data,type,study)
-			write_file_with_list(script_path,"\n".join(commands))
+			pipeline.write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
 		
 		elif type == "stats":
 			sname = [data["subject"]]
 			sname_path = pj(sessid,"subjectname")
-			write_file_with_list(sname_path,"\n".join(sname),True)
+			pipeline.write_file_with_list(sname_path,"\n".join(sname),True)
 			#write .par
 			study_dict = pipeline.load_data(info_path(data))[study]
 			#amount of runs 
@@ -901,9 +881,9 @@ def fs_setup(data,type,subjects=None):
 					commands.append("let z=z+$?")
 			commands.append("exit $z")
 			script_path = fs_script_path(data,type,study)
-			write_file_with_list(script_path,"\n".join(commands))
+			pipeline.write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
-			
+
 		elif type == "group":		
 			fsgd = []
 			fsgd.append("GroupDescriptorFile 1")
@@ -919,7 +899,7 @@ def fs_setup(data,type,subjects=None):
 				fsgd.append("Input %s %s" % (sub,data["stype"]))
 			fsgd.append("\n")
 			fsgd_path = pj(func_dir,"%s.%s.fsgd" % (data["stype"],study))
-			write_file_with_list(fsgd_path,"\n".join(fsgd),True)
+			pipeline.write_file_with_list(fsgd_path,"\n".join(fsgd),True)
 			for space in ["lh","rh","mni305"]:
 				for shape in ["fir","spm"]:
 					commands = []
@@ -933,15 +913,16 @@ def fs_setup(data,type,subjects=None):
 										"-all-contrasts",
 										"-sf %s" % sessid,
 										"-fsgd %s" % fsgd_path,
-										"-o %s.group-analysis" % data["stype"],
+										"-o %s.group-analysis/%s/" % (data["stype"], study),
 										">& %s" % lf])
 					commands.append(isx_cmd)
-					isx_cmd_path = pj(func_dir, "fsfast_scripts","%s-isxconcat.%s.sh" % (study,aname))
+					isx_cmd_path = pj(func_dir, "fsfast_scripts","%s.%s-isxconcat.%s.sh" % (data['stype'], study,aname))
 					if data["launchpad"]:
-						write_file_with_list(isx_cmd_path,"\n".join(commands),True)
-						print("""pbsubmit -c "%s" -n 1 -mail sburns@nmr.mgh.harvard.edu """ % isx_cmd_path)
+						q = True
+						print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % isx_cmd_path)
 					else:
-						write_file_with_list(isx_cmd_path,"\n".join(commands))
+						q = False
+					pipeline.write_file_with_list(isx_cmd_path,"\n".join(commands),q)
 					make_file_exec(isx_cmd_path)
 			
 		elif type == "glm":
@@ -953,7 +934,7 @@ def fs_setup(data,type,subjects=None):
 						else:
 							space_opt = ""
 						aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
-						group_dir = pj(func_dir,"%s.group-analysis" % data["stype"])
+						group_dir = pj(func_dir,"%s.group-analysis/%s" % (data["stype"], study))
 						adir = pj(group_dir,aname)
 						con_dir = pj(adir,con)
 						commands = []
@@ -962,7 +943,7 @@ def fs_setup(data,type,subjects=None):
 						if shape == "fir":
 							#build XXX
 							conc = lambda x:"00"+str(x) if x < 10 else "0"+str(x)
-							XXX = [conc((x+6)/2) for x in range(-1*fir_wind[study][0],fir_wind[study][1],2)] 
+							XXX = [conc((x+fir_wind[study][0])/2) for x in range(-1*fir_wind[study][0],fir_wind[study][1],2)]
 							for cesXXX in XXX:
 								if data["wls"]:
 									wls_opt = "--wls cesvar.%s.nii.gz" % cesXXX
@@ -995,12 +976,12 @@ def fs_setup(data,type,subjects=None):
 							wls_opt = "-wls"
 						else:
 							wls_opt =""
-						glm_path = pj(func_dir,"fsfast_scripts","%s-glmfit%s.%s.sh" % (study,wls_opt,aname))
+						glm_path = pj(func_dir,"fsfast_scripts","%s.%s-glmfit%s.%s.%s.sh" % (data['stype'], study, wls_opt, aname, con))
 						if data["launchpad"]:
-							write_file_with_list(glm_path, "\n".join(commands),True)
-							print("""pbsubmit -c "%s" -n 1 -mail sburns@nmr.mgh.harvard.edu """ % glm_path)
+							pipeline.write_file_with_list(glm_path, "\n".join(commands),True)
+							print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % glm_path)
 						else:
-							write_file_with_list(glm_path, "\n".join(commands))
+							pipeline.write_file_with_list(glm_path, "\n".join(commands))
 						make_file_exec(glm_path)
 				
 		elif type == "image":#this is subject-specific
@@ -1016,11 +997,11 @@ def fs_setup(data,type,subjects=None):
 						make_file_exec(oscript)
 						commands.append(oscript)
 			script_path = pj(data["mri_dir"],"scripts","%s-fs-images.sh" % study)
-			write_file_with_list(script_path,"\n".join(commands))
+			pipeline.write_file_with_list(script_path,"\n".join(commands))
 			make_file_exec(script_path)
-			#os.system("""xvfb-run -s "-screen 0 2048x2048x24" %s""" % script_path)	
+			if not data['dry']:
+				os.system("""xvfb-run -s "-screen 0 2048x2048x24" %s""" % script_path)	
 
-			
 		elif type == "group_image":
 			for con in contrasts[study].keys():
 				for space in ["lh","rh"]:
@@ -1040,10 +1021,10 @@ def fs_setup(data,type,subjects=None):
 						make_file_exec(oscript)
 						commands.append(oscript)
 			if data["wls"]:
-				image_path = pj(func_dir,"fsfast_scripts","%s-image-wls.sh" % study)
+				image_path = pj(func_dir,"fsfast_scripts","%s.%s-image-wls.sh" % (data['stype'], study))
 			else:
 				image_path = pj(func_dir,"fsfast_scripts","%s-image.sh" % study)
-			write_file_with_list(image_path, "\n".join(commands))
+			pipeline.write_file_with_list(image_path, "\n".join(commands))
 			make_file_exec(image_path)
 
 
@@ -1055,18 +1036,18 @@ def fs_run(data,type):
 		if not os.path.exists(script_to_run):
 			raise UserError("Hey dummy, you need to run --setup_fs_preproc")
 		if data["group_parallel"]:
-			run_script(data,"fs-%s"%type,study,
-				script_to_run,fs_logfile(data,study,type))
+			pipeline.run_script(study,"fs-%s"%type,data['subject'],
+				script_to_run,fs_logfile(data,type,study))
 		else:
 			scripts_to_run.append(script_to_run)
 			studies.append(study)
 	if use_joblib and data["subject_parallel"]:
 		if data["joblib"]:
-			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(run_script)(data,"fs-%s"%type,study,script_to_run,fs_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
+			Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"fs-%s"%type,data['subject'],script_to_run,fs_logfile(data,type,study)) for (study,script_to_run) in zip(studies,scripts_to_run))
 			
 
 def fs_script_dir(data,type=None):
-	if type == "analysis":
+	if type in ["analysis", "glm", "group", "group_image"]:
 		return pj(func_dir,"fsfast_scripts")
 	else:
 		return pj(data["mri_dir"],"scripts")
@@ -1080,7 +1061,7 @@ def fs_script_path(data,type,study):
 	script_dir = fs_script_dir(data,type)
 	if not os.path.exists(script_dir):
 		os.mkdir(script_dir)
-	return pj(script_dir,"_".join([study,"fs-"+type+".sh"]))
+	return pj(script_dir,".".join([data['stype'],study,"fs-"+type+".sh"]))
 
 
 ####MEG#####
@@ -1205,7 +1186,7 @@ def setup_bem(data):
 		os.mkdir(flash_org_dir)
 	try:
 		scanlog_path = scan_path(data)
-		all_lines = list_from_file(scanlog_path,data["verbose"])
+		all_lines = pipeline.list_from_file(scanlog_path,data["verbose"])
 		dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]
 		if len(dcm) > 1:
 			ProgrammerError("More than one MEFLASH5 with 8 frames...check scan.log")
@@ -1229,8 +1210,6 @@ def setup_bem(data):
 				pass
 	else:
 		print("NO Flash DCM...")
-
-
 
 ####SECOND LEVEL#######
 
@@ -1386,14 +1365,24 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 	else:
 		studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
 	for study in studies:
-		new_dir = pj(prefix,data['stype'],study,date_dir)
+		if data["list_prefix"]:
+			head, base = os.path.split(data['list_prefix'])
+			list_path = pj(head, "%s_%s" % (base, study.lower()))
+		else:
+			list_path = pj(mri_scripts, "%s_mri_%s" % (data['stype'], study.lower()))
+		if not os.path.isfile(list_path):
+			raise ValueError("Can't find %s" % list_path)
+		print("Getting subjects from %s" % list_path)
+		_, tail = os.path.split(list_path)
+		new_dir = pj(prefix,data['stype'],study,"_".join([date_dir, tail]))
+		print("new dir is %s" % new_dir)
 		#make the new dir
 		if not os.path.exists(new_dir):
 			os.mkdir(new_dir)
 		job_dir = pj(new_dir,"jobs")
 		if not os.path.exists(job_dir):
 			os.mkdir(job_dir)
-		print("\n{0}:\t{1} contrasts".format(study,len(study_contrasts[study])))
+		print("{0}:\t{1} contrasts".format(study,len(study_contrasts[study])))
 		for [contrast,XXXX] in study_contrasts[study]:
 			replace_dict = dict()
 			replace_dict["contrast"] = contrast
@@ -1401,19 +1390,9 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 			replace_dict["con_dir"] = con_dir
 			if not os.path.exists(con_dir):
 				os.mkdir(con_dir)
-			search_term = pj(func_dir,data["stype"]+"*",study,"stats_outliers","8mm",
-				"con_"+XXXX+".img")
-			all_img = glob(search_term)
-			all_img.sort()
-			#add included subjecdt images
-			if data["good_sub"]:
-				for sub in data["good_sub"]:
-					all_img.extend(glob(pj(func_dir,sub,study,"stats_outliers",
-						"8mm","con_"+XXXX+".img")))
-			#remove excluded subject images
-			good_img = [x for x in all_img if len([bad for bad in data["bad_sub"] if bad in x]) == 0]
-			good_img[:] = ["'"+x+"'" for x in good_img]
-			N = len(good_img)
+			subjects = get_subjects(list_path)
+			good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "8mm", "con_%s.img" % XXXX) for sub in subjects]
+			N = len(subjects)
 			replace_dict["contrast_images"] = "\n".join(good_img)
 			#are we masking?
 			match = [x for x in data["mask"] if x[0] == study and x[1] == contrast]
@@ -1439,9 +1418,10 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 			else:
 				info["mask"] = "No mask used"
 			pipeline.save_data(info,info_fname,data["verbose"])
-			print("{0} -> {1} subjects".format(contrast,N))	
+			print("%s -> %s subjects (%s)" % (contrast,N, " ".join(subjects)))
+		print('\n\n')
 	shell_path = second_script(data)
-	write_file_with_list(shell_path,"\n".join(shell_commands))
+	pipeline.write_file_with_list(shell_path,"\n".join(shell_commands))
 	make_file_exec(shell_path)
 
 
@@ -1478,8 +1458,7 @@ def set_paths(data):
 
 
 def get_subjects(sub_list):
-	raw = list_from_file(sub_list)
-	pass
+	raw = pipeline.list_from_file(sub_list)
 	subjects = []
 	for s in raw:
 		if s and s[0] != "#": #notempty
@@ -1510,11 +1489,13 @@ def subject_type(subjects):
 
 def print_info(data):
 	info = pipeline.load_data(info_path(data))
+	print(data["subject"])
 	if data["single_study"]:
 		for study in data["single_study"]:
-			info = info[study]
-			for k,v in sorted(info.items()):
-				print("%s:%s" % (k,v))
+			if study in info:
+				info = info[study]
+				for k,v in sorted(info.items()):
+					print("%s:%s" % (k,v))
 	else:
 		for k,v in sorted(info.items()):
 			print("{0}...".format(k))
@@ -1522,44 +1503,11 @@ def print_info(data):
 				print("{0}:{1}".format(key,value))
 			print('\n')
 
-
-
-######IO#######
-
-def write_file_with_list(path,lines,quiet=False):
-	"""
-	Any file writing should go through here.
-	"""
-	try:
-		with open(path,'w') as f:
-			f.writelines(lines)
-		if not quiet:
-			print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines.split("\n"))))
-	except IOError:
-		raise
-
-
-def list_from_file(path,verbose=None):
-	"""
-	Any file reading should go through here. Returns a list from the file split at newlines.
-	"""
-	try: 
-		with open(path,'r') as f:
-			all_lines = f.read()
-			all_lines = all_lines.splitlines()
-			if verbose:
-				print("Reading from {0}".format(path))
-	except IOError:
-		print("Cannot open %s"  % path)
-		raise
-	return all_lines
-
 ####SUBJ#####
 def process_subject(subject,data):
 	"""
 	This processes options on a single-subject basis.
 	"""
-	#try:
 	data["subject"] = subject
 	set_paths(data)
 	if data["copy_dicom"]:		
@@ -1590,27 +1538,31 @@ def process_subject(subject,data):
 		fs_setup(data,"stats")
 	if data["setup_fs_image"]:
 		fs_setup(data,"image")
+	
 	#recon
 	if data["setup_recon"]:
 		recon_write_script(data)
 	if data["run_recon"]:
 		recon_run(data)
+	
 	#SPM
-	if data["reg_mprage"]:
-		spm_write_coreg_mprage(data)
 	if data["run_preproc"]:
 		spm_run(data,"preproc")
 	if data["run_art"]:
 		spm_run_art(data)
+	if data["reg_mprage"]:
+		spm_write_coreg_mprage(data)
 	if data["run_stats"]:
 		spm_run(data,"stats")
 	if data["run_outliers"]:
 		spm_run(data,"stats_outliers")
+	
 	#FSFast
 	if data["run_fs_preproc"]:
 		fs_run(data,"preproc")
 	if data["run_fs_stats"]:
 		fs_run(data,"stats")
+	
 	#MEG
 	if data["setup_bem"]:
 		setup_bem(data)
@@ -1629,17 +1581,8 @@ def process_subject(subject,data):
 		
 	if data["print_info"]:
 		print_info(data)
-# 	except Exception as strerr:
-# 		print "Run-time error (%s): " % subject ,type(strerr),strerr
-# 		if data["error_email"]:
-# 			add = "{0}@nmr.mgh.harvard.edu".format(getpass.getuser())
-# 			pipeline.email(sender=add,receiver=add,
-# 					subject="semprmm_pipeline error".format(subject),
-# 					message=data["subject"]+" "+str(strerr))
 
-
-
-if __name__ == "__main__":
+def parse_arguments():
 	parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
 
 	#Copying/Unpacking options
@@ -1716,8 +1659,8 @@ if __name__ == "__main__":
 		help="Write script to batch tksurfer image production")
 	fs_group.add_option("--setup_fs_image",dest="setup_fs_image",default=False,action="store_true",
 		help="Write script to batch tksurfer image production PER SUBJECT")
-	fs_group.add_option("--wls",dest="wls",default=False,action="store_true",
-		help="With --setup_fs_glm, compute with weighted least squares")
+	fs_group.add_option("--nowls",dest="wls",default=True,action="store_false",
+		help="With --setup_fs_glm, compute WITHOUT weighted least squares")
 	parser.add_option_group(fs_group)	
 	
 	#Cortical reconstruction options
@@ -1779,7 +1722,7 @@ if __name__ == "__main__":
 	#Parallelization Options
 	par_group = OptionGroup(parser,"Paralleization","WARNING:Use --joblib and --parallel together "
 													"at your own risk")
-	par_group.add_option("--ncores",dest="joblib",action="store",type="int",default=0,
+	par_group.add_option("--ncpu",dest="joblib",action="store",type="int",default=0,
 		help="Process this many subjects in parallel")
 	par_group.add_option("--parallel",dest="parallel",action="store_true",default=False,
 		help="For use with --setup_*.Make the script so jobs run in parallel")
@@ -1802,11 +1745,17 @@ if __name__ == "__main__":
 		help="For group level options, process by subject type (ya,ac,sc)")
 	misc_group.add_option("--local",dest="local",default=False,action="store_true",
 		help="Use local data (/home/scratch/functionals/")
+	misc_group.add_option("--list_prefix",dest="list_prefix",default=False,action="store",type="string",
+		help="With --setup_second, specify the prefix to a subject list. Searched path will be [this option]_[lower case paradigm]")
+	parser.add_option_group(misc_group)
 
-	parser.add_option_group(misc_group)	
+
+	return parser.parse_args()
+
+if __name__ == "__main__":
 	
-
-	(options,subjects) = parser.parse_args()
+	options, subjects = parse_arguments()
+	
 	data = dict({})
 	#add options to data
 	for opt,value in options.__dict__.items():
@@ -1832,17 +1781,18 @@ if __name__ == "__main__":
 			parts = mask_str.split(",")
 			masks.append(parts)
 		data["mask"] = masks
+	
 	if not data["stype"]:
 		data['stype'] = subject_type(subjects)
 		
 	if data["spm"]:
 		data["setup_preproc"] = True
+		data["setup_outliers"] = True
 		data["run_preproc"] = True
 		data["run_art"] = True
-		data["setup_outliers"] = True
+		data["reg_mprage"] = True
 		data["run_outliers" ] = True
 	if data["fs"]:
-		data["setup_fs_preproc"] = True
 		data["setup_fs_stats"] = True
 		data["run_fs_stats"] = True
 	
