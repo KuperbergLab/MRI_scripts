@@ -10,4 +10,5 @@ move_baleen.sh
 art_mask.hdr
 art_mask.img
 */.DS_store
+*.tiff
 art_mask_temporalfile.mat
