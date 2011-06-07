@@ -725,6 +725,14 @@ def recon_write_script(data):
 	for mprage in mprages:
 		recon_cmd +=  " -i " + mprage
 	commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
+	for hemi in ('lh', 'rh'):
+		annot = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', '%s.aparc.a2009.annot' % hemi)
+		base = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', "aparc2009-%s" % hemi)
+		commands.append(' '.join(["mri_annotation2label",
+								'--subject %s' % data['subject'],
+								'--hemi %s' % hemi,
+								'--annotation %s' % annot,
+								'--labelbase %s' % base]))
 	pipeline.write_file_with_list(script_path,"\n".join(commands))
 	make_file_exec(script_path)
 	
