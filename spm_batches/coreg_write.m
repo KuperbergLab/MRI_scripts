@@ -36,7 +36,7 @@ matlabbatch{2}.spm.spatial.normalise.write.roptions.bb = [-78 -112 -70
 matlabbatch{2}.spm.spatial.normalise.write.roptions.vox = [2 2 2];
 matlabbatch{2}.spm.spatial.normalise.write.roptions.interp = 1;
 matlabbatch{2}.spm.spatial.normalise.write.roptions.wrap = [0 0 0];
-matlabbatch{2}.spm.spatial.normalise.write.roptions.prefix = 'w$par';
+matlabbatch{2}.spm.spatial.normalise.write.roptions.prefix = 'w';
 
 
 %run it
