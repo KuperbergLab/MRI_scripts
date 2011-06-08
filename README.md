@@ -14,16 +14,18 @@ condition files for use with SPM.
 -	surf\_analysis/ contains the things for 
 -	pipeline.py provides basic functionality to semprmm\_pipeline and can be used in other
 Kuperberg MRI pipelines.
+-   roi_scripts/ contains a "cookbook" file (roi\_stuff.py) and shell scripts to actually do
+    ROI processing
 
 ## semprmm\_pipeline
-This script facilitates the following processing steps:
+This script implements functionality the following:
 
 -	MRI Processing (using SPM and FreeSurfer)
 	-	Copying DICOM images from the archives to our cluster
 	-	Unpacking/transforming the DICOM images to usable NiFTi files.
-	-	Setting up and running preprocessing
-	-	Setting up and running first-level statistics 
-	-	Setting up and running second-level statistics
+	-	Setting up and running preprocessing (SPM and FSFast)
+	-	Setting up and running first-level statistics (SPM and FSFast)
+	-	Setting up and running second-level statistics (SPM and FSFast)
 	-	Using FreeSurfer to project activity onto the surface and packaging these results into an
 easy to browse archive.
 -	MEG Processing (using MNE)
@@ -32,36 +34,36 @@ easy to browse archive.
 	
 ### Usage
 The general way to use this script is:
-`semprmm_pipeline [options] subject (more subjects)`
+`semprmm_pipeline subject (more subjects) option [more options] `
 You can specify multiple subjects in one call, but at least one. Whatever option(s) you pass will be
 applied to all.
 
 
-### Copying/Unpacking Options
+### Copying/Unpacking/General Setup Options
 Note the following conventions:
 
--	DICOM\_DIR is /cluster/kuperberg/SemPrMM/MRI/dicoms/
--	FUNCTIONALS\_DIR is /cluster/kuperberg/SemPrMM/MRI/functionals
+-	DICOMDIR is /cluster/kuperberg/SemPrMM/MRI/dicoms/
+-	FUNCDIR is /cluster/kuperberg/SemPrMM/MRI/functionals
 
 ####-d,--copy\_dicom
 This option copies all the dicom images that were produced by the scanner into your study directory.
-It parses the output of 'findsession $subject]' and sets up an rsync job like so: `rysnc -a
-[path/from/findsession/] DICOM_DIR/$subject]/`
+It parses the output of 'findsession $subject -x Kuperberg' and sets up an rsync job like so: `rysnc -a
+[path/from/findsession/] DICOMDIR/$subject]/`
 This is hardcoded to use the newest path.
 
 ####--scan\_only
-This option runs `unpacksdcmdir -src DICOM_DIR/subject/ -targ FUNCTIONALS_DIR/[subject]/ -scanonly
-FUNCTIONALS_DIR/$subject]/scan.log`
+This option runs `unpacksdcmdir -src DICOMDIR/subject/ -targ FUNCDIR/[subject]/ -scanonly
+FUNCDIR/$subject]/scan.log`
 The most important output of this is the scan.log file.
 
 ####--scan2cfg
 This transforms the scan.log file into cfg.txt that is useful for --unpack.
 
 ##### Notes
-Currently, these MRI runs are unpacked into the FUNCTIONALS\_DIR/$subject] folder:
+Currently, these MRI runs are unpacked into the FUNCDIR/$subject] folder:
 
 -	MEMPRAGE\_4e\_p2\_1mm\_iso scans unpack into MPRAGE/
-	-	Only the rms image (which has 1 frame and is the best image) is unpacked, not the 4 frame
+	-	Only the RMS image (which has 1 frame and is the best image) is unpacked, not the 4 frame
 MEMPRAGE
 -	ge\_functionals\_atlloc scans unpack into ATLLoc/
 -	field\_mapping scans unpack into FieldMap/
@@ -71,15 +73,16 @@ FieldMap\_$study after which they were run]\_Mag.nii
 		-	After you run this step, copy the closest matching FieldMaps into two XXX directories
 (the XXX's don't matter but is some three digit string) and rename them according to the above
 format. The rest of the pipeline will fail if this isn't done.
--	ge\_functionals\_maskmm scans unpack into MaskedMM/
--	ge\_functionals\_baleen scans unpack into BaleenMM/
+-	ge\_functionals\_maskmm and ge\_functionals\_maskmm\_sc scans unpack into MaskedMM/
+-	The first four ge\_functionals\_baleen scans unpack into BaleenLP/
+-	The last four ge\_functionals\_baleen scans unpack into BaleenHP/
 -	MEFLASH\_8e\_1mm\_iso\_5deg scans unpack into MEFLASH/
 -	Only the rms scan (which has 1 frame) is unpacked, as opposed to the first MEFLASH scan which
 has 8 frames
 -	ge\_functionals\_axcpt and ge\_functionals\_axcpt_\sc scans unpack into AXCPT/
 -	Any scan in which an error occured (the third column in scan.log) will not be unpacked
 -	If this doesn't make sense, see the scan.log file
--	The .nii files are sequentially numbered, e.g. the 5th run of Baleen is named BaleenMM5.nii
+-	The .nii files are sequentially numbered
 
 ####--unpack
 This option runs `unpacksdcmdir -src DICOM_DIR/subject/ -targ FUNCTIONALS_DIR/$subject]/ -fsfast -cfg FUNCTIONALS_DIR/$subject]/cfg.txt`
@@ -94,6 +97,25 @@ XXX is a zero-padded number that corresponds to the run number.
 ####-u,--unpack\_all
 This options wraps up --scan\_only,--scan2cfg, and --unpack into one easy call. Use this when you're
 confident scan.log will turn out nice (i.e. the scanning session went normal).
+
+####--cfg2info
+Each subject has a small info.txt file that contains a database for information pertaining to the
+subject. 
+
+Currently, this information is saved for each paradigm (MaskedMM, ATLLoc, BaleenHP, BaleenLP, AXCPT):
+
+-   Each run's XXX
+-   The XXX for the MPRAGE(s)
+-   XXX for the magnitude and phase FieldMaps pertaining to the paradigm.
+-   a complete boolean, true if there were the correct amount of runs
+
+####--makeMultCond
+1st-level processing requires knowing onsets and durations for each event in each run. This data is
+stored in all of the .vtsd_log files created by VTSD.  After a scan, on Scott's laptop do this first:
+`cd ~/Documents/MATLAB/vtsd\_logs; sh pushtocluster.sh'
+This script rsyncs all of the .vtsd\_log files to the cluster. With that out of the way, you can run
+this option, which populates the info.txt database with onsets and durations for every event in 
+every run.
 
 ###Preprocessing Options
 
@@ -112,7 +134,7 @@ defined in atlloc\_preproc\_job.m is literally
 '/cluster/kuperberg/SemPrMM/MRI/functionals/$subject]/FieldMap/$FieldMapPhaseXXX]/
 FieldMap\_ATLLoc\_Phase.nii' which clearly doesn't exist after the unpack command. So, a large part of
 this section of the pipeline is taking these 4 generic batches and filling in the correct paths to the unpacked images. This file is written to
-FUNCTIONALS\_DIR/$subject]/$study]/jobs/$study]\_preproc\_job.m
+FUNCDIR/$subject]/$study]/jobs/$study]\_preproc\_job.m
 
 At the end of the batch description, a small snippet of matlab code actually runs the SPM batch. So this single file both describes and runs and entire SPM batch.
 Finally, all matlab commands are written to a script at $subject]/scripts/all\_preproc.sh
@@ -123,7 +145,8 @@ This options merely executes the all_preproc.sh script
 
 ####--study=STUDY
 
-If you need to preprocess single paradigms individually for whatever reason, use this option with --setup\_preproc and --run\_preproc to specifiy a paradigm/study.
+If you need to preprocess single paradigms individually for whatever reason, use this option with 
+--setup\_preproc and --run\_preproc to specifiy a paradigm/study.
 If you do this, the script file made will be called $study]\_preproc.sh.
 
 ###First-Level Statistical Processing Options
@@ -135,26 +158,28 @@ The files of interest are :
 
 -	atlloc\_stats\.m
 -	maskedmm\_stats.m
--	baleenmm\_stats\_block1.m
--	baleenmm\_stats\_block2.m
+-	baleenlp\_stats.m
+-	baleenhp\_stats.m
 -	axcpt\_stats.m
 
 These files define SPM batches for first-level statistical processing.
 
-BaleenMM is broken into blocks (1 is low proportion, 2 is high proportion) because the models are different (different events occur).
+####--run_art
+This makes sets up and runs Sue Gabrieli's ART for every run.
 
 
 ####--run_outliers
 Executes the $subject]/scripts/all\_stats\_outliers.sh script.
 
-_Make sure you've done the following two things before using this option:_
+_Make sure you've done the following options before this:_
 
--	Run art (Sue Gabrieli's artifact detection tool) and created art\_regression\_outliers\_and\_movement\_$RUN NAME].mat
--	Make the multiple condition file for each run using `(matlab prompt)>> MakeMultCond({'(subject)'})`
+-	--run_art
+-	--makeMultCond
+
 
 ###Second Level Options
 
-####--setup_second SUBJECT_TYPE
+####--setup_second --type (ya | sc | ac)
 
 This setups a generic 2nd-level one-sample T test for all contrasts of interest:
 
@@ -179,7 +204,7 @@ This setups a generic 2nd-level one-sample T test for all contrasts of interest:
 
 A script to process all these contrasts is written to functionals/SecondLevelStats/ya/all\_studies.sh
 
-_You must pass into a subject type (ya,ac,sc) with this option_
+_You must also use the --type option with this_
 
 ####--run_second
 
@@ -262,14 +287,17 @@ STUDY,CONTRAST,PATH/TO/MASK/IMAGE
 For example, to mask BaleenLP:UnRelVRel with /cluster/kuperberg/SemPrMM/MRI/functionals/SecondLevelStats/ya/ATLLoc/ATLLoc\_SentVNon\_mask.img then pass this as the option:
 `--mask BaleenLP,UnRelVRel,/cluster/kuperberg/SemPrMM/MRI/functionals/SecondLevelStats/ya/ATLLoc/ATLLoc\_SentVNon\_mask.img`
 
+####--list_prefix PREFIX
+With --setup_second, you can use this option to specify a subject list for every paradigm. This can
+be a full path if you'd like.  The lists searched for are then:
 
-####--exc SUBJECT
+-   PREFIX\_atlloc
+-   PREFIX\_maskedmm
+-   PREFIX\_baleenlp
+-   PREFIX\_baleenhp
+-   PREFIX\_axcpt
 
-If you'd like to exclude subjects from analysis, pass them in with this option when using --setup_second.
-
-####--inc SUBJECT
-
-If you'd like to include subjects in this analysis, pass them in with this option when using --setup_second.
+This option defaults to ya_mri
 
 ####--date = DATE
 
