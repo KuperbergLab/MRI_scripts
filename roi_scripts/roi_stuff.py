@@ -54,7 +54,14 @@ diff roi_summary/lh.074.cespct.dat roi_summary/lh.074.ces.dat
 
 
 ####################################
-map = 'cespct'
+#
+# Code below generates three files, config.sh, sess.sh, and table.sh
+#
+# config.sh - funcroi-config, only call once
+# sess.sh - updates, call it with new subjects
+# table.sh - doesn't update, call it with new subjects
+#
+####################################
 mask_con = 'All'
 mask_map = 'sig'
 mask_tail = 'pos'
@@ -64,19 +71,34 @@ config_com = []
 sess_com = []
 table_com = []
 i = 1
-for par in ('BaleenHP', 'BaleenLP'):
-    for sp in ('lh', 'rh'):
-        for sh in ('fir', 'spm'):
+ii = 1
+pars = ('BaleenHP', 'BaleenLP')
+space = ('lh', 'rh')
+shape = ('fir', 'spm')
+labels = ('012', '025', '034', '037', '038', '044', '073', '074') #, 'BA44', 'BA45')
+contrasts = ('Unrelated', 'Related')
+map = 'cespct'
+
+
+for par in pars:
+    for sp in space:
+        for sh in shape:
             if sh == 'fir':
                 frame = '6'
             else:
                 frame = '0'    
-            for label in ('012', '025', '034', '037', '038', '044', '073', '074'):
+            for label in labels:
                 roidef = '.'.join((par, sp, sh, label, 'roicfg'))
                 analysis = 'ya.%s.%s.sm8.%s' % (par, sh, sp)
-                for contrast in ('Unrelated', 'Related'):
+                for contrast in contrasts:
                     output = 'roi_summary/%s' % '.'.join((par, sp, sh, label, map, contrast, 'dat'))
                     #funcoir-table-sess
+                    ii += 1
+                    if ii > 8:
+                        wait1 = 'wait\n'
+                        ii = 1
+                    else:
+                        wait1 = ''
                     table_com.append(' '.join(['funcroi-table-sess',
                                             '-o %s' % output,
                                             '-roi %s' % roidef,
@@ -86,11 +108,17 @@ for par in ('BaleenHP', 'BaleenLP'):
                                             '-contrast %s' % contrast,
                                             '-map %s' % map,
                                             '-frame %s' % frame,
-                                            '\n']))
+                                            '&',
+                                            '\n',
+                                            wait1]))
                 #funcroi-config
+                if len(label) > 3:
+                    label_text = 'aparc2009-%s-%s.label' * (sp, label)
+                else:
+                    label_text = '%s.%s.label' % (sp, label)
                 config_com.append(' '.join(['funcroi-config',
                                         '-roi %s' % roidef,
-                                        '-label aparc2009-%s-%s.label' % (sp,label) ,
+                                        '-label %s' % label_text,
                                         '-analysis %s' % analysis,
                                         '\n']))
                 i += 1
@@ -128,13 +156,40 @@ f.close()
 !open roi_scripts/*.sh
 ####################################
 
+lab2BA = {'012':'???', '025':'BA39', '034':'???', '037':'BA20', '038':'BA21', '044':'BA38', '073':'BA20', '074':'BA22'}
+
+def print_dat():
+    #get data
+    data = dat_dict()
+    txt = []
+    keys = sorted(data.keys())
+    for label, d in data.iteritems():
+        lab_txt = """{0} --> {1}\n%s""".format(label, lab2BA[label])
+        print lab_txt
 
 
-
+def dat_dict():
+    #lets only do spm for now
+    data = dict({})
+    for label in labels:
+        data[label] = dict({})
+        for contrast in contrasts:
+            for prop in ('LP', 'HP'):
+                key = '%s_%s' % (contrast, prop)
+                data[label][key] = dict({})
+                for sp in space:
+                    input = 'roi_summary/Baleen%s.%s.spm.%s.%s.%s.dat' % (prop, sp, label, map, contrast)
+                    data[label][key][sp] = parse_dat(input)
+    return data
 
 
 def parse_dat(input):
     from readInput import readTable
     data = readTable(input)
     d = dict({})
+    [d.__setitem__(x[0], x[1]) for x in data]
+    return d    
+    
+    
+    
     
