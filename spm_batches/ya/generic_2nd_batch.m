@@ -48,7 +48,7 @@ try
 	output = spm_jobman('run_nogui',matlabbatch);
 	exit_code = 0;
 catch ME
-	sendmail('sburns@nmr.mgh.harvard.edu','$email_fail');
+	sendmail('$email','$email_fail');
 	exit_code = 1;
 end
 exit(exit_code);
