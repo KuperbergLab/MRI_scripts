@@ -11,4 +11,5 @@ art_mask.hdr
 art_mask.img
 */.DS_store
 *.tiff
+*.pyc
 art_mask_temporalfile.mat
