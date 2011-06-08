@@ -12,7 +12,7 @@ import os
 from os.path import join as pj
 from pprint import pprint
 from glob import glob
-import getpass
+from getpass import getuser
 import stat
 import sys
 import time
@@ -724,7 +724,7 @@ def recon_write_script(data):
 	mprages = glob(pj(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
 	for mprage in mprages:
 		recon_cmd +=  " -i " + mprage
-	commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getpass.getuser()))
+	commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getuser()))
 	for hemi in ('lh', 'rh'):
 		annot = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', '%s.aparc.a2009.annot' % hemi)
 		base = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', "aparc2009-%s" % hemi)
@@ -1409,6 +1409,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 				mask = ""
 			replace_dict["mask"] = mask
 			replace_dict["email_fail"] = "{0} {1} 2nd Level failed".format(study,contrast)
+			replace_dict['email'] = '%s@nmr.mgh.harvard.edu' % getuser()
 			replace_dict["SPM"] = "{0}/SPM.mat".format(con_dir)
 			ibatch = pj(batch_dir,data["stype"],"generic_2nd_batch.m")
 			obatch = pj(job_dir,contrast+".m")
@@ -1722,11 +1723,6 @@ def parse_arguments():
 	second_group.add_option("--list_prefix",dest="list_prefix",default=False,action="store",type="string",
 		help="With --setup_second, specify the prefix to a subject list. Searched path will be [this option]_[lower case paradigm]")
 	parser.add_option_group(second_group)
-	
-	#Parallelization Options
-	par_group = OptionGroup(parser,"Paralleization","WARNING:Use --joblib and --parallel together "
-													"at your own risk")
-	parser.add_option_group(par_group)
 	
 	#Miscellaneous options
 	misc_group = OptionGroup(parser,"Miscellaneous")
