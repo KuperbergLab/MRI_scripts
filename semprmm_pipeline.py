@@ -802,7 +802,7 @@ def fs_setup(data,type,subjects=None):
 									"-surface fsaverage lhrh",
 									"-sliceorder siemens ",
 									"-mni305",
-									"> %s %s" % (lf,data["parallel"])])
+									"> %s %s" % lf])
 			commands.append(preproc_cmd)
 			commands.append("exit $?")
 			script_path = fs_script_path(data,type,study)
@@ -1141,8 +1141,6 @@ def meg_script(data,type,extra=None):
 	print("Logging to {0}".format(log_file))
 	f = open(log_file,"w")
 	process = pipeline.run_process(my_args,output=f,error=f)
-	if data["parallel"]:
-		running_jobs.append(process)	
 	else:
 		process.communicate()[0]
 	os.system("chgrp -R lingua %s" % data["meg_dir"])
@@ -1417,7 +1415,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 			#make batch
 			pipeline.f2f_replace(ibatch,obatch,replace_dict,data["verbose"])
 			log = pj(job_dir,contrast+".log")
-			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log,data["parallel"]))
+			shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log))
 			shell_commands.append("if [ $? -eq 0 ] \nthen\necho {0}:{1} succeeded\nelse\n echo {0}:{1} failed\nfi\n".format(study,contrast))
 			info_fname = pj(con_dir,"info.txt")
 			info = dict({"N": N,"images": good_img,"stype": data["stype"],"contrast": contrast})
@@ -1701,10 +1699,12 @@ def parse_arguments():
 	second_group = OptionGroup(parser,"Second-Level Statistics")
 	second_group.add_option("--setup_second",dest="setup_second",action="store_true",default=False,
 		help="Setup second level stats")
+	second_group.add_option("--run_second",dest="run_second",action="store_true",default=False,
+		help="Run the script made my --setup_second")
 	second_group.add_option("--surf_second",dest="surf_second",action="store_true",default=False,
 		help="Analyze second level stats (that have been run) with Freesurfer")
-	second_group.add_option("--package_second",dest="package_second",action="store_true",default=False,
-		help="Make analysis package (run after --surf_second)")
+	second_group.add_option("--package_second",dest="package_second",action="store_true",
+	    default=False,help="Make analysis package (run after --surf_second)")
 	second_group.add_option("--pvalue",dest="pvalue",type="float",default=0.001,
 		help="Use with --surf_second")
 	second_group.add_option("--date",dest="date",type="string",default=None,
@@ -1713,29 +1713,19 @@ def parse_arguments():
 		help="If passed with --surf_second, tksurfer will load aparc annotations")
 	second_group.add_option("--dry",dest="dry",action="store_true",default=False,
 		help="If passed with --surf_second, all scripts are copied but tksurfer isn't run")
-	second_group.add_option("--exc",dest="bad_sub",action="append",default=[],
-		help="Exclude subjects, for use with --setup_second")
 	second_group.add_option("--mask",dest="mask",action="append",default=[],
 		help="At the second level, mask certain contrasts. Pass in <study>,<contrast>,<pathtomaskimage>")
-	second_group.add_option("--inc",dest="good_sub",action="append",default=[],
-		help="At the second level, include subjects, use with --setup_second")
-	second_group.add_option("--run_second",dest="run_second",action="store_true",default=False,
-		help="Run the script made my --setup_second")
 	second_group.add_option("--override_p",dest="override_p",action="store_true",default=False,
 		help="Overwrite p-value with new --pvalue")
 	second_group.add_option("--all_second",dest="all_second",action="store_true",default=False,
 		help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
+	second_group.add_option("--list_prefix",dest="list_prefix",default=False,action="store",type="string",
+		help="With --setup_second, specify the prefix to a subject list. Searched path will be [this option]_[lower case paradigm]")
 	parser.add_option_group(second_group)
 	
 	#Parallelization Options
 	par_group = OptionGroup(parser,"Paralleization","WARNING:Use --joblib and --parallel together "
 													"at your own risk")
-	par_group.add_option("--ncpu",dest="joblib",action="store",type="int",default=0,
-		help="Process this many subjects in parallel")
-	par_group.add_option("--parallel",dest="parallel",action="store_true",default=False,
-		help="For use with --setup_*.Make the script so jobs run in parallel")
-	par_group.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
-		help="Use with --run_*, pipeline only exits when all jobs finish")
 	parser.add_option_group(par_group)
 	
 	#Miscellaneous options
@@ -1753,8 +1743,10 @@ def parse_arguments():
 		help="For group level options, process by subject type (ya,ac,sc)")
 	misc_group.add_option("--local",dest="local",default=False,action="store_true",
 		help="Use local data (/home/scratch/functionals/")
-	misc_group.add_option("--list_prefix",dest="list_prefix",default=False,action="store",type="string",
-		help="With --setup_second, specify the prefix to a subject list. Searched path will be [this option]_[lower case paradigm]")
+	misc_group.add_option("--launchpad",dest="launchpad",action="store_true",default=False,
+		help="Prints out launchpad commands for some options")
+	misc_group.add_option("--ncpu",dest="joblib",action="store",type="int",default=0,
+		help="Process this many subjects in parallel, or with one subject, use this many cpus")
 	parser.add_option_group(misc_group)
 
 
@@ -1772,11 +1764,6 @@ if __name__ == "__main__":
 	if data["subject_list"]:
 		subjects = get_subjects(data["subject_list"])
 	
-	#transform parallel
-	if data["parallel"]:
-		data["parallel"] = "&"
-	else:
-		data["parallel"] = ""
 	#transform aparc
 	if data["aparc"]:
 		data["aparc"] = "-aparc"
@@ -1842,6 +1829,3 @@ if __name__ == "__main__":
 		second_level(data,"surf")
 	if data["package_second"]:
 		second_level(data,"package")
-	#miscellaneous
-	if data["launchpad"]:
-		pipeline.wait_to_finish(running_jobs)
