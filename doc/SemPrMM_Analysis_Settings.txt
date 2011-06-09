@@ -1,0 +1,14 @@
+==Introduction==
+This document clearly spells out the exact settings we're using for preprocessing, 1st-level, group-level, and ROI analyses.  Hopefully it will help future RAs, techs, and post-docs get a new MRI study underway quickly and painlessly (as much as possible, anyways).
+
+==Preprocessing==
+===SPM===
+===FSFast===
+==First Level Statistics==
+===SPM===
+===FSFast===
+==Group-Level Statistics==
+===SPM===
+===FSFast===
+==ROI==
+===FSFast===
