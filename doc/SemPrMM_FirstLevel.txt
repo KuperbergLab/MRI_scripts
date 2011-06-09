@@ -1,0 +1,114 @@
+==Introduction==
+
+The goal of this page is to familiarize you with the following:
+
+*	How to create 1st-level statistics for a subject with both SPM and FSFast pipelines.
+*	Exactly what files are created during each step.
+*	How to go about troubleshooting each step.
+
+The first few steps are package-independent and when the steps become dependent on the processing you'd like to do, I'll make that clear.<br>
+
+Just to reiterate, here's how to use the pipeline:
+ semprmm_pipeline.py your_subject [more subjects if you'd like] option1 [more options]
+To run the pipeline, you need at least one subject which specifies what data you'd like to process and one option which specifies what you'd like to do on said data. You can make life easier for yourself by including more subjects and/or more options. All options are applied to every subject.<br>
+
+I list the steps below in the order you should process your subject.  In most cases it's not possible to do it any other way.
+
+===Path conventions===
+I'll abbreviate the following to save typing:
+*	DCM => /cluster/kuperberg/SemPrMM/MRI/dicoms/
+*	FUNC => /cluster/kuperberg/SemPrMM/MRI/functionals/
+I'll also use the '$' symbol to denote these variables:
+*	sub => a subject you passed into semprmm_pipeline.py
+*	par => one of our 5 paradigms (ATLLoc, MaskedMM, AXCPT, BaleenHP, BaleenLP)
+For example, FUNC/$sub/$par/jobs is referencing the jobs folder that's present under each paradigm 
+for your subject.
+
+==Just after the scan==
+This is the one step that doesn't use the pipeline.<br>
+Your subject is changing into their clothes and your colleagues are cleaning the MRI bore. The data only exists as DICOM images on the scanning computer (the machine that you drove the MRI machine with).  Since you've hopefully logged out of that machine to save money, you need to use the satellite machine (the computer to the right in Bay 6) to push the DICOMs to Bourget (the Martinos DICOM server).<br>
+
+On the satellite machine, open the data browser and find your subject.  Click on your subject in the 2nd column (the different scans will show up in the 4th column).  In the ??Network?? menu, click on 'Send to Bourget'. This starts the (long) process of copying all DICOMs to Bourget.  In a few hours the images will be accessible from your workstation.<br>
+
+===Troubleshooting===
+If you need help at this part, ask Mary or Larry.
+
+==Copying==
+
+===Why are we doing this?===
+
+We do this because while our DICOM images are safe on the DICOM server Bourget, we'd like to keep them on our cluster as well, mostly for peace of mind.  
+
+===Options Involved===
+
+*	--copy_dicom
+
+===What this does/produces===
+
+findsession is a little program that spits out information from Bourget.  By passing a subject name and experimenter, it returns the subject name, subject ID, date, time, experimenter and path to the DICOM images for that subject. <br>
+semprmm_pipeline.py first runs this command in the background:
+ findsession $sub -x Kuperberg
+It then parses the output for the line containing PATH	: /path/to/dicoms.<br>
+Then, to actually copy the images, it sets up an rsync process that looks like this:
+ rsync -a /path/to/dicoms/ DCM/$sub/
+When this finished, DCM/$sub/ exists and is full of the DICOM images from your scan (usually more than 5000 different files).
+
+===Troubleshooting===
+
+By default, this uses the first PATH	: /path/ line returned from findsession. Normally this is fine because between the subject name and experimenter, there should never be any ambiguity on Bourget.  However, if you ran the same subject twice in the MRI, then there were will two entries returned from findsession.<br>
+
+If this is the case, I would manually setup the rsync jobs, first running findession $sub -x Kuperberg, copying the paths into rysnc.
+
+==Unpacking==
+
+===Why are we doing this?===
+
+===Options Involved===
+
+===What this does/produces===
+
+===Troubleshooting===
+
+==Saving Event Durations/Onsets==
+
+===Why are we doing this?===
+
+===Options Involved===
+
+===What this does/produces===
+
+===Troubleshooting===
+
+==Preprocessing==
+
+===Why are we doing this?===
+
+===Options Involved===
+
+===What this does/produces===
+
+===Troubleshooting===
+
+==Artifact Detection==
+
+===Why are we doing this?===
+
+===Options Involved===
+
+===What this does/produces===
+
+===Troubleshooting===
+
+==Statistics==
+
+===Why are we doing this?===
+
+===Options Involved===
+
+===What this does/produces===
+
+===Troubleshooting===
+
+
+
+
