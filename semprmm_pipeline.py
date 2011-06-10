@@ -1141,8 +1141,7 @@ def meg_script(data,type,extra=None):
 	print("Logging to {0}".format(log_file))
 	f = open(log_file,"w")
 	process = pipeline.run_process(my_args,output=f,error=f)
-	else:
-		process.communicate()[0]
+	process.communicate()[0]
 	os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 
@@ -1532,11 +1531,23 @@ def process_subject(subject,data):
 	if data["makeMC"]:
 		makeMC(data)
 
-	#SETUP
+	#recon
+	if data["setup_recon"]:
+		recon_write_script(data)
+	if data["run_recon"]:
+		recon_run(data)
+
+	#preproc
 	if data["setup_preproc"]:
 		spm_setup(data,"preproc")
+	if data["run_preproc"]:
+		spm_run(data,"preproc")
 	if data["setup_fs_preproc"]:
 		fs_setup(data,"preproc")
+	if data["run_fs_preproc"]:
+		fs_run(data,"preproc")
+
+	#stats
 	if data["setup_stats"]:
 		spm_setup(data,"stats")
 	if data["setup_outliers"]:
@@ -1545,16 +1556,6 @@ def process_subject(subject,data):
 		fs_setup(data,"stats")
 	if data["setup_fs_image"]:
 		fs_setup(data,"image")
-	
-	#recon
-	if data["setup_recon"]:
-		recon_write_script(data)
-	if data["run_recon"]:
-		recon_run(data)
-	
-	#SPM
-	if data["run_preproc"]:
-		spm_run(data,"preproc")
 	if data["run_art"]:
 		spm_run_art(data)
 	if data["reg_mprage"]:
@@ -1565,8 +1566,6 @@ def process_subject(subject,data):
 		spm_run(data,"stats_outliers")
 	
 	#FSFast
-	if data["run_fs_preproc"]:
-		fs_run(data,"preproc")
 	if data["run_fs_stats"]:
 		fs_run(data,"stats")
 	
