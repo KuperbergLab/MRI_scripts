@@ -158,6 +158,9 @@ f.close()
 
 lab2BA = {'012':'???', '025':'BA39', '034':'???', '037':'BA20', '038':'BA21', '044':'BA38', '073':'BA20', '074':'BA22'}
 
+%+.3d
+
+
 def print_dat():
     #get data
     data = dat_dict()
@@ -165,7 +168,34 @@ def print_dat():
     keys = sorted(data.keys())
     for label, d in data.iteritems():
         lab_txt = """{0} --> {1}\n%s""".format(label, lab2BA[label])
-        print lab_txt
+        sk = tuple(sorted(d.keys()))
+        con_line = ''.join(('\t\t%s',) * 4) % sk
+        lr_line = '\t\t'+'\t\t'.join(('L\t\tR',) * 3) + '\t\t\tL\t\tR'
+        subjects = sorted(d[sk[0]]['lh'].keys(), cmp=lambda x, y: cmp(int(x[2:]), int(y[2:])))
+        all_sub = []
+        for sub in subjects:
+            if len(sub) >= 4:
+                end_tab = '\t'
+            else:
+                end_tab = '\t\t'
+            subject_line = '{0}{1}%s'.format(sub, end_tab)
+            num_fmt = '%+0.3f\t%+0.3f'
+            n_spacing = '\t'.join((num_fmt,) * 3) + '\t\t%s' % num_fmt
+            s_line = subject_line % n_spacing
+            num = []
+            for k in sk:
+                for sp in ('lh', 'rh'):
+                    num.append(float(d[k][sp][sub]))
+            all_sub.append(s_line % tuple(num))
+        full = '\n'.join((con_line, lr_line, '\n'.join(all_sub)))
+        txt.append(lab_txt % full)
+    f = open('roi_summary/BaleenFullTable.txt', 'w')
+    f.write('\n'.join(txt))
+    f.close()
+    
+
+print_dat()
+!open roi_summary/BaleenFullTable.txt
 
 
 def dat_dict():
