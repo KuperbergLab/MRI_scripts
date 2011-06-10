@@ -1,0 +1,349 @@
+==Introduction==
+
+The goal of this page is to familiarize you with the following:
+
+*	How to create 1st-level statistics for a subject with both SPM and FSFast pipelines.
+*	Exactly what files are created during each step.
+*	How to go about troubleshooting each step.
+
+The first few steps are package-independent and when the steps become dependent on the processing you'd like to do, I'll make that clear.<br>
+
+Just to reiterate, here's how to use the pipeline:
+ semprmm_pipeline.py your_subject [more subjects if you'd like] option1 [more options]
+To run the pipeline, you need at least one subject which specifies what data you'd like to process and one option which specifies what you'd like to do on said data. You can make life easier for yourself by including more subjects and/or more options. All options are applied to every subject.<br>
+
+I list the steps below in the order you should process your subject.  In most cases it's not possible to do it any other way.
+
+===Conventions===
+I'll use the '$' symbol to denote these variables:
+*	sub => a subject you passed into semprmm_pipeline.py
+*	par => one of our 5 paradigms (ATLLoc, MaskedMM, AXCPT, BaleenHP, BaleenLP)
+I'll also use abbreviations for the following to save typing:
+*	DCM => /cluster/kuperberg/SemPrMM/MRI/dicoms/$sub
+*	FUNC => /cluster/kuperberg/SemPrMM/MRI/functionals/$sub
+*	LOG => /cluster/kuperberg/SemPrMM/MRI/vtsd_logs/$sub
+*	SCRIPT => /cluster/kuperberg/SemPrMM/MRI/scripts
+So, if you did
+ semprmm_pipeline.py ya1 --copy_dicom --unpack_all
+DCM refers to /cluster/kuperberg/SemPrMM/MRI/dicoms/ya1/ and FUNC refers to /cluster/kuperberg/SemPrMM/MRI/functionals/ya1/.<br>
+When you see XXX, I'm referring to the three digit, zero-padded run number corresponding to a scan.
+
+==Just after the scan==
+This is the one step that doesn't use the pipeline.<br>
+Your subject is changing into their clothes and your colleagues are cleaning the MRI bore. The data only exists as DICOM images on the scanning computer (the machine that you drove the MRI machine with).  Since you've hopefully logged out of that machine to save money, you need to use the satellite machine (the computer to the right in Bay 6) to push the DICOMs to Bourget (the Martinos DICOM server).<br>
+
+On the satellite machine, open the data browser and find your subject.  Click on your subject in the 2nd column (the different scans will show up in the 4th column).  In the ??Network?? menu, click on 'Send to Bourget'. This starts the (long) process of copying all DICOMs to Bourget.  In a few hours the images will be accessible from your workstation.<br>
+
+===Troubleshooting===
+If you need help at this part, ask Mary or Larry.
+
+==Copying==
+
+===Why are we doing this?===
+
+We do this because while our DICOM images are safe on the DICOM server Bourget, we'd like to keep them on our cluster as well, mostly for peace of mind.  
+
+===Options Involved===
+
+*	--copy_dicom
+
+===What this does/produces===
+
+findsession is a little program that spits out information from Bourget.  By passing a subject name and experimenter, it returns the subject name, subject ID, date, time, experimenter and path to the DICOM images for that subject. <br>
+semprmm_pipeline.py first runs this command in the background:
+ findsession $sub -x Kuperberg
+It then parses the output for the line containing PATH	: /path/to/dicoms.<br>
+Then, to actually copy the images, it sets up an rsync process that looks like this:
+ rsync -a /path/to/dicoms/ DCM
+When this finished, DCM exists and is full of the DICOM images from your scan (usually more than 5000 different files).
+
+===Troubleshooting===
+
+By default, this uses the first PATH	: /path/ line returned from findsession. Normally this is fine because between the subject name and experimenter, there should never be any ambiguity on Bourget.  However, if you ran the same subject twice in the MRI, then there were will two entries returned from findsession.<br>
+
+If this is the case, I would manually setup the rsync jobs, first running findession $sub -x Kuperberg, copying the paths into rysnc.
+
+==Unpacking==
+
+===Why are we doing this?===
+The DICOM image format contains lots of extraneous information that isn't generally needed for analysis and is otherwise cumbersome to use during analysis.  Unpacking is the process of scanning the DICOM folder (DCM), figuring out what scans exist in it, and then converting them to useful image formats (e.g. the nifti format, .nii).
+
+===Options Involved===
+*	--scan_only
+*	--scan2cfg
+*	--unpack
+*	--cfg2info
+*	--unpack_all
+You can manually use each of the first four options one at a time, if you'd like. --unpack_all is a helper option that wraps all of the other options.
+
+===What this does/produces===
+
+unpacksdcmdir is a command packaged with Freesurfer that facilitates the scanning and converting of a DICOM directory.  These options conveniently call this for you. This is a somewhat complex step, so I'll talk about and troubleshoot each option individually.
+
+====--scan_only====
+Before any DICOM conversion can take place, you need to know exactly which scans were produced by the scanner.  This option setups up this call to unpacksdcmdir:
+ unpacksdcmdir -src DCM -targ FUNC -scanonly FUNC/scan.log
+The important output of this step is the scan.log file. This is a simple text file that contains one line for each scan, giving the run #, the scan name, and lots of other information.
+
+=====Troubleshooting=====
+I'm not really doing anything special in this command and unpacksdcmdir is very stable. I've never had a problem with this. That doesn't mean you won't, and if you do, I'd just run unpacksdcmdir manually from the command line.  Use
+ unpacksdcmdir -help
+for more information.
+
+====--scan2cfg====
+To actually convert all the DICOM images, a cfg file is required by unpacksdcmdir.  This option opens the newly created FUNC/scan.log file and looks for the following scans:
+*	MEMPRAGE_4e_p2_1mm_iso scans unpack into FUNC/MPRAGE/
+**	Only the RMS image (which has 1 frame and is the best image) is unpacked, not the 4 frame
+MEMPRAGE
+*	ge_functionals_atlloc scans unpack into FUNC/ATLLoc/
+*	field_mapping scans unpack into FUNC/FieldMap/
+**	These scans are named FieldMap_$par_Phase.nii and FieldMap_$par_Mag.nii
+**	If you didn't collect a FieldMap after a particular study, don't worry about it, we don't use these anymore.
+*	ge_functionals_maskmm and ge_functionals_maskmm_sc scans unpack into FUNC/MaskedMM/
+*	The first four ge_functionals_baleen scans unpack into FUNC/BaleenLP/
+*	The last four ge_functionals_baleen scans unpack into FUNC/BaleenHP/
+*	MEFLASH_8e_1mm_iso_5deg scans unpack into FUNC/MEFLASH/
+**	Only the rms scan (which has 1 frame) is unpacked, as opposed to the first MEFLASH scan which
+has 8 frames
+*	ge_functionals_axcpt and ge_functionals_axcpt_sc scans unpack into FUNC/AXCPT/
+Any scan in which an error occured (the third column in scan.log) will not be unpacked. If this doesn't make sense, see the scan.log file. Also, the .nii files are sequentially numbered.<br>
+After scanning the FUNC/scan.log file, the FUNC/cfg.txt is written, with one line for each good scan. The first column in the line is the run number, the next is the folder where this scan will be copied to, the next is the file type, and the last is the file name.  For example, the line corresponding to the ATLLoc scan looks something like this:
+ 007	ATLLoc	nii	ATLLoc1.nii
+The 007 may be different, obviously.
+
+=====Troubleshooting=====
+If everything went smoothly in your scan, then --scan2cfg is robust enough write out the correct cfg file. If you had to stop the scanner during a run, however, this option will not work because an error will most likely have occured during this run and will be reported in the scan.log file.<br>
+All is not lost though, and if need be you can manually make the FUNC/cfg.txt file.  Open both the FUNC/scan.log and FUNC/cfg.txt file and figure out which scans were not flagged by --scan2cfg and insert them into your FUNC/cfg.txt file.  Obviously, if you make a manual FUNC/cfg.txt file, do NOT run --scan2cfg again, otherwise your hard work will be overwritten with the (wrong) data. See
+ unpackdcmdir -help
+for information about what the cfg file should look like.
+
+====--unpack====
+With your FUNC/cfg.txt file, you can now run the full unpacksdcmdir command.  This option sets up the following command:
+ unpacksdcmdir -src DCM -targ FUNC -cfg FUNC/cfg.txt -fsfast
+This looks a lot like the command run with --scan_only and it is.  However, because we're passing the FUNC/cfg.txt file, unpacksdcmdir will actually convert the DICOM images to useful nifti files in the correct folders. The -fsfast option tells unpacksdcmdir to unpack the images into a three-digit, 0-padded directory under the paradigm folder.  For example, if your ATLLoc scan was run number 7, then the ATLLoc1.nii file will be copied to FUNC/ATLLoc/007/ATLLoc1.nii.  This option is extremely helpful in seperating runs because during analysis, there's lots of extraneous information created during these folders that should not be mixed with other runs.
+
+=====Troubleshooting=====
+This biggest issue with this failing is if the FUNC/cfg.txt file is wrong.  The output of this command is written to the terminal (I'm not sure why it's not when you use --scan_only, it's something to do with how unpacksdcmdir writes to stdout and stderr) so you can watch as everything is unpacked.  If an error occurs, make sure that the FUNC/cfg.txt file is correct and try again. Again use
+ unpacksdcmdir -help
+if you get tripped up.
+
+====--cfg2info====
+This option isn't explicitly involved with unpacking, but it's important for later processing steps.
+<br>
+Some information is important to know for each subject but varies from subject to subject.  This includes the three digit, zero-padded run number for each functional scan within each paradigm and MPRAGE and whether the functional scans were "complete" (in that the correct amount of runs were collected per paradigm).  Useful information like that that is needed for later processing is stored in a "pickle file" at FUNC/info.txt.  You can open this file in a regular text editor, but it looks kind of weird.  It's a simple database that contains a dictionary (a data structure that contains keys and a value for each key) for each paradigm and contains the following keys:
+*	FieldMapPhaseXXX: XXX for the second FieldMap after the funtional run, which is the phase scan.
+*	FieldMapMagXXX: XXX for the first FieldMap after the funtional run, which is the magnitude scan.
+*	MPRAGE_runs: a list of XXX for each MPRAGE that was run
+*	Run1XXX: XXX for the first run (and there may be up to 4 Run?XXX keys depending on the paradigm)
+*	complete: a boolean signifying whether there are the correct amount of runs for the paradigm.
+Other processing steps add information to this data store, but this step creates the dictionary and grabs as much information from the FUNC/cfg.txt file as possible.
+
+=====Troubleshooting=====
+If you had to manually fix your FUNC/cfg.txt file, be sure to run --cfg2info to update the database as necessary.
+
+==Saving Event Durations/Onsets==
+
+===Why are we doing this?===
+All of your scans have been copied/converted to the right folders, so you're ready to start doing actual analysis.  Because the 1st-level statistics require condition onset and duration to deconvolve the HRF and perform the GLM, we need to somehow get this information into a usable format.  Fortunately, VTSD, our stimulus program, saves all of this information into easy to read text files on julius (scott's laptop). <br>
+Log into julius and switch to the Finder.  Press Apple-K to open the "Connect to server" box.  Choose the "smb://gpfs08.nmr.mgh.harvard.edu/kuperberg" and click Connect. This should mount our cluster volume onto the desktop (if it doesn't, you can't proceed and there are bigger problems). Next, open a terminal.  Run the following commands:
+ cd ~/Documents/MATLAB/vtsd_logs
+ sh pushtocluster.sh
+This rsyncs all of the .vtsd_log files to the appropriate places on the cluster.<br>
+Now you can proceed.
+
+===Options Involved===
+*	--makeMultCond
+
+===What this does/produces===
+This option opens each .vtsd_log file in LOG and parses it for event information.  After a file has been parsed, the pipeline contains onset and duration information for every condition in the file. This information is added to the FUNC/info.txt database. The following keys are added to each paradigm dictionary:
+*	Run1$conditionOnsets: a string of numbers containing onsets for each $condition
+*	Run1$conditionDuration: a string of numbers containing durations for each $condition
+*	Run1MissesOnsets: a string of numbers corresponding to time points in which the subject either did not respond to the task (didn't press the button for an insect, animal, or X) or did respond to a non-task event. Because we don't want to include these events because they potentially contain outlying physiological response from the appropriate response, these misses are treated specifically in the GLM.
+*	Run1MissesDurations: a string of numbers corresponding to the durations for each miss
+If a paradigm contains more than one run, there will be keys for every condition in every run.
+
+===Troubleshooting===
+This method is pretty robust, but it breaks under one specific edge case.  For paradigms in which there are tasks (everything but ATLLoc), if the subject misses every task (e.g. they found no insects in a MaskedMM run), then the values for Run1$conditionOnsets and Run1$conditionDurations will be empty. When you try to perform the GLM, the math breaks down because a column in the design matrix is empty. This is obviously bad.<br>
+If this happens, semprmm_pipeline.py will explicitly tell you which paradigm, run, and condition this occured. I'll refer to this as $par, $run, and $cond below.
+Now, we need to manually edit the dictionary and this isn't exactly for the faint of heart. Start with this:
+ cd /cluster/kuperberg/SemPrMM/MRI/functionals/$sub
+ ipython
+This opens the ipython program which is a special version of the regular python interpreter. For demonstration purposes, let's assume the subject did not find any InsectPrimes during the first run of MaskedMM.At the new prompt, do this:
+ import pipeline as p
+ data = p.load_data('info.txt')
+ d = data['MaskedMM']
+ print d
+On the screen will be all of the data for that specific paradigm. Somewhere, you'll see an empty string for the value of Run1InsectPrimeOnsets and Run1InsectPrimeDurations keys.  Because we're not really interested in analyzing the task conditions, I usually just put the first value in Run$runMissesOnsets string into this condition. This is difficult to explain but I'll try to show in text. If you type
+ d['Run1InsectPrimeOnsets']
+at the ipython prompt and it outputs and empty string (that will look like '') and 
+ d['Run1MissesOnsets']
+prints out
+' 42 56 74 92 118 202 246 278 294 306'
+then you can move the 42 from the misses to the insects like so.
+ d['Run1InsectPrimeOnsets'] = '42'
+ d['Run1InsectPrimesDurations'] = '2'
+Now, be sure to remove the 42 from d['Run1MissesOnsets'] string and remove one of the 2s from d['Run1MissesDurations'] string because if you don't, the GLM will break down because you can't assign two events the same time. You'll do that like so (it often helps to have a text editor open to copy/paste stuff):
+ d['Run1MissesOnsets'] = '56 74 92 118 202 246 278 294 306' # of course these times will be different for your specific case
+ d['Run1MissesDurations'] = '2 2 2 2 2 2 2 2 2'
+When you've think you've got this figured out, do 
+ print d
+one more time and inspect the data.  None of the onsets in any condition should overlap,  and there should be as many 2s in each duration key as there are onsets in that condition. When this is so, do this at the ipython prompt:
+ data['MaskedMM'] = d
+ p.save_data(data, 'info.txt')
+ exit()
+Now, you'll probably want to change this dictionary to be read-only so you don't inadvertantely overwrite the dictionary at some point:
+ chmod ugo=r info.txt
+
+==Preprocessing==
+
+===Why are we doing this?===
+Un-preprocessed data is essentially worthless to us. This is for a few reasons:
+*	We have no handle on how much the subject moved.
+*	Because each slice is captured at a specific offset from the TR, the whole volume is basically spread out over time.
+*	Because the data is still in native space, voxels do not necessarily correspond to the same anatomical structure between subjects.
+*	The BOLD signal is inherently very noisy, and spatially smoothing helps when computing statistics.
+Because of these reasons, we need to pre-process the data. Each problem listed above is taken care of in both analyses.
+
+===Options Involved===
+
+====SPM====
+*	--setup_preproc
+*	--run_preproc
+
+====FSFast====
+*	--setup_recon
+*	--run_recon
+
+===What this does/produces===
+
+====SPM====
+In SCRIPT/spm_batches/ya/ you'll find $par_preproc.m This file defines and exectues the SPM preprocessing batch for a single subject.  However, it's generic and doesn't have any subject-specific information filled in.  The major thing that --setup_preproc does is for each paradigm, it copies this file to FUNC/$par/jobs/$par_preproc.m while doing a global search and replace for a few key items. Namely, these items are:
+*	$subject: this is replaced with the subject name
+*	$Run1XXX: the XXX for Run1 (there also exists $Run2XXX and so on for multi-run paradigms)
+*	$location: This defaults to /cluster/kuperberg/SemPrMM/MRI but can be different with the --local option
+*	$MPRAGEXXX: The XXX for the first MPRAGE scan.
+*	$start_file: FUNC/$par/jobs/$par_start
+*	$run_file: FUNC/$par/jobs/$par_run
+Once this replacement has been done, the script is ready to run.  --setup_preproc also writes a small script in FUNC/scripts/$par_spm-preproc.sh that looks like this:
+ #!/bin/sh
+ nohup matlab7.11 -nosplash -nodesktop < FUNC/$par/jobs/$par_preproc.m > FUNC/$par/jobs/$par_preproc.log
+Semprmm_pipeline.py will print out every file written during this step.<br>
+Now, when you run --run_preproc, this .sh file is executed.  When it finishes, the pipeline then emails you the log file that was created as well as some information about when the script started and finished.<br>
+The final output of --run_preproc is FUNC/$par/$run/s8war$par.nii, which is a smoothed (8mm), normalized, slice-time corrected and realigned functional scan.
+
+====FSFast====
+The cortical reconstruction process is not technically apart of FSFast, but it is required to do any of the processing we need.  So, I consider the reconstruction to be preprocessing since FSFast takes care of the preprocessing automatically when doing statistics, that is it checks for the right file given a pre-determined set of preprocessing options.<br>
+To run a recon, it's best to do this:
+ screen
+Screen is a linux program that emulates a terminal but can be turned off.  Because reconstructions take so long, it's not unheard to exit the terminal from which you started the reconstruction. If you do this, the reconstruction program will be killed automatically.  The fix is to use screen. When you invoke screen, a new terminal opens in the same window.  Now, doing:
+ semprmm_pipeline.py --setup_recon --run_recon $sub
+and then pressing CTRL-A D will exit from screen, but that terminal is still running (you just don't have access to it) and the reconstruction process can continue unaffected if you close the terminal window.<br>
+The recon script that's written (at FUNC/scripts/recon_$sub.sh looks like this:
+ #!/bin/sh
+ recon-all -all -s ya31 -i /cluster/kuperberg/SemPrMM/MRI/functionals/ya31/MPRAGE/006/MPRAGE1.nii -i /cluster/kuperberg/SemPrMM/MRI/functionals/ya31/MPRAGE/032/MPRAGE2.nii -mail sburns >& /cluster/kuperberg/SemPrMM/MRI/functionals/ya31/scripts/recon_ya31.log
+ mri_annotation2label --subject ya31 --hemi lh --annotation /cluster/kuperberg/SemPrMM/MRI/structurals/subjects/ya31/label/lh.aparc.a2009.annot --labelbase /cluster/kuperberg/SemPrMM/MRI/structurals/subjects/ya31/label/aparc2009-lh
+ mri_annotation2label --subject ya31 --hemi rh --annotation /cluster/kuperberg/SemPrMM/MRI/structurals/subjects/ya31/label/rh.aparc.a2009.annot --labelbase /cluster/kuperberg/SemPrMM/MRI/structurals/subjects/ya31/label/aparc2009-rh
+The two mri_annotation2label calls just create labels from the aparc.a2009.annot files produced by Freesurfer.<br>
+The output of recon-all is the entire SUBJECTS_DIR/$sub/ directory.
+
+===Troubleshooting===
+I'm not going to detail how to troubleshoot the reconstruction process, that can be found on Freesurfer's website.<br>
+However, for SPM, if the written file still contains '$' characters in the new file (i.e. not all of the keywords were replaced), then the pipeline will print a warning.  Don't run the file until you locate the fix because it will not suceed in Matlab.
+
+==Artifact Detection==
+
+===Why are we doing this?===
+Large movements during the scan can produce large variances in the data.  Sue Gabrieli and colleagues have written a very nice Matlab toolbox called 'art' that will scan functional data and recognize large movements (using the rp_*.txt file produced by SPM's realign process) and classify outlier time points.  This program is normally GUI-driven using SPM windows, but it can be driven from a single file and thus be batched and run automatically.
+
+===Options Involved===
+*	--run_art
+
+===What this does/produces===
+For every paradigm, a FUNC/$par/art_sess.txt file is created that looks like this:
+ sessions: 2
+ global_mean: 1
+ drop_flag: 0
+ motion_file_type: 0
+ end
+ session 1 image FUNC/MaskedMM/$Run1XXX/MaskedMM1.nii
+ session 1 motion FUNC/MaskedMM/$Run1XXX/rp_MaskedMM1.txt
+ session 2 image FUNC/MaskedMM/$Run2XXX/MaskedMM2.nii
+ session 2 motion FUNC/MaskedMM/$Run2XXX/rp_MaskedMM2.txt
+ end
+(This text was taken from a MaskedMM, obviously). Then a FUNC/scripts/spm_run_art.m file is written that looks like this:
+ art('sess_file','FUNC/MaskedMM/art_sess.txt');
+ art2tpef('MaskedMM','FUNC/MaskedMM/010');
+ art2tpef('MaskedMM','FUNC/MaskedMM/011');
+ art('sess_file','FUNC/BaleenHP/art_sess.txt');
+ art2tpef('BaleenHP','FUNC/BaleenHP/018');
+ art2tpef('BaleenHP','FUNC/BaleenHP/019');
+ art2tpef('BaleenHP','FUNC/BaleenHP/020');
+ art2tpef('BaleenHP','FUNC/BaleenHP/021');
+ art('sess_file','FUNC/AXCPT/art_sess.txt');
+ art2tpef('AXCPT','FUNC/AXCPT/024');
+ art2tpef('AXCPT','FUNC/AXCPT/025');
+ art('sess_file','FUNC/ATLLoc/art_sess.txt');
+ art2tpef('ATLLoc','FUNC/ATLLoc/007');
+ art('sess_file','FUNC/BaleenLP/art_sess.txt');
+ art2tpef('BaleenLP','FUNC/BaleenLP/014');
+ art2tpef('BaleenLP','FUNC/BaleenLP/015');
+ art2tpef('BaleenLP','FUNC/BaleenLP/016');
+ art2tpef('BaleenLP','FUNC/BaleenLP/017');
+(though will be different for different subjects). After these files are created --run_art starts this process:
+ matlab7.11 -nodisplay -nodisplay -nosplash -nodesktop < FUNC/scripts/spm_run_art.m
+The output of this process is written to the terminal, so you can watch everything happen.<br>
+The main output of art is the FUNC/$par/RunXXX/art_regression_outliers_and_movement_$par.mat, is a matrix of movement parameters and outliers and is used by the SPM statistics processing.
+You'll notice calls to art2tpef above. This is a small script I wrote that writes out $par.tpef files in every run directory when art finds outliers for that functional run.  .tpef files are used in the FSFast statistical process to remove speicific time points, just like in the SPM processing.
+
+===Troubleshooting===
+ART is a robust program. If this process fails, look at the terminal output to try to figure it out, there may be something wrong with the database (info.txt) file.
+
+==Statistics==
+
+===Why are we doing this?===
+To make group-level inferences, we need subject-level statistical analyses.
+
+===Options Involved===
+====SPM====
+*	--setup_outliers
+*	--run_outliers
+
+====FSFast====
+*	--setup_fs_stats
+*	--run_fs_stats
+
+===What this does/produces===
+====SPM====
+--setup_outliers works very much like --setup_preproc. It copies SCRIPT/spm_batches/ya/$par_stats.m to FUNC/$par/jobs/$par_stats_outliers.m while doing a global search/replace for the keys mentioned above.  FUNC/scripts/$par_spm-stats_outliers.sh is also produced and this is the actual script that's run with --run_outliers.<br>
+The output of --run_outliers is the FUNC/$par/stats_outliers/8mm/ directory, which contains estimates, variances, and spmT images for each contrast. 
+
+=====Troubleshooting=====
+This is pretty robust, any errors here probably mean you haven't --run_preproc or there's an issue with the database file.
+
+====FSFast====
+--setup_fs_stats makes FUNC/scripts/$par_fs-stats.sh which looks like this:
+ #!/bin/sh
+ cd /cluster/kuperberg/SemPrMM/MRI/functionals/
+ rm /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=0
+ selxavg3-sess -analysis ya.BaleenLP.spm.sm8.lh -s ya30 -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -log /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/ya.BaleenLP.spm.sm8.lh.log >> /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=z+$?
+ selxavg3-sess -analysis ya.BaleenLP.fir.sm8.lh -s ya30 -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -log /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/ya.BaleenLP.fir.sm8.lh.log >> /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=z+$?
+ selxavg3-sess -analysis ya.BaleenLP.spm.sm8.rh -s ya30 -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -log /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/ya.BaleenLP.spm.sm8.rh.log >> /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=z+$?
+ selxavg3-sess -analysis ya.BaleenLP.fir.sm8.rh -s ya30 -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -log /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/ya.BaleenLP.fir.sm8.rh.log >> /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=z+$?
+ selxavg3-sess -analysis ya.BaleenLP.spm.sm8.mni305 -s ya30 -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -log /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/ya.BaleenLP.spm.sm8.mni305.log >> /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=z+$?
+ selxavg3-sess -analysis ya.BaleenLP.fir.sm8.mni305 -s ya30 -d /cluster/kuperberg/SemPrMM/MRI/functionals/ -log /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/ya.BaleenLP.fir.sm8.mni305.log >> /cluster/kuperberg/SemPrMM/MRI/functionals/ya30/scripts/baleenlp_fs-stats.log
+ let z=z+$?
+ exit $z
+If this looks more involved than the SPM stuff, that's because it is.  We're doing 6 times more analyses than with SPM.  Using FSFast, we're analyzing the data using both an HRF (using the SPM hrf) and FIR approach on surface (LH and RH) and volumetric (MNI305) data. selxavg3-sess is the workhorse.  The analysis specified with -analysis (above, not a pipeline option) has been pre made with the pipeline option --setup_fs_analysis.  <br>
+This produces the FUNC/$par/$analysis/$contrast/ directory, which contains estimates, variances, and t images for the contrast.
+
+=====Troubleshooting=====
+This pipeline is pretty robust. Every so often this will fail, in which case you can look at the log files, which may or may not be decipherable.  
+
+
+

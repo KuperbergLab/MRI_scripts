@@ -580,7 +580,7 @@ def spm_run_art(data):
 		for run_path in runs:
 			art_m.append("art2tpef('%s','%s');" % (study,run_path))
 	art_m.append("exit;")
-	art_path = pj(data["mri_dir"],"spm_run_art.m")
+	art_path = pj(data["mri_dir"], 'scripts', "spm_run_art.m")
 
 	pipeline.write_file_with_list(art_path,"\n".join(art_m))
 	my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
