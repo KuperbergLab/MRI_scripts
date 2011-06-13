@@ -10,6 +10,7 @@ License: BSD,3 clause
 
 from subprocess import Popen,PIPE
 import os
+from os.path import join as pj
 import smtplib
 import time
 import string
@@ -271,3 +272,62 @@ def list_from_file(path,verbose=None):
 		print("Cannot open %s"  % path)
 		raise
 	return all_lines
+
+def make_file_exec(path):
+	"""
+	just makes the file given by path executable by the system
+	"""
+	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
+
+
+class SPM(object):
+    
+    """SPM object for first-level analysis"""
+    
+    def __init__(script_dir, verbose=False):
+        self.scripts = script_dir
+        self.v = verbose
+        
+    def setup(study, type, out_batch, out_script, rep_dict, logfile='/dev/null/'):
+        """
+        Converts $script_dir/study_type.m to out_batch using rep_dict and writes
+        out_script.pass
+        
+        Parameters
+        ----------
+        study: str
+            paradigm
+        type: str
+            type of processing
+        out_batch: str
+            path to outputted batch
+        out_script: str
+            path to outputted script
+        rep_dict: dict
+            mapping with script-specific replacements
+        """
+        input_batch = pj(self.scripts, "%s_%s.m"%(study, type))
+        if not os.path.exists(input_batch):
+            raise ValueError('Cannot find %s'%input_batch)
+        batch_base = os.path.dirname(out_batch)
+        script_base = os.path.dirname(out_script)
+        for p in (batch_base, script_base):
+            if not os.path.isdir(p):
+                try:
+                    os.makedirs(p)
+                except error:
+                    print('Trouble making directories to %s'%p)
+                    raise
+        f2f_replace(input_batch, out_batch, rep_dict, self.v)
+        commands = []
+        commands.append('#!/bin/sh')
+        mlab_cmd = 'nohup matlab -nosplash -nodesktop'
+        commands.append('%s < %s > %s'%(mlab_cmd, out_batch, logfile))
+        write_file_with_list(out_script, '\n'.join(commands))
+        make_file_exec(out_script)
+    
+    def run(script, logfile=None):
+        """
+        Executes the script argument, emails logfile
+        """
+        pass
