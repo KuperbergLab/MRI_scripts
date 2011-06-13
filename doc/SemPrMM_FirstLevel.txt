@@ -34,6 +34,12 @@ Your subject is changing into their clothes and your colleagues are cleaning the
 
 On the satellite machine, open the data browser and find your subject.  Click on your subject in the 2nd column (the different scans will show up in the 4th column).  In the ??Network?? menu, click on 'Send to Bourget'. This starts the (long) process of copying all DICOMs to Bourget.  In a few hours the images will be accessible from your workstation.<br>
 
+This is also a good time to copy the log files from VTSD to the cluster. Log into julius, hook up ethernet and switch to the Finder.  Press Apple-K to open the "Connect to server" box.  Choose the "smb://gpfs08.nmr.mgh.harvard.edu/kuperberg" and click Connect. This should mount our cluster volume  and an icon shows up on the desktop. If it doesn't, you can't proceed. If you just plugged in the ethernet cable, give the system a little time to get that going. Next, open a terminal.  Run the following commands:
+ cd ~/Documents/MATLAB/vtsd_logs
+ sh pushtocluster.sh
+This rsyncs all of the .vtsd_log files to the appropriate places on the cluster.<br>
+Now you can proceed.
+
 ===Troubleshooting===
 If you need help at this part, ask Mary or Larry.
 
@@ -144,12 +150,7 @@ If you had to manually fix your FUNC/cfg.txt file, be sure to run --cfg2info to 
 ==Saving Event Durations/Onsets==
 
 ===Why are we doing this?===
-All of your scans have been copied/converted to the right folders, so you're ready to start doing actual analysis.  Because the 1st-level statistics require condition onset and duration to deconvolve the HRF and perform the GLM, we need to somehow get this information into a usable format.  Fortunately, VTSD, our stimulus program, saves all of this information into easy to read text files on julius (scott's laptop). <br>
-Log into julius and switch to the Finder.  Press Apple-K to open the "Connect to server" box.  Choose the "smb://gpfs08.nmr.mgh.harvard.edu/kuperberg" and click Connect. This should mount our cluster volume onto the desktop (if it doesn't, you can't proceed and there are bigger problems). Next, open a terminal.  Run the following commands:
- cd ~/Documents/MATLAB/vtsd_logs
- sh pushtocluster.sh
-This rsyncs all of the .vtsd_log files to the appropriate places on the cluster.<br>
-Now you can proceed.
+You already copied all the .vtsd_log files to the cluster, right? If not, see the 'Just After the scan' section above about how to do this.
 
 ===Options Involved===
 *	--makeMultCond
@@ -299,7 +300,7 @@ You'll notice calls to art2tpef above. This is a small script I wrote that write
 ART is a robust program. If this process fails, look at the terminal output to try to figure it out, there may be something wrong with the database (info.txt) file.
 
 ==Statistics==
-
+'''The FSFast analysis presupposes that we've run mkanalysis-sess for every paradigm. This is a program included with FSFast that creates and stores analyses settings on disk and simplifies FSFast processing.  See [[SemPrMM_Analysis_Settings]] for more information'''
 ===Why are we doing this?===
 To make group-level inferences, we need subject-level statistical analyses.
 
