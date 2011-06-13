@@ -75,7 +75,8 @@ ii = 1
 pars = ('BaleenHP', 'BaleenLP')
 space = ('lh', 'rh')
 shape = ('fir', 'spm')
-labels = ('012', '025', '034', '037', '038', '044', '073', '074') #, 'BA44', 'BA45')
+labels = ('012', '025', '034', '037', '038', '044', '073', '074') #, 
+labels = ('BA44', 'BA45')
 contrasts = ('Unrelated', 'Related')
 map = 'cespct'
 
@@ -112,8 +113,8 @@ for par in pars:
                                             '\n',
                                             wait1]))
                 #funcroi-config
-                if len(label) > 3:
-                    label_text = 'aparc2009-%s-%s.label' * (sp, label)
+                if len(label) < 4:
+                    label_text = 'aparc2009-%s-%s.label' % (sp, label)
                 else:
                     label_text = '%s.%s.label' % (sp, label)
                 config_com.append(' '.join(['funcroi-config',
