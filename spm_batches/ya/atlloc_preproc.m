@@ -280,7 +280,6 @@ matlabbatch{6}.spm.spatial.smooth.im = 0;
 matlabbatch{6}.spm.spatial.smooth.prefix = 's8';
 
 
-%run it
 try
 	spm('defaults','fmri');
 	spm_jobman('initcfg');

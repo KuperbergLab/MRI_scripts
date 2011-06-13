@@ -1,10 +1,9 @@
-% 8mm
+warning off all;
 matlabbatch{1}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$stat_folder/8mm/'};
 matlabbatch{1}.spm.stats.fmri_spec.timing.units = 'secs';
 matlabbatch{1}.spm.stats.fmri_spec.timing.RT = 2;
 matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t = 16;
 matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t0 = 1;
-%%
 matlabbatch{1}.spm.stats.fmri_spec.sess.scans = {
                                                  '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/s8warATLLoc1.nii,1'
                                                  '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/s8warATLLoc1.nii,2'
@@ -167,7 +166,6 @@ matlabbatch{1}.spm.stats.fmri_spec.sess.scans = {
                                                  '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/s8warATLLoc1.nii,159'
                                                  '/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/s8warATLLoc1.nii,160'
                                                  };
-%%
 %Sentences
 matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).name = 'Sentences';
 matlabbatch{1}.spm.stats.fmri_spec.sess.cond(1).onset = [$Run1SentencesOnsets];
@@ -186,7 +184,6 @@ matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).onset = [$Run1NonwordsOnsets];
 matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).duration = [$Run1NonwordsDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess.cond(3).pmod = struct('name', {}, 'param', {}, 'poly', {});
-
 matlabbatch{1}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess.multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/ATLLoc/$Run1XXX/$Run1MR'};
 matlabbatch{1}.spm.stats.fmri_spec.sess.hpf = 128;
@@ -246,7 +243,6 @@ matlabbatch{3}.spm.stats.con.delete = 1;
 
 
 
-warning off all;
 try
 	spm('defaults','fmri');
 	spm_jobman('initcfg');
