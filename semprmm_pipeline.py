@@ -26,7 +26,6 @@ from readInput import readTable
 import pipeline as pipeline
 
 possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenLP": 4, "BaleenHP":4, "AXCPT": 2})
-
 cond_num = dict({"ATLLoc":
 					{"Sentences":"1",
 					"Wordlist":"2",
@@ -475,11 +474,6 @@ def makeMC(data):
 	pipeline.save_data(info,info_path(data),data["verbose"])
 
 
-def make_file_exec(path):
-	"""
-	just makes the file given by path executable by the system
-	"""
-	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
 	
 
 def touch_file_path(data,study,type,when):
@@ -527,10 +521,7 @@ def spm_script_path(data,study,type):
 def spm_write_script(data,study,type):
 	"""
 	type (string): "preproc","stats","outliers"
-	Writes out the shell script with matlab calls if we're preprocessing or stats processing or with
-	recon-all functions if we're reconstructing.
-	If --parallel was used, then & will be appended to the matlab lines. With the new parallelization
-	scheme I've got with joblib, this could be dangerous, use at your own risk.
+	Writes out the shell script with matlab calls.
 	"""
 	shell_script = spm_script_path(data,study,type)
 	commands = []
@@ -541,7 +532,7 @@ def spm_write_script(data,study,type):
 		mlab_cmd += " -nodisplay "
 	commands.append("%s < %s > %s " % (mlab_cmd, spm_jobfile(data,study,type), spm_logfile(data,study,type)))	
 	pipeline.write_file_with_list(shell_script,"\n".join(commands))
-	make_file_exec(shell_script)
+	pipeline.make_file_exec(shell_script)
 
 
 def spm_run_art(data):
@@ -702,7 +693,7 @@ def spm_write_coreg_mprage(data):
 		commands.append(mlab_cmd)
 	script_name = spm_script_path(data,'ATLLoc', "cowrite")
 	pipeline.write_file_with_list(script_name,"\n".join(commands))
-	make_file_exec(script_name)
+	pipeline.make_file_exec(script_name)
 	pipeline.run_process(["nohup",script_name],output=sys.stdout).wait()
 
 
@@ -734,7 +725,7 @@ def recon_write_script(data):
 								'--annotation %s' % annot,
 								'--labelbase %s' % base]))
 	pipeline.write_file_with_list(script_path,"\n".join(commands))
-	make_file_exec(script_path)
+	pipeline.make_file_exec(script_path)
 	
 
 def recon_run(data):
@@ -807,7 +798,7 @@ def fs_setup(data,type,subjects=None):
 			commands.append("exit $?")
 			script_path = fs_script_path(data,type,study)
 			pipeline.write_file_with_list(script_path,"\n".join(commands))
-			make_file_exec(script_path)
+			pipeline.make_file_exec(script_path)
 		
 		elif type == "analysis":
 			commands.append("cd %s" % func_dir)
@@ -851,7 +842,7 @@ def fs_setup(data,type,subjects=None):
 						commands.append(con_cmd)
 			script_path = fs_script_path(data,type,study)
 			pipeline.write_file_with_list(script_path,"\n".join(commands))
-			make_file_exec(script_path)
+			pipeline.make_file_exec(script_path)
 		
 		elif type == "stats":
 			sname = [data["subject"]]
@@ -890,7 +881,7 @@ def fs_setup(data,type,subjects=None):
 			commands.append("exit $z")
 			script_path = fs_script_path(data,type,study)
 			pipeline.write_file_with_list(script_path,"\n".join(commands))
-			make_file_exec(script_path)
+			pipeline.make_file_exec(script_path)
 
 		elif type == "group":		
 			fsgd = []
@@ -931,7 +922,7 @@ def fs_setup(data,type,subjects=None):
 					else:
 						q = False
 					pipeline.write_file_with_list(isx_cmd_path,"\n".join(commands),q)
-					make_file_exec(isx_cmd_path)
+					pipeline.make_file_exec(isx_cmd_path)
 			
 		elif type == "glm":
 			for con in contrasts[study].keys():
@@ -990,7 +981,7 @@ def fs_setup(data,type,subjects=None):
 							print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % glm_path)
 						else:
 							pipeline.write_file_with_list(glm_path, "\n".join(commands))
-						make_file_exec(glm_path)
+						pipeline.make_file_exec(glm_path)
 				
 		elif type == "image":#this is subject-specific
 			for con in ["Unrelated-Related"]:#contrasts[study].keys()
@@ -1002,11 +993,11 @@ def fs_setup(data,type,subjects=None):
 						iscript = pj(mri_scripts,"surf_analysis","make_fs_images.sh")
 						oscript = pj(con_dir,"make_images.sh")
 						pipeline.f2f_replace(iscript,oscript,replace,data["verbose"])
-						make_file_exec(oscript)
+						pipeline.make_file_exec(oscript)
 						commands.append(oscript)
 			script_path = pj(data["mri_dir"],"scripts","%s-fs-images.sh" % study)
 			pipeline.write_file_with_list(script_path,"\n".join(commands))
-			make_file_exec(script_path)
+			pipeline.make_file_exec(script_path)
 			if not data['dry']:
 				os.system("""xvfb-run -s "-screen 0 2048x2048x24" %s""" % script_path)	
 
@@ -1026,14 +1017,14 @@ def fs_setup(data,type,subjects=None):
 						iscript = pj(mri_scripts,"surf_analysis","make_fs_images.sh")
 						oscript = pj(con_dir,"make_images.sh")
 						pipeline.f2f_replace(iscript,oscript,replace,data["verbose"])
-						make_file_exec(oscript)
+						pipeline.make_file_exec(oscript)
 						commands.append(oscript)
 			if data["wls"]:
 				image_path = pj(func_dir,"fsfast_scripts","%s.%s-image-wls.sh" % (data['stype'], study))
 			else:
 				image_path = pj(func_dir,"fsfast_scripts","%s-image.sh" % study)
 			pipeline.write_file_with_list(image_path, "\n".join(commands))
-			make_file_exec(image_path)
+			pipeline.make_file_exec(image_path)
 
 
 def fs_run(data,type):
@@ -1339,7 +1330,7 @@ def second_surf(data,prefix,date,study_contrasts):
 			new_script_path = pj(con_dir,"make_images.sh")
 			pipeline.f2f_replace(pj(mri_scripts,"surf_analysis","make_images.sh"),
 				new_script_path,script_dict,data["verbose"])
-			make_file_exec(new_script_path)
+			pipeline.make_file_exec(new_script_path)
 			#copy lh_tiffs and rh_tiffs
 			for surf_script in ["lh_tiff","rh_tiff"]:
 				tiffs_path = pj(mri_scripts,"surf_analysis",surf_script)
@@ -1428,7 +1419,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 		print('\n\n')
 	shell_path = second_script(data)
 	pipeline.write_file_with_list(shell_path,"\n".join(shell_commands))
-	make_file_exec(shell_path)
+	pipeline.make_file_exec(shell_path)
 
 
 def second_run(data,prefix,date_dir,study_contrasts):
