@@ -128,14 +128,43 @@ Much like with SPM preprocessing, first-level statistics processing are describe
 ****	Name: contrast name
 ****	T contrast vector: a N-condition wide vector corresponding to the contrast
 ****	Replicate over sessions: yes
-**	Delete existing contrats: yes
+**	Delete existing contrasts: yes
 
 ====How it's implemented====
 First-level statistics are implemented with the --setup_outliers and --run_outliers pipeline options.
 
 ===Group-Level Statistics===
-====How it's implemented====
+Like any other SPM processing, this involves a batch file.  Here's the nodes:
+* 	Factorial Design Specification
+**	Directory: directory to put SPM.mat and stat images
+**	Design
+***	One-sample T Test
+****	Scans: contrast images from 1st level
+**	Covariates: none
+**	Masking
+***	Threshold Masking
+****	None
+***	Implicit mask: yes
+***	Expliciit mask: None
+**	Global calculation
+***	Omit
+**	Global normalisation
+***	Overal grand mean scaling
+****	No
+***	Normalisation: None
+*	Model Estimation
+** 	SPM.mat: SPM.mat from fMRI model specification
+**	Method
+***	Classical
+* 	Contrast Manager
+** 	SPM.mat: SPM.mat from Factorial Design Specification
+**	contrasts
+***	T contrast
+***	Vector: [1]
+*** Delete existing contrasts: yes
 
+====How it's implemented====
+This functionality is implemented with --setup_second and --run_second pipeline options.
 ==FSFast==
 ===Preprocessing/1st Level Statistics===
 
@@ -166,7 +195,10 @@ Setting up the analyses can be done with --setup_fs_analysis.  This writes out 5
 The --setup_fs_stats and --run_fs_stats are the options you need to process a subject with the pipeline.
 
 ===Group-Level Statistics===
+FSFast provides isxconcat-sess for combining the first level contrast estimates into one large data file, which mri_glmfit is then operated on.  mri_glmfit by default does a one-sample group-mean t test, much like the SPM group analysis detailed above.
+
 ====How it's implemented====
+The --setup_fs_group (makes the isxconcat-sess scripts) and --setup_fs_glm (makes the mri_glmfit scripts) are the pipeline options to look at.
 
 ==ROI==
 ===FSFast===
