@@ -277,6 +277,7 @@ def make_file_exec(path):
 	"""
 	just makes the file given by path executable by the system
 	"""
+	import stat
 	os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
 
 
