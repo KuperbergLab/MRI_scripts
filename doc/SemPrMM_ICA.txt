@@ -1,0 +1,17 @@
+==Introduction==
+
+The goal of this page is to explain what the --run_ica pipeline command does.  I'll leave the nitty-gritty explanation of ICA to the experts (see links at the bottom).
+
+
+
+
+
+
+
+
+
+
+==Links==
+*   [http://sccn.ucsd.edu/wiki/Chapter_09:_Decomposing_Data_Using_ICA EEGLab's Discussion of decomposing data using ICA]
+*   [http://sccn.ucsd.edu/papers/OntonMakeig_ICAERSP06.pdf Technical paper discussing ICA from EEGLab group]
+*   [http://en.wikipedia.org/wiki/Independent_component_analysis Wikipedia: ICA]
