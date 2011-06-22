@@ -85,7 +85,7 @@ contrasts = dict({"ATLLoc":
 					"Unrelated-Related":(("2"),("1")),
 					"AnimalTarget-Unrelated":(("4"),("2")),
 					"All":(("1","2","3","4","5"),("0"))},
-				"BaleenHP":	
+				"BaleenHP": 
 					{"Related":(("1"),("0")),
 					"Unrelated":(("2"),("0")),
 					"RelatedFiller":(("3"),("0")),
@@ -145,8 +145,9 @@ def archive_to_cluster(data):
 		return
 	if not os.path.exists(data["dicom_dir"]):
 		os.mkdir(data["dicom_dir"])
+	print("Beginning DICOM copy...")
 	pipeline.mirror(data["archive_dir"], data["dicom_dir"], True)
-
+	print("Finished DICOM copy.")
 
 def scan_only(data):
 	"""
@@ -444,7 +445,7 @@ def makeMC(data):
 			good_onsets = []
 			for trial in [x for x in vtsd_data if x[code_ind] == code]:
 				task = codes[study_key][code][1]
-				response =  trial[response_ind] != "0.000"
+				response =	trial[response_ind] != "0.000"
 				if (task and response) or (not task and not response):
 					good_onsets.append(trial[onset_ind])
 				if (not task and response) or (task and not response):
@@ -751,9 +752,9 @@ def write_par(data,study,info,run):
 		onsets = info[cond_onset]
 		duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
 		for onset in onsets.split():
-# 			if study == "BaleenMM" and int(run) > 4 and cond_name == "Misses":
-# 				code_num = str(int(cond_num[study][cond_name]) + 1)
-# 			else:
+#			if study == "BaleenMM" and int(run) > 4 and cond_name == "Misses":
+#				code_num = str(int(cond_num[study][cond_name]) + 1)
+#			else:
 			code_num = cond_num[study][cond_name]
 			full_par.append([onset,code_num,duration,"1.0",cond_name])
 	full_par.sort(key=lambda x:int(x[0]))
@@ -1177,7 +1178,7 @@ def setup_bem(data):
 	flash_dcm_dir = pj(bem_dir,"flash_dcm")
 	if not os.path.exists(flash_dcm_dir):	
 		os.mkdir(flash_dcm_dir)
-	flash_org_dir = pj(bem_dir,"flash_org")	
+	flash_org_dir = pj(bem_dir,"flash_org") 
 	if not os.path.exists(flash_org_dir):	
 		os.mkdir(flash_org_dir)
 	try:
@@ -1424,7 +1425,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
 
 def second_run(data,prefix,date_dir,study_contrasts):
 	"""
-	Runs the script made by --setup_second.  That script's output is hooked into sys.stdout (which 
+	Runs the script made by --setup_second.	 That script's output is hooked into sys.stdout (which 
 	probably the terminal)
 	"""
 	script_path = second_script(data)
@@ -1443,7 +1444,7 @@ def second_script(data):
 #####MISC#####
 
 def set_paths(data):
-	"""Fairly self-explanatory.  Adds keys to the dictionary for "mri_dir","subject_dir",
+	"""Fairly self-explanatory.	 Adds keys to the dictionary for "mri_dir","subject_dir",
 	"dicom_dir",and "subject_dicom".  path prefixes are hard coded.
 	"""
 	if data["local"]:
@@ -1695,7 +1696,7 @@ def parse_arguments():
 	second_group.add_option("--surf_second",dest="surf_second",action="store_true",default=False,
 		help="Analyze second level stats (that have been run) with Freesurfer")
 	second_group.add_option("--package_second",dest="package_second",action="store_true",
-	    default=False,help="Make analysis package (run after --surf_second)")
+		default=False,help="Make analysis package (run after --surf_second)")
 	second_group.add_option("--pvalue",dest="pvalue",type="float",default=0.001,
 		help="Use with --surf_second")
 	second_group.add_option("--date",dest="date",type="string",default=None,
