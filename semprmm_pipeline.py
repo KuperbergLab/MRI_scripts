@@ -1101,6 +1101,8 @@ def meg_script(data,type,extra=None):
         for fif in fiffs:
             cmd.append(mlab % fif)
         cmd.append('exit;')
+        if ~ os.path.isdir(pj(data['meg_dir'], 'temp')):
+            os.mkdir(pj(data['meg_dir'], 'temp'))
         pipeline.write_file_with_list(pj(data['meg_dir'], 'temp', 'reject.m'), '\n'.join(cmd), data['verbose'])
     if type == "preProc":
         raise ValueError("PREPROC HAS BEEN SPLIT")
