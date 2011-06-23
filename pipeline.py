@@ -42,10 +42,13 @@ def find_session(subject,verbose=False):
 	paths = filter(lambda x:x.startswith('PATH'),out_lines)
 	if len(paths) > 1:
 		print('Warning: more than one session found, using newest.')
-		ind_to_use = len(paths)-1
-	else:
+		to_return = paths[-1].split()[2]
+	elif len(paths) == 1:
 		ind_to_use = 0
-	return paths[ind_to_use].split()[2]
+        to_return = paths[0].split()[2]
+	else:
+	    to_return = ''
+	return to_return
 	
 def mirror(src, dest, block=True):
 	"""
