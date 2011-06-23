@@ -146,7 +146,11 @@ def archive_to_cluster(data):
     if data["verbose"]:
         print("archive_to_cluster:")
     data["archive_dir"] = pipeline.find_session([data["subject"], "-x", "Kuperberg"])
-    if data["archive_dir"] is None:
+    if data['wait']:
+        while not data['archive_dir']:
+            time.sleep(10)
+            data["archive_dir"] = pipeline.find_session([data["subject"], "-x", "Kuperberg"])        
+    if not data["archive_dir"]:
         print("ALERT:findsession returned nothing for {0}".format(data["subject"]))
         return
     if not os.path.exists(data["dicom_dir"]):
@@ -154,6 +158,7 @@ def archive_to_cluster(data):
     print("Beginning DICOM copy...")
     pipeline.mirror(data["archive_dir"], data["dicom_dir"], True)
     print("Finished DICOM copy.")
+
 
 def scan_only(data):
     """
@@ -480,8 +485,6 @@ def makeMC(data):
                             "Run"+run+"MissesDurations": " ".join(miss_dur)})
     pipeline.save_data(info,info_path(data),data["verbose"])
 
-
-    
 
 def touch_file_path(data,study,type,when):
     """
@@ -1107,7 +1110,7 @@ def meg_script(data,type,extra=None):
         for fif in fiffs:
             cmd.append(mlab % fif)
         cmd.append('exit;')
-        if ~ os.path.isdir(pj(data['meg_dir'], 'temp')):
+        if not os.path.isdir(pj(data['meg_dir'], 'temp')):
             os.mkdir(pj(data['meg_dir'], 'temp'))
         pipeline.write_file_with_list(pj(data['meg_dir'], 'temp', 'reject.m'), '\n'.join(cmd), data['verbose'])
     if type == "preProc":
@@ -1772,6 +1775,8 @@ def parse_arguments():
         help="Prints out launchpad commands for some options")
     misc_group.add_option("--ncpu",dest="joblib",action="store",type="int",default=0,
         help="Process this many subjects in parallel, or with one subject, use this many cpus")
+    misc_group.add_option("--wait",dest="wait",action="store_true",default=False,
+        help="With --copy_dicom, wait for dicoms to show up in Bourget.")
     parser.add_option_group(misc_group)
 
 
