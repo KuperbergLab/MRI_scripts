@@ -106,13 +106,19 @@ contrasts = dict({"ATLLoc":
                     "BX-BY":(("2"),("3"))}
                     })
 
-batch_dir = "/cluster/kuperberg/SemPrMM/MRI/scripts/spm_batches/"
-func_dir = "/cluster/kuperberg/SemPrMM/MRI/functionals/"
-dicom_dir = "/cluster/kuperberg/SemPrMM/MRI/dicoms/"
-meg_dir = "/cluster/kuperberg/SemPrMM/MEG/data/"
-meg_scripts = "/cluster/kuperberg/SemPrMM/MEG/scripts/"
-mri_scripts = "/cluster/kuperberg/SemPrMM/MRI/scripts/"
-mri_vtsd = "/cluster/kuperberg/SemPrMM/MRI/vtsd_logs/"
+if sys.platform == 'darwin':
+    pre = 'Volumes'
+else:
+    pre = 'cluster'
+
+
+batch_dir = "/%s/kuperberg/SemPrMM/MRI/scripts/spm_batches/" % pre
+func_dir = "/%s/kuperberg/SemPrMM/MRI/functionals/"  % pre
+dicom_dir = "/%s/kuperberg/SemPrMM/MRI/dicoms/" % pre
+meg_dir = "/%s/kuperberg/SemPrMM/MEG/data/" % pre
+meg_scripts = "/%s/kuperberg/SemPrMM/MEG/scripts/" % pre
+mri_scripts = "/%s/kuperberg/SemPrMM/MRI/scripts/" % pre
+mri_vtsd = "/%s/kuperberg/SemPrMM/MRI/vtsd_logs/" % pre
 running_jobs = []
 
 
@@ -1377,7 +1383,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
     shell_commands.append("#!/bin/sh")
     shell_commands.append("unset DISPLAY")
     if data["single_study"]:
-        studies = [data["single_study"]]
+        studies = data["single_study"]
     else:
         studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
     for study in studies:
