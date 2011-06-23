@@ -718,7 +718,7 @@ def recon_write_script(data):
         recon_cmd +=  " -i " + mprage
     commands.append(recon_cmd + " -mail {1} >& {0}".format(recon_logfile(data),getuser()))
     for hemi in ('lh', 'rh'):
-        annot = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', '%s.aparc.a2009.annot' % hemi)
+        annot = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', '%s.aparc.a2009s.annot' % hemi)
         base = pj(os.environ["SUBJECTS_DIR"], data['subject'], 'label', "aparc2009-%s" % hemi)
         commands.append(' '.join(["mri_annotation2label",
                                 '--subject %s' % data['subject'],
@@ -1090,9 +1090,20 @@ def meg_script(data,type,extra=None):
         bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
         if not os.path.isfile(bad_chan_path):
             raise UserError("%s wasn't found, make it and try again" % bad_chan_path)
+    if type == "preProc_reject":
+        #write out reject.m
+        fiffs = []
+        fiffs = glob(pj(data["meg_dir"],'*_raw.fif'))
+        fiffs[:] = filter(lambda x: 'emptyroom' not in x and 'Blink' not in x, fiffs)
+        fiffs.sort()
+        mlab = "fif2rej('%s');"
+        cmd = ['warning off all']
+        for fif in fiffs:
+            cmd.append(mlab % fif)
+        cmd.append('exit;')
+        pipeline.write_file_with_list(pj(data['meg_dir'], 'temp', 'reject.m'), '\n'.join(cmd), data['verbose'])
     if type == "preProc":
         raise ValueError("PREPROC HAS BEEN SPLIT")
-        sys.exit(1)
 #       bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
 #       if not os.path.isfile(bad_chan_path):
 #           raise UserError("%s wasn't found, make it and try again" % bad_chan_path)
@@ -1135,7 +1146,7 @@ def meg_script(data,type,extra=None):
     log_dir = pj(data["meg_dir"],"logs")
     if not os.path.isdir(log_dir):
         os.mkdir(log_dir)
-    log_file = pj(log_dir,"%s.log" % (data["subject"],type))
+    log_file = pj(log_dir,"%s.log" % type)
     print("Logging to {0}".format(log_file))
     f = open(log_file,"w")
     process = pipeline.run_process(my_args,output=f,error=f)
@@ -1413,7 +1424,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             #make batch
             pipeline.f2f_replace(ibatch,obatch,replace_dict,data["verbose"])
             log = pj(job_dir,contrast+".log")
-            shell_commands.append("{0} < {1} > {2} {3}".format(mlab_cmd,obatch,log))
+            shell_commands.append("{0} < {1} > {2}".format(mlab_cmd,obatch,log))
             shell_commands.append("if [ $? -eq 0 ] \nthen\necho {0}:{1} succeeded\nelse\n echo {0}:{1} failed\nfi\n".format(study,contrast))
             info_fname = pj(con_dir,"info.txt")
             info = dict({"N": N,"images": good_img,"stype": data["stype"],"contrast": contrast})
@@ -1529,11 +1540,6 @@ def process_subject(subject,data):
     if data["makeMC"]:
         makeMC(data)
 
-    #recon
-    if data["setup_recon"]:
-        recon_write_script(data)
-    if data["run_recon"]:
-        recon_run(data)
 
     #preproc
     if data["setup_preproc"]:
@@ -1550,8 +1556,6 @@ def process_subject(subject,data):
         spm_setup(data,"stats")
     if data["setup_outliers"]:
         spm_setup(data,"stats_outliers")
-    if data["setup_fs_stats"]:
-        fs_setup(data,"stats")
     if data["setup_fs_image"]:
         fs_setup(data,"image")
     if data["run_art"]:
@@ -1563,7 +1567,16 @@ def process_subject(subject,data):
     if data["run_outliers"]:
         spm_run(data,"stats_outliers")
     
+	#recon
+    if data["setup_recon"]:
+        recon_write_script(data)
+    if data["run_recon"]:
+        recon_run(data)
+
+	
     #FSFast
+    if data["setup_fs_stats"]:
+        fs_setup(data,"stats")
     if data["run_fs_stats"]:
         fs_run(data,"stats")
     
