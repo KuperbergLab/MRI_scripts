@@ -209,13 +209,12 @@ def wait_to_finish(running_jobs,loop_time=30):
         running_jobs[:] = [process for process in running_jobs if process.poll() is None]
         time.sleep(loop_time)
                 
-def run_script(study, stream, subject, script_to_run, log=None):
-    my_args = [script_to_run]
+def run_script(study, stream, subject, cmd_arg, log=None):
     start_time = time.strftime("%Y%m%d %H:%M:%S")
-    print("(%s) began %s" % (start_time,script_to_run) )
-    return_value = run_process(my_args).wait()
+    print("(%s) began %s" % (start_time,' '.join(cmd_arg)) )
+    return_value = run_process(cmd_arg).wait()
     finish_time = time.strftime("%Y%m%d %H:%M:%S")
-    print("(%s) finish %s" % (finish_time,script_to_run) )
+    print("(%s) finish %s" % (finish_time,' '.join(cmd_arg)) )
     if return_value:
        status = "failure"
     else:

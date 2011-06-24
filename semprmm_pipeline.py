@@ -679,13 +679,13 @@ def spm_run(data,type):
             raise UserError("spm_run: no script found for %s" % study)
         if data["group_parallel"]:
             pipeline.run_script(study,"spm-%s"%type, data['subject'],
-                            script_to_run,spm_logfile(data,study,type))
+                            [script_to_run],spm_logfile(data,study,type))
         else:
             scripts_to_run.append(script_to_run)
             studies.append(study)
     if use_joblib and data["subject_parallel"]:
         if data["joblib"]:
-            Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"spm-%s"%type,data['subject'],script_to_run,spm_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
+            Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"spm-%s"%type,data['subject'],[script_to_run],spm_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
 
 
 def spm_write_coreg_mprage(data):
@@ -1046,13 +1046,13 @@ def fs_run(data,type):
             raise UserError("Hey dummy, you need to run --setup_fs_preproc")
         if data["group_parallel"]:
             pipeline.run_script(study,"fs-%s"%type,data['subject'],
-                script_to_run,fs_logfile(data,type,study))
+                [script_to_run],fs_logfile(data,type,study))
         else:
             scripts_to_run.append(script_to_run)
             studies.append(study)
     if use_joblib and data["subject_parallel"]:
         if data["joblib"]:
-            Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"fs-%s"%type,data['subject'],script_to_run,fs_logfile(data,type,study)) for (study,script_to_run) in zip(studies,scripts_to_run))
+            Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"fs-%s"%type,data['subject'],[script_to_run],fs_logfile(data,type,study)) for (study,script_to_run) in zip(studies,scripts_to_run))
             
 
 def fs_script_dir(data,type=None):
@@ -1113,6 +1113,10 @@ def meg_script(data,type,extra=None):
         if not os.path.isdir(pj(data['meg_dir'], 'temp')):
             os.mkdir(pj(data['meg_dir'], 'temp'))
         pipeline.write_file_with_list(pj(data['meg_dir'], 'temp', 'reject.m'), '\n'.join(cmd), data['verbose'])
+    if type == "preProc_avg":
+        pass
+    if type == "preProc_cov":
+        pass
     if type == "preProc":
         raise ValueError("PREPROC HAS BEEN SPLIT")
 #       bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
@@ -1158,10 +1162,9 @@ def meg_script(data,type,extra=None):
     if not os.path.isdir(log_dir):
         os.mkdir(log_dir)
     log_file = pj(log_dir,"%s.log" % type)
+    my_args.extend(['>', log_file])
     print("Logging to {0}".format(log_file))
-    f = open(log_file,"w")
-    process = pipeline.run_process(my_args,output=f,error=f)
-    process.communicate()[0]
+    pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
     os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 
@@ -1602,7 +1605,10 @@ def process_subject(subject,data):
         meg_script(data, "preProc_setup")
     if data["preProc_reject"]:
         meg_script(data, "preProc_reject")
-        
+    if data["preProc_avg"]:
+        meg_script(data, "preProc_avg")
+    if data["preProc_cov"]:
+        meg_script(data, "preProc_cov")
     if data["new_preProc"]:
         new_preProc(data)
     if data["preAnat"]:
@@ -1713,7 +1719,13 @@ def parse_arguments():
         action="store_true",default=False)
     meg_group.add_option("--preProc_reject",dest="preProc_reject",help="Run the preProc_reject script",
         action="store_true",default=False)
-
+    meg_group.add_option("--preProc_avg",dest="preProc_avg",help="Run the preProc_avg script",
+        action="store_true",default=False)
+    meg_group.add_option("--preProc_cov",dest="preProc_cov",help="Run the preProc_cov script",
+        action="store_true",default=False)
+    meg_group.add_option("--preProc_all",dest="preProc_all",help="Run all preProc scripts",
+        action="store_true",default=False)
+        
     meg_group.add_option("--preAnat",dest="preAnat",help="Run the preAnat script for meg",
         action="store_true",default=False)
     meg_group.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
@@ -1809,7 +1821,13 @@ if __name__ == "__main__":
     
     if not data["stype"]:
         data['stype'] = subject_type(subjects)
-        
+
+    # handle full stream options
+    if data['preProc_all']:
+        data['preProc_setup'] = True
+        data['preProc_reject'] = True
+        data['preProc_avg'] = True
+        data['preProc_cov'] = True
     if data["spm"]:
         data["setup_preproc"] = True
         data["setup_outliers"] = True
