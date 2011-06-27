@@ -607,9 +607,13 @@ def spm_write_mlab_script(data,study,type):
         good_type = type
     batch_dict = spm_matlab_dict(data,study,type)
     if data["unwarp"]:
-        batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+"_unwarp.m")           
+        batch_i = pj(batch_dir,data["stype"],'_'.join([study.lower(),good_type,"unwarp.m"]))
+    if data['no_misses']:
+        batch_i = pj(batch_dir,data['stype'],'_'.join([study.lower(),good_type,"nomiss.m"]))
     else:
         batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+    if not os.path.isfile(batch_i):
+        raise IOError("Cannot locate %s" % batch_i)
     batch_o = spm_jobfile(data,study,type)
     pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
