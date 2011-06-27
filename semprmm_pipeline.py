@@ -1643,10 +1643,14 @@ def parse_arguments():
     
     #full-stream options
     stream_group = OptionGroup(parser,"Full stream options")
-    stream_group.add_option("--spm_all",dest="spm",action="store_true",default=False,
+    stream_group.add_option("--spm",dest="spm",action="store_true",default=False,
         help="Wraps --setup_preproc,--run_preproc,--run_art,--setup_outliers,--run_outliers")
-    stream_group.add_option("--fs_all",dest="fs",action="store_true",default=False,
+    stream_group.add_option("--fs",dest="fs",action="store_true",default=False,
         help="Wraps --setup_fs_preproc,--setup_fs_stats,--run_fs_stats--because fs_stats does preproc automatically")
+    stream_group.add_option("--recon",dest="recon",action="store_true",default=False,
+        help="Wraps --setup_recon and --start_recon")
+    stream_group.add_option("--first",dest="first",action="store_true",default=False,
+        help="Wraps --copy_dicom, --unpack_all, --makeMultCond, --spm, --fs, and --recon")    
     parser.add_option_group(stream_group)
 
 
@@ -1823,6 +1827,17 @@ if __name__ == "__main__":
         data['stype'] = subject_type(subjects)
 
     # handle full stream options
+    if data['first'] = True
+        data['copy_dicom'] = True
+        data['wait'] = True
+        data['unpack_all'] = True
+        data['makeMultCond'] = True
+        data['spm'] = True
+        data['fs'] = True
+        data['recon'] = True
+    if data['recon'] = True
+        data['setup_recon'] = True
+        data['run_recon'] = True
     if data['preProc_all']:
         data['preProc_setup'] = True
         data['preProc_reject'] = True

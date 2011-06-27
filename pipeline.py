@@ -209,10 +209,14 @@ def wait_to_finish(running_jobs,loop_time=30):
         running_jobs[:] = [process for process in running_jobs if process.poll() is None]
         time.sleep(loop_time)
                 
-def run_script(study, stream, subject, cmd_arg, log=None):
+def run_script(study, stream, subject, cmd_arg, log=None, pipeToLog=False):
     start_time = time.strftime("%Y%m%d %H:%M:%S")
     print("(%s) began %s" % (start_time,' '.join(cmd_arg)) )
-    return_value = run_process(cmd_arg).wait()
+    if pipeToLog:
+        out = log
+    else:
+        out = PIPE
+    return_value = run_process(cmd_arg, output=out).wait()
     finish_time = time.strftime("%Y%m%d %H:%M:%S")
     print("(%s) finish %s" % (finish_time,' '.join(cmd_arg)) )
     if return_value:
