@@ -319,7 +319,10 @@ def info_path(data):
     """
     just a little method to encapsulate this path
     """
-    return pj(data["mri_dir"],"info.txt")
+    if data['info_name']:
+        return pj(data['mri_dir'], data['info_name'])
+    else:
+        return pj(data["mri_dir"],"info.txt")
 
 
 def cfg2info(data):
@@ -454,14 +457,18 @@ def makeMC(data):
         for code in uncodes:
             #get raw data
             good_onsets = []
-            for trial in [x for x in vtsd_data if x[code_ind] == code]:
-                task = codes[study_key][code][1]
-                response =  trial[response_ind] != "0.000"
-                if (task and response) or (not task and not response):
-                    good_onsets.append(trial[onset_ind])
-                if (not task and response) or (task and not response):
-                    misses.append(trial[onset_ind])
-            #xfm to floats, subtract, round,int,back to string
+            code_lines = [x for x in vtsd_data if x[code_ind] == code]
+            if data['no_misses']:
+                good_onsets = [line[onset_ind] for line in code_lines]
+            else:
+                for trial in code_lines:
+                    task = codes[study_key][code][1]
+                    response =  trial[response_ind] != "0.000"
+                    if (task and response) or (not task and not response):
+                        good_onsets.append(trial[onset_ind])
+                    if (not task and response) or (task and not response):
+                        misses.append(trial[onset_ind])
+                #xfm to floats, subtract, round,int,back to string
             xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
             if len(xfm_onsets) == 0:
                 print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study_key, run, codes[study_key][code][0]))
@@ -475,14 +482,14 @@ def makeMC(data):
                 xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
                 miss_dur = [codes[study_key]["duration"]] * len(xfm_misses)
                 print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study_key,run,len(xfm_misses)))
-            else:
+            elif not data['no_misses']:
                 trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
     
                 xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study_key]["duration"])))]
                 miss_dur = ["2"]
-            if study_key in info:
-                info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
-                            "Run"+run+"MissesDurations": " ".join(miss_dur)})
+                if study_key in info:
+                    info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
+                                "Run"+run+"MissesDurations": " ".join(miss_dur)})
     pipeline.save_data(info,info_path(data),data["verbose"])
 
 
@@ -1517,20 +1524,24 @@ def subject_type(subjects):
 
 
 def print_info(data):
-    info = pipeline.load_data(info_path(data))
-    print(data["subject"])
-    if data["single_study"]:
-        for study in data["single_study"]:
-            if study in info:
-                info = info[study]
-                for k,v in sorted(info.items()):
-                    print("%s:%s" % (k,v))
+    ip = info_path(data)
+    if os.path.isfile(ip):
+        info = pipeline.load_data(info_path(data))
+        print(data["subject"])
+        if data["single_study"]:
+            for study in data["single_study"]:
+                if study in info:
+                    info = info[study]
+                    for k,v in sorted(info.items()):
+                        print("%s:%s" % (k,v))
+        else:
+            for k,v in sorted(info.items()):
+                print("{0}...".format(k))
+                for key,value in sorted(v.items()):
+                    print("{0}:{1}".format(key,value))
+                print('\n')
     else:
-        for k,v in sorted(info.items()):
-            print("{0}...".format(k))
-            for key,value in sorted(v.items()):
-                print("{0}:{1}".format(key,value))
-            print('\n')
+        print '%s is not a file.' % ip
 
 ####SUBJ#####
 def process_subject(subject,data):
@@ -1638,6 +1649,12 @@ def parse_arguments():
         action="store_true",default=False)
     copy_group.add_option("--cfg2info",dest="cfg2info",action="store_true",default=False,
         help="Convert cfg to info dictionary")
+    copy_group.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
+        help="Parse exp logs for multiple condition information, must be done before --setup_[stats]")  
+    copy_group.add_option('--no_misses', dest='no_misses',action='store_true', default=False,
+        help='With --makeMultCond, do NOT seperate misses.')
+    copy_group.add_option('--info_name', dest='info_name', action='store', default='', 
+        help="Load/save info using MRI/functionals/$sub/[this option]")
     parser.add_option_group(copy_group)
 
     
@@ -1670,8 +1687,6 @@ def parse_arguments():
         default=False)
     spm_group.add_option("--run_preproc",dest="run_preproc",help="Run preproc script",
         action="store_true",default=False)
-    spm_group.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
-        help="Parse exp logs for multiple condition information, must be done before --setup_[stats]")  
     spm_group.add_option("--run_art",dest="run_art",action="store_true",default=False,
         help="Run artifact detection for a subject")
     spm_group.add_option("--reg_mprage",dest="reg_mprage",action="store_true",default=False,
@@ -1827,7 +1842,7 @@ if __name__ == "__main__":
         data['stype'] = subject_type(subjects)
 
     # handle full stream options
-    if data['first'] = True
+    if data['first']:
         data['copy_dicom'] = True
         data['wait'] = True
         data['unpack_all'] = True
@@ -1835,7 +1850,7 @@ if __name__ == "__main__":
         data['spm'] = True
         data['fs'] = True
         data['recon'] = True
-    if data['recon'] = True
+    if data['recon']:
         data['setup_recon'] = True
         data['run_recon'] = True
     if data['preProc_all']:
