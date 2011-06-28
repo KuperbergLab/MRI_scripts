@@ -1085,6 +1085,7 @@ def fs_script_path(data,type,study):
 
 
 ####MEG#####
+
 def new_preProc(data):
     """
     New pure-python pre-processing for MEG.
@@ -1174,8 +1175,8 @@ def meg_script(data,type,extra=None):
         os.mkdir(log_dir)
     log_file = pj(log_dir,"%s.log" % type)
     my_args.extend(['>', log_file])
-    print("Logging to {0}".format(log_file))
-    pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
+    print('Logging to %s' % log_file)
+    pipeline.run_script('MEG', type, data['subject'], my_args, log_file, pipeToLog=True)    
     os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 

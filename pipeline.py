@@ -213,11 +213,13 @@ def run_script(study, stream, subject, cmd_arg, log=None, pipeToLog=False):
     start_time = time.strftime("%Y%m%d %H:%M:%S")
     print("(%s) began %s" % (start_time,' '.join(cmd_arg)) )
     if pipeToLog:
-        out = log
+        f = open(log, 'w')
+        out = f
     else:
         out = PIPE
     return_value = run_process(cmd_arg, output=out).wait()
     finish_time = time.strftime("%Y%m%d %H:%M:%S")
+    
     print("(%s) finish %s" % (finish_time,' '.join(cmd_arg)) )
     if return_value:
        status = "failure"
