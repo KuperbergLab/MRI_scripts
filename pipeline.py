@@ -213,8 +213,7 @@ def run_script(study, stream, subject, cmd_arg, log=None, pipeToLog=False):
     start_time = time.strftime("%Y%m%d %H:%M:%S")
     print("(%s) began %s" % (start_time,' '.join(cmd_arg)) )
     if pipeToLog:
-        f = open(log, 'w')
-        out = f
+        out = open(log, 'w')
     else:
         out = PIPE
     return_value = run_process(cmd_arg, output=out).wait()
