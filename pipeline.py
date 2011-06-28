@@ -110,7 +110,7 @@ def scan_to_cfg(dir_map,file_map,scan_list,scan_path,filetype='nii'):
         good_scans = [v.split() for v in in_text if set(scan) < set(v.split())]
         for i,v in enumerate(good_scans):
             good_lines.append(' '.join([v[0],dir_map[v[1]],filetype,
-                '{0}{1}.nii'.format(file_map[v[1]],i+1)]))
+                '%s%s.nii' % (file_map[v[1]],i+1)]) )
     return good_lines
     
 def unpack(src,targ,cfg_path,output=None,verbose=False):
@@ -139,7 +139,7 @@ def load_data(path,verbose=False):
         with open(path,"r") as f:
             info = pickle.load(f)
             if verbose:
-                print("Loaded data from {0}".format(path))
+                print("Loaded data from %s" % path )
     except:
         raise
     return info
@@ -152,9 +152,9 @@ def save_data(data,path,verbose=False):
         with open(path,"w") as f:
             pickle.dump(data,f)
             if verbose:
-                print("Saved data to {0}".format(path))
+                print("Saved data to %s" % path )
     except:
-        print("Couldn't save data to {0}".format(path))
+        print("Couldn't save data to %s" % path )
         raise
         
 def f2f_replace(incoming,outgoing,replace,verbose=False):
@@ -172,16 +172,16 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
         with open(incoming,"r") as f:
             new_string = string.Template(f.read()).safe_substitute(replace)
             if verbose:
-                print("Read and replaced {0}".format(incoming))
+                print("Read and replaced %s" % incoming )
             #check if there were $keywords that weren't replaced
             if new_string.count("$") > 0:
-                print("WARNING: keyword missed in {0} -> {1}".format(incoming,outgoing))
+                print("WARNING: keyword missed in %s -> %s" % (incoming,outgoing))
         with open(outgoing,"w") as f:
             f.write(new_string)
             if verbose:
-                print("Wrote {0}".format(outgoing))
+                print("Wrote %s" % outgoing )
     except IOError:
-        print("IOError with {0} or {1}".format(incoming,outgoing))
+        print("IOError with %s or %s" % (incoming,outgoing))
         raise       
     except:
         raise
@@ -273,7 +273,7 @@ def list_from_file(path,verbose=None):
             all_lines = f.read()
             all_lines = all_lines.splitlines()
             if verbose:
-                print("Reading from {0}".format(path))
+                print("Reading from %s" % path )
     except IOError:
         print("Cannot open %s"  % path)
         raise
