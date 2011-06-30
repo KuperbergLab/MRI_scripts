@@ -1122,39 +1122,14 @@ def meg_script(data,type,extra=None):
         for fif in fiffs:
             cmd.append(mlab % fif)
         cmd.append('exit;')
-        if not os.path.isdir(pj(data['meg_dir'], 'temp')):
-            os.mkdir(pj(data['meg_dir'], 'temp'))
-        pipeline.write_file_with_list(pj(data['meg_dir'], 'temp', 'reject.m'), '\n'.join(cmd), data['verbose'])
+        rej_dir = pj(data['meg_dir'], 'rej')
+        if not os.path.isdir(rej_dir):
+            os.mkdir(rej_dir)
+        pipeline.write_file_with_list(pj(rej_dir, 'reject.m'), '\n'.join(cmd), data['verbose'])
     if type == "preProc_avg":
         pass
     if type == "preProc_cov":
         pass
-    if type == "preProc":
-        raise ValueError("PREPROC HAS BEEN SPLIT")
-#       bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
-#       if not os.path.isfile(bad_chan_path):
-#           raise UserError("%s wasn't found, make it and try again" % bad_chan_path)
-#       fif = glob(pj(data["meg_dir"],"*_raw.fif"))
-#       #filter our blink and emptyroom
-#       fif = [x for x in fif if x.find("Blink") == -1 and x.find("emptyroom") == -1]
-#       N_fif = len(fif)
-#       if data["verbose"]:
-#           print("Fifs:\n{0}".format("\n".join(fif)))
-#       icamat = glob(pj(data["meg_dir"],"*_raw_ica.mat"))
-#       N_icamat = len(icamat)
-#       if data["verbose"]:
-#           print("ICA mat:\n{0}".format("\n".join(icamat)))
-#       blinks = glob(pj(data["meg_dir"],"*.blinks"))
-#       N_blinks = len(blinks)
-#       if data["verbose"]:
-#           print("Blinks:\n{0}".format("\n".join(blinks)))
-#       if (N_fif == 0):
-#           raise UserError("No fif files found for this subject")
-#       if not (N_fif == N_icamat == N_blinks):
-#           raise UserError("Unequal amount of fif,ica.mat,and blink files.\nTry Again")
-#       # DEFAULT EYE BLINK ARGUMENTS FOR PREPROC1
-#       
-#       extra = ["-0.1","0.3"]
     if type == "preAnat":
         setup_bem(data)
         #check that flash was unpacked
@@ -1615,8 +1590,6 @@ def process_subject(subject,data):
         setup_bem(data)
     if data["run_ica"]:
         run_ica(data)
-    if data["preProc"]:
-        meg_script(data,"preProc")
     if data["preProc_setup"]:
         meg_script(data, "preProc_setup")
     if data["preProc_reject"]:
@@ -1736,8 +1709,6 @@ def parse_arguments():
     
     #MEG options
     meg_group = OptionGroup(parser,"MEG processing")
-    meg_group.add_option("--preProc",dest="preProc",help="Run the preProc script for meg",
-        action="store_true",default=False)
 
     meg_group.add_option("--preProc_setup",dest="preProc_setup",help="Run the preProc_setup script",
         action="store_true",default=False)
