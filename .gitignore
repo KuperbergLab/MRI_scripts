@@ -14,3 +14,5 @@ art_mask.img
 *.tiff
 *.pyc
 art_mask_temporalfile.mat
+
+launchpad.sh
