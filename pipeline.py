@@ -153,6 +153,7 @@ def save_data(data,path,verbose=False):
             pickle.dump(data,f)
             if verbose:
                 print("Saved data to %s" % path )
+        make_lingua(path)
     except:
         print("Couldn't save data to %s" % path )
         raise
@@ -259,6 +260,7 @@ def write_file_with_list(path,lines,quiet=False):
     try:
         with open(path,'w') as f:
             f.writelines(lines)
+        make_lingua(path)
         if not quiet:
             print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines.split("\n"))))
     except IOError:
@@ -285,6 +287,14 @@ def make_file_exec(path):
     """
     import stat
     os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
+
+def make_linuga(fname):
+    """
+    Changes a given file to the unix group 'lingua'
+    """
+    fd = os.open(fname, os.O_RDONLY)
+    os.fchown(fd, -1, 1049)
+    os.close(fd)
 
 
 class SPM(object):
