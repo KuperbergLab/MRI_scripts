@@ -35,29 +35,25 @@ cond_num = dict({"ATLLoc":
                     "IndirectlyRelated":"2",
                     "Unrelated":"3",
                     "InsectPrime":"4",
-                    "InsectTarget":"5",
-                    "Misses":"6"},
+                    "InsectTarget":"5"},
                 "BaleenLP":
                     {"RelatedTarget":"1",
                     "UnrelatedTarget":"2",
                     "UnrelatedFiller":"3",
                     "AnimalTarget":"4",
-                    "AnimalPrime":"5",
-                    "Misses":"6"},
+                    "AnimalPrime":"5"},
                 "BaleenHP":
                     {"RelatedTarget":"1",
                     "UnrelatedTarget":"2",
                     "RelatedFiller":"3",
                     "UnrelatedFiller":"4",
                     "AnimalTarget":"5",
-                    "AnimalPrime":"6",
-                    "Misses":"7"},
+                    "AnimalPrime":"6"},
                 "AXCPT":
                     {"AY":"1",
                     "BX":"2",
                     "BY":"3",
-                    "AX":"4",
-                    "Misses":"5"}
+                    "AX":"4"}
                     })
                     
 contrasts = dict({"ATLLoc":
@@ -1103,7 +1099,14 @@ def meg_script(data,type,extra=None):
     extra: list of extra arguments (e.g. for "preProc2", extra would be [{preBlinkTime},
     {postBlinkTime}])
     """
-    script_path = pj(meg_scripts,type+".sh")
+    user_script = pj(data['meg_dir'], 'scripts', '%s.sh' % type)
+    if os.path.exists(user_script):
+        script_path = user_script
+        pipeline.make_file_exec(script_path)
+        print('Using subject-specific script...')
+    else:
+        script_path = pj(meg_scripts, "%s.sh" % type)
+        print('Using default script...')
     if not os.path.exists(script_path):
         raise UserError("meg_script: can not locate {0}".format(type))
     my_args = [script_path,data["subject"]]
