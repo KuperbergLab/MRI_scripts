@@ -1,12 +1,6 @@
 log/*
 move_local.py
 move.sh
-ya_mri_all
-ya_mri_atlloc
-ya_mri_maskedmm
-ya_mri_axcpt
-ya_mri_baleenlp
-ya_mri_baleenhp
 move_baleen.sh
 art_mask.hdr
 art_mask.img
