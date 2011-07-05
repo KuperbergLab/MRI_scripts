@@ -288,7 +288,7 @@ def make_file_exec(path):
     import stat
     os.chmod(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP|stat.S_IROTH )
 
-def make_linuga(fname):
+def make_lingua(fname):
     """
     Changes a given file to the unix group 'lingua'
     """
