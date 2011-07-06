@@ -75,8 +75,7 @@ ii = 1
 pars = ('BaleenHP', 'BaleenLP')
 space = ('lh', 'rh')
 shape = ('fir', 'spm')
-labels = ('012', '025', '034', '037', '038', '044', '073', '074') #, 
-labels = ('BA44', 'BA45')
+labels = ('012', '025', '034', '037', '038', '044', '073', '074', 'BA44', 'BA45')
 contrasts = ('Unrelated', 'Related')
 map = 'cespct'
 
@@ -138,28 +137,19 @@ for par in pars:
                                         wait]))
 
 
+fnames = ('config.sh', 'sess.sh', 'table.sh')
+commands = (config_com, sess_com, table_com)
 
-script_fname = 'roi_scripts/config.sh'
-f = open(script_fname, 'w')
-f.writelines(config_com)
-f.close()
+for fname, command in zip(fnames, commands):
+    with open(fname, 'w') as f:
+        f.writelines(command)
+        print("Wrote %s" % fname)
 
-script_fname = 'roi_scripts/sess.sh'
-f = open(script_fname, 'w')
-f.writelines(sess_com)
-f.close()
-
-script_fname = 'roi_scripts/table.sh'
-f = open(script_fname, 'w')
-f.writelines(table_com)
-f.close()
 
 !open roi_scripts/*.sh
 ####################################
 
 lab2BA = {'012':'???', '025':'BA39', '034':'???', '037':'BA20', '038':'BA21', '044':'BA38', '073':'BA20', '074':'BA22'}
-
-%+.3d
 
 
 def print_dat():
@@ -217,7 +207,7 @@ def dat_dict():
 def parse_dat(input):
     from readInput import readTable
     data = readTable(input)
-    d = dict({})
+    d = {}
     [d.__setitem__(x[0], x[1]) for x in data]
     return d    
     
