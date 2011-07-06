@@ -292,8 +292,9 @@ def make_lingua(fname):
     """
     Changes a given file to the unix group 'lingua'
     """
+    import grp
     fd = os.open(fname, os.O_RDONLY)
-    os.fchown(fd, -1, 1049)
+    os.fchown(fd, -1, grp.getgrnam('lingua').gr_gid)
     os.close(fd)
 
 
