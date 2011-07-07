@@ -168,12 +168,6 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).onset = [$Run1AnimalPrimeOnse
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).duration = [$Run1AnimalPrimeDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
-%Miss
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(6).name = 'Miss';
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(6).onset = [$Run1MissesOnsets];
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(6).duration = [$Run1MissesDurations];
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(6).tmod = 0;
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(6).pmod = struct('name', {}, 'param', {}, 'poly', {});
 
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).regress = struct('name', {}, 'val', {});
@@ -343,12 +337,6 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).onset = [$Run2AnimalPrimeOnse
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).duration = [$Run2AnimalPrimeDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
-%Miss
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(6).name = 'Miss';
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(6).onset = [$Run2MissesOnsets];
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(6).duration = [$Run2MissesDurations];
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(6).tmod = 0;
-matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(6).pmod = struct('name', {}, 'param', {}, 'poly', {});
 
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).regress = struct('name', {}, 'val', {});
@@ -518,12 +506,6 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).onset = [$Run3AnimalPrimeOnse
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).duration = [$Run3AnimalPrimeDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
-%Miss
-matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(6).name = 'Miss';
-matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(6).onset = [$Run3MissesOnsets];
-matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(6).duration = [$Run3MissesDurations];
-matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(6).tmod = 0;
-matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(6).pmod = struct('name', {}, 'param', {}, 'poly', {});
 
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).regress = struct('name', {}, 'val', {});
@@ -693,12 +675,6 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(5).onset = [$Run4AnimalPrimeOnse
 matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(5).duration = [$Run4AnimalPrimeDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(5).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
-%Miss
-matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(6).name = 'Miss';
-matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(6).onset = [$Run4MissesOnsets];
-matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(6).duration = [$Run4MissesDurations];
-matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(6).tmod = 0;
-matlabbatch{1}.spm.stats.fmri_spec.sess(4).cond(6).pmod = struct('name', {}, 'param', {}, 'poly', {});
 
 matlabbatch{1}.spm.stats.fmri_spec.sess(4).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(4).regress = struct('name', {}, 'val', {});
@@ -724,31 +700,31 @@ matlabbatch{3}.spm.stats.con.spmmat(1).sname = 'Model estimation: SPM.mat File';
 matlabbatch{3}.spm.stats.con.spmmat(1).src_exbranch = substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1});
 matlabbatch{3}.spm.stats.con.spmmat(1).src_output = substruct('.','spmmat');
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.name = 'Related Target';
-matlabbatch{3}.spm.stats.con.consess{1}.tcon.convec = [1 0 0 0 0 0];
+matlabbatch{3}.spm.stats.con.consess{1}.tcon.convec = [1 0 0 0 0];
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{2}.tcon.name = 'Unrelated Target';
-matlabbatch{3}.spm.stats.con.consess{2}.tcon.convec = [0 1 0 0 0 0];
+matlabbatch{3}.spm.stats.con.consess{2}.tcon.convec = [0 1 0 0 0];
 matlabbatch{3}.spm.stats.con.consess{2}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{3}.tcon.name = 'Unrelated Filler';
-matlabbatch{3}.spm.stats.con.consess{3}.tcon.convec = [0 0 1 0 0 0];
+matlabbatch{3}.spm.stats.con.consess{3}.tcon.convec = [0 0 1 0 0];
 matlabbatch{3}.spm.stats.con.consess{3}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{4}.tcon.name = 'Animal Target';
-matlabbatch{3}.spm.stats.con.consess{4}.tcon.convec = [0 0 0 1 0 0];
+matlabbatch{3}.spm.stats.con.consess{4}.tcon.convec = [0 0 0 1 0];
 matlabbatch{3}.spm.stats.con.consess{4}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{5}.tcon.name = 'Animal Prime';
-matlabbatch{3}.spm.stats.con.consess{5}.tcon.convec = [0 0 0 0 1 0];
+matlabbatch{3}.spm.stats.con.consess{5}.tcon.convec = [0 0 0 0 1];
 matlabbatch{3}.spm.stats.con.consess{5}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{6}.tcon.name = 'Related vs Unrelated';
-matlabbatch{3}.spm.stats.con.consess{6}.tcon.convec = [1 -1 0 0 0 0];
+matlabbatch{3}.spm.stats.con.consess{6}.tcon.convec = [1 -1 0 0 0];
 matlabbatch{3}.spm.stats.con.consess{6}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{7}.tcon.name = 'Unrelated vs Related';
-matlabbatch{3}.spm.stats.con.consess{7}.tcon.convec = [-1 1 0 0 0 0];
+matlabbatch{3}.spm.stats.con.consess{7}.tcon.convec = [-1 1 0 0 0];
 matlabbatch{3}.spm.stats.con.consess{7}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{8}.tcon.name = 'AnimalTarget vs Unrelated';
-matlabbatch{3}.spm.stats.con.consess{8}.tcon.convec = [0 -1 0 1 0 0];
+matlabbatch{3}.spm.stats.con.consess{8}.tcon.convec = [0 -1 0 1 0];
 matlabbatch{3}.spm.stats.con.consess{8}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.consess{9}.tcon.name = 'Unrelated vs AnimalTarget';
-matlabbatch{3}.spm.stats.con.consess{9}.tcon.convec = [0 1 0 -1 0 0];
+matlabbatch{3}.spm.stats.con.consess{9}.tcon.convec = [0 1 0 -1 0];
 matlabbatch{3}.spm.stats.con.consess{9}.tcon.sessrep = 'replsc';
 matlabbatch{3}.spm.stats.con.delete = 1;
 

@@ -172,8 +172,14 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).onset = [$Run1AXOnsets];
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).duration = [$Run1AXDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
-matlabbatch{1}.spm.stats.fmri_spec.sess(1).regress = struct('name', {}, 'val', {});
+%Misses
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).name = 'Misses';
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).onset = [$Run1MissesOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).duration = [$Run1MissesDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi = {''};
+matlabbatch{1}.spm.stats.fmri_spec.sess(1).regress = struct('name', {}, 'val', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/AXCPT/$Run1XXX/$Run1MR'};
 matlabbatch{1}.spm.stats.fmri_spec.sess(1).hpf = 128;
 %%
@@ -343,6 +349,12 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).onset = [$Run2AXOnsets];
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).duration = [$Run2AXDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%Misses
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).name = 'Misses';
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).onset = [$Run2MissesOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).duration = [$Run2MissesDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(2).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
 %
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(2).regress = struct('name', {}, 'val', {});
@@ -514,6 +526,12 @@ matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(4).onset = [$Run2AXOnsets];
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(4).duration = [$Run2AXDurations];
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(4).tmod = 0;
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(4).pmod = struct('name', {}, 'param', {}, 'poly', {});
+%Misses
+matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).name = 'Misses';
+matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).onset = [$Run2MissesOnsets];
+matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).duration = [$Run2MissesDurations];
+matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).tmod = 0;
+matlabbatch{1}.spm.stats.fmri_spec.sess(3).cond(5).pmod = struct('name', {}, 'param', {}, 'poly', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).multi = {''};
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).regress = struct('name', {}, 'val', {});
 matlabbatch{1}.spm.stats.fmri_spec.sess(3).multi_reg = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/AXCPT/$Run3XXX/$Run3MR'};
@@ -585,6 +603,6 @@ try
 	fclose(fopen('$run_file','w'));
 	ec = 0;
 catch ME
-	ec = 1;
+    ec = 1;
 end
 exit(ec);
