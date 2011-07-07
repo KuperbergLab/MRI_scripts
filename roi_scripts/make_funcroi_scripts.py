@@ -10,49 +10,8 @@
 #
 ####################################
 
-# List all of the paradigms you're interested in...
-paradigms = ('BaleenHP', 'BaleenLP')
-
-# This defines from which hemisphere you'll grab the data.
-# It's a list because we're interested in both
-spaces = ('lh', 'rh')
-
-# This partly determines from which analysis you'll grab the functional data
-hrf_shapes = ('fir', 'spm')
-
-
-# Now, with paradigms, spaces, and hrf_shapes, the analysis is fully specified
-# because it's something like ya.{paradigm}.{hrf_shape}.sm8.{space}
-
-
-# Filenames for all the labels of interest
-# The %s will be replaced with each space in the 'spaces' variable above
-# DO NOT include the .label
-labels = ('aparc2009-%s-012', 
-          'aparc2009-%s-025',
-          'aparc2009-%s-034',
-          'aparc2009-%s-037',
-          'aparc2009-%s-038',
-          'aparc2009-%s-044',
-          'aparc2009-%s-073',
-          'aparc2009-%s-074',
-          '%s.BA44',
-          '%s.BA45')
-
-# Specify which contrasts you'd like to compare
-# These contrasts should be in all the paradigms listed above
-contrasts = ('Unrelated', 'Related')
-
-# This determines where to grab the functional values from.
-# Options are:
-# 'ces' (contrast estimate)
-# 'cespct' (contrast estimate in % signal change) <--- This seems to make the most sense
-# 'cesvar' (contrast estimate variance)
-# 'cesvarpct' (contrast estimate in $ signal change)
-# 'fsig' (unsigned T values)
-# 'sig' (signed T values)
-map = 'cespct'
-
+import options as opt
+# There should be opt.paradigms, opt.spaces, opt.hrf_shapes, opt.labels, opt.contrasts, and opt.map
 
 
 ##############
@@ -63,18 +22,18 @@ ii = 1
 config_com = []
 sess_com = []
 table_com = []
-for par in paradigms:
-    for sp in spaces:
-        for sh in hrf_shapes:
+for par in opt.paradigms:
+    for sp in opt.spaces:
+        for sh in opt.hrf_shapes:
             if sh == 'fir':
                 frame = '6'
             else:
                 frame = '0'    
-            for label in labels:
+            for label in opt.labels:
                 roidef = '.'.join((par, sp, sh, label % sp, 'roicfg'))
                 analysis = 'ya.%s.%s.sm8.%s' % (par, sh, sp)
-                for contrast in contrasts:
-                    output = 'roi_summary/%s' % '.'.join((par, sp, sh, label % sp, map, contrast, 'dat'))
+                for contrast in opt.contrasts:
+                    output = 'roi_summary/%s' % '.'.join((par, sp, sh, label % sp, opt.map, contrast, 'dat'))
                     #funcoir-table-sess
                     ii += 1
                     if ii > 8:
