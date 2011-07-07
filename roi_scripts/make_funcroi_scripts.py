@@ -27,16 +27,17 @@ hrf_shapes = ('fir', 'spm')
 
 # Filenames for all the labels of interest
 # The %s will be replaced with each space in the 'spaces' variable above
-labels = ('aparc2009-%s-012.label', 
-          'aparc2009-%s-025.label',
-          'aparc2009-%s-034.label',
-          'aparc2009-%s-037.label',
-          'aparc2009-%s-038.label',
-          'aparc2009-%s-044.label',
-          'aparc2009-%s-073.label',
-          'aparc2009-%s-074.label',
-          '%s.BA44.label',
-          '%s.BA45.label')
+# DO NOT include the .label
+labels = ('aparc2009-%s-012', 
+          'aparc2009-%s-025',
+          'aparc2009-%s-034',
+          'aparc2009-%s-037',
+          'aparc2009-%s-038',
+          'aparc2009-%s-044',
+          'aparc2009-%s-073',
+          'aparc2009-%s-074',
+          '%s.BA44',
+          '%s.BA45')
 
 # Specify which contrasts you'd like to compare
 # These contrasts should be in all the paradigms listed above
@@ -73,7 +74,7 @@ for par in paradigms:
                 roidef = '.'.join((par, sp, sh, label % sp, 'roicfg'))
                 analysis = 'ya.%s.%s.sm8.%s' % (par, sh, sp)
                 for contrast in contrasts:
-                    output = 'roi_summary/%s' % '.'.join((par, sp, sh, label, map, contrast, 'dat'))
+                    output = 'roi_summary/%s' % '.'.join((par, sp, sh, label % sp, map, contrast, 'dat'))
                     #funcoir-table-sess
                     ii += 1
                     if ii > 8:
@@ -96,7 +97,7 @@ for par in paradigms:
                 #funcroi-config
                 config_com.append(' '.join(['funcroi-config',
                                         '-roi %s' % roidef,
-                                        '-label %s' % (label % sp) ,
+                                        '-label %s' % '%s.label' % (label % sp) ,
                                         '-analysis %s' % analysis,
                                         '\n']))
                 i += 1
