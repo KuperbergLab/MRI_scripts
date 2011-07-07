@@ -25,6 +25,8 @@ import shutil
 from readInput import readTable
 import pipeline as pipeline
 
+import pdb
+
 possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenLP": 4, "BaleenHP":4, "AXCPT": 2})
 cond_num = dict({"ATLLoc":
                     {"Sentences":"1",
@@ -450,13 +452,13 @@ def makeMC(data):
         sub = codes[study_key]["on_sub"]
         uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
         misses = []
+        if data['debug']:
+            pdb.set_trace()
         for code in uncodes:
             #get raw data
             good_onsets = []
             code_lines = [x for x in vtsd_data if x[code_ind] == code]
-            if data['no_misses']:
-                good_onsets = [line[onset_ind] for line in code_lines]
-            else:
+            if data['misses']:
                 for trial in code_lines:
                     task = codes[study_key][code][1]
                     response =  trial[response_ind] != "0.000"
@@ -464,7 +466,9 @@ def makeMC(data):
                         good_onsets.append(trial[onset_ind])
                     if (not task and response) or (task and not response):
                         misses.append(trial[onset_ind])
-                #xfm to floats, subtract, round,int,back to string
+            else: # don't worry about misses, just find all onsets
+                good_onsets = [line[onset_ind] for line in code_lines]
+            #xfm to floats, subtract, round,int,back to string
             xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
             if len(xfm_onsets) == 0:
                 print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study_key, run, codes[study_key][code][0]))
@@ -473,20 +477,20 @@ def makeMC(data):
             if study_key in info:
                 info[study_key].update(new_dict)
         if study_key != "ATLLoc":
-            #do misses
-            if len(misses) > 0:
-                xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
-                miss_dur = [codes[study_key]["duration"]] * len(xfm_misses)
-                print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study_key,run,len(xfm_misses)))
-            elif not data['no_misses']:
-                trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
-    
-                xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study_key]["duration"])))]
-                miss_dur = ["2"]
-                if study_key in info:
-                    info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
-                                "Run"+run+"MissesDurations": " ".join(miss_dur)})
-    pipeline.save_data(info,info_path(data),data["verbose"])
+            if data['misses']:
+                if len(misses) > 0:
+                    xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
+                    miss_dur = [codes[study_key]["duration"]] * len(xfm_misses)
+                    print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study_key,run,len(xfm_misses)))
+                else: # no misses, need to insert some misses from iti time
+                    trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
+                    xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study_key]["duration"])))]
+                    miss_dur = ["2"]
+                    if study_key in info:
+                        info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
+                                    "Run"+run+"MissesDurations": " ".join(miss_dur)})
+    print('Saving info to %s' % info_path(data))
+    pipeline.save_data(info,info_path(data))
 
 
 def touch_file_path(data,study,type,when):
@@ -604,8 +608,8 @@ def spm_write_mlab_script(data,study,type):
     batch_dict = spm_matlab_dict(data,study,type)
     if data["unwarp"]:
         batch_i = pj(batch_dir,data["stype"],'_'.join([study.lower(),good_type,"unwarp.m"]))
-    if data['no_misses']:
-        batch_i = pj(batch_dir,data['stype'],'_'.join([study.lower(),good_type,"nomiss.m"]))
+    if data['misses']:
+        batch_i = pj(batch_dir,data['stype'],'_'.join([study.lower(),good_type,"miss.m"]))
     else:
         batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
     if not os.path.isfile(batch_i):
@@ -768,9 +772,6 @@ def write_par(data,study,info,run):
         onsets = info[cond_onset]
         duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
         for onset in onsets.split():
-#           if study == "BaleenMM" and int(run) > 4 and cond_name == "Misses":
-#               code_num = str(int(cond_num[study][cond_name]) + 1)
-#           else:
             code_num = cond_num[study][cond_name]
             full_par.append([onset,code_num,duration,"1.0",cond_name])
     full_par.sort(key=lambda x:int(x[0]))
@@ -1631,8 +1632,8 @@ def parse_arguments():
         help="Convert cfg to info dictionary")
     copy_group.add_option("--makeMultCond",dest="makeMC",action="store_true",default=False,
         help="Parse exp logs for multiple condition information, must be done before --setup_[stats]")  
-    copy_group.add_option('--no_misses', dest='no_misses',action='store_true', default=False,
-        help='With --makeMultCond, do NOT seperate misses.')
+    copy_group.add_option('--misses', dest='misses',action='store_true', default=False,
+        help='With --makeMultCond, seperate misses from correct responses.')
     copy_group.add_option('--info_name', dest='info_name', action='store', default='', 
         help="Load/save info using MRI/functionals/$sub/[this option]")
     parser.add_option_group(copy_group)
@@ -1786,6 +1787,8 @@ def parse_arguments():
         help="Process this many subjects in parallel, or with one subject, use this many cpus")
     misc_group.add_option("--wait",dest="wait",action="store_true",default=False,
         help="With --copy_dicom, wait for dicoms to show up in Bourget.")
+    misc_group.add_option('--debug', dest='debug', action='store_true', default=False,
+        help='Debug the script')
     parser.add_option_group(misc_group)
 
 
