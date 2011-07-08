@@ -297,7 +297,6 @@ def make_lingua(fname):
     os.fchown(fd, -1, grp.getgrnam('lingua').gr_gid)
     os.close(fd)
 
-
 class SPM(object):
     
     """SPM object for first-level analysis"""
