@@ -923,12 +923,13 @@ def fs_setup(data,type,subjects=None):
                     commands.append("#!/bin/sh")
                     commands.append("cd %s" % func_dir)
                     aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
-                    lf = pj(func_dir,"fsfast_scripts","%s-isxconcat.%s.log" % (study,aname))
+                    lf = pj(func_dir,"fsfast_scripts","%s.%s-isxconcat.%s.log" % (data['stype'], study,aname))
                     isx_cmd = " ".join(["isxconcat-sess",
                                         "-a %s" % aname,
                                         "-d %s" % func_dir,
                                         "-all-contrasts",
                                         "-sf %s" % sessid,
+                                        "-no-hrf",
                                         "-fsgd %s" % fsgd_path,
                                         "-o %s.group-analysis/%s/" % (data["stype"], study),
                                         ">& %s" % lf])
@@ -1387,7 +1388,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             head, base = os.path.split(data['list_prefix'])
             list_path = pj(head, "%s_%s" % (base, study.lower()))
         else:
-            list_path = pj(mri_scripts, "%s_mri_%s" % (data['stype'], study.lower()))
+            list_path = pj(mri_scripts, 'input', "%s_mri_%s" % (data['stype'], study.lower()))
         if not os.path.isfile(list_path):
             raise ValueError("Can't find %s" % list_path)
         print("Getting subjects from %s" % list_path)
@@ -1613,6 +1614,7 @@ def process_subject(subject,data):
     if data["print_info"]:
         print_info(data)
 
+
 def parse_arguments():
     parser = OptionParser(usage="%prog [options] subject (more subjects)", version="%prog 1.0")
 
@@ -1794,7 +1796,30 @@ def parse_arguments():
 
     return parser.parse_args()
 
+
+def log_session():
+    """
+    This simple method is called every time the pipeline is started.
+    It simply appends a line displaying the time, machine, user and call.
+    Hopefully it's helpful to save a running tally of all the times we've ever used it.
+    """
+    log_file = '/%s/kuperberg/SemPrMM/pipeline.log' % pre
+    currentTime = time.strftime("%Y-%m-%d %H:%M:%S")
+    user = getuser()
+    call = ' '.join(sys.argv)
+    machine_name = os.uname()[1]
+    to_save = ' '.join((currentTime, machine_name, user, call))
+    if os.path.exists(log_file):
+        mode = 'a'
+    else:
+        mode = 'w'
+    with open(log_file, mode) as f:
+        f.write('%s\n' % to_save)
+
+
 if __name__ == "__main__":
+    #Let's log this call
+    log_session()
     
     options, subjects = parse_arguments()
     
