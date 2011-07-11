@@ -1093,13 +1093,11 @@ def new_preProc(data):
     meg_py.preProc(data["subject"],data["meg_dir"])
 
 
-def meg_script(data,type,extra=None):
+def meg_script(data,type):
     """
     Run a particular meg script as given in type.
     data: the regular dict
-    type: name of meg script (e.g. "preProc1","preAnat1",etc)
-    extra: list of extra arguments (e.g. for "preProc2", extra would be [{preBlinkTime},
-    {postBlinkTime}])
+    type: name of meg script (e.g. "preProc_setup","preAnat",etc)
     """
     user_script = pj(data['meg_dir'], 'scripts', '%s.sh' % type)
     if os.path.exists(user_script):
@@ -1115,9 +1113,7 @@ def meg_script(data,type,extra=None):
     if not os.path.isdir(log_dir):
         os.mkdir(log_dir)
     log_file = pj(log_dir,"%s.log" % type)
-    my_args = [script_path,data["subject"]]
-    if type != 'preAnat':
-        my_args.append(log_file)
+    my_args = [script_path,data["subject"], log_file]
     if type == "preProc_setup":
         bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
         if not os.path.isfile(bad_chan_path):
@@ -1145,10 +1141,10 @@ def meg_script(data,type,extra=None):
         setup_bem(data)
         #check that flash was unpacked
         if os.path.exists(pj(data["mri_dir"],"MEFLASH")):
-            extra = ["FLASH", log_file]
+            extra = "FLASH"
         else:
-            extra = ["WATER", log_file]
-        my_args.extend(extra)
+            extra = "WATER"
+        my_args.insert(2, extra)
     if type == "makeInv":
         cor_search = pj(os.environ["SUBJECTS_DIR"],data["subject"],"mri","T1-neuromag","sets","COR-*.fif")
         cor_files = glob(cor_search)
