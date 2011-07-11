@@ -287,7 +287,7 @@ def scan2cfg(data):
     not_fieldmaps.extend(good_fieldmaps)
     good_lines = not_fieldmaps
     good_lines.sort(key=lambda x:int(x.split()[0]))
-    pipeline.write_file_with_list(data["cfg_path"],"\n".join(good_lines))
+    pipeline.write_file_with_list(data["cfg_path"], good_lines)
 
 
 ####GENERAL FUNCTIONAL####
@@ -548,7 +548,7 @@ def spm_write_script(data,study,type):
         commands.append("unset DISPLAY")
         mlab_cmd += " -nodisplay "
     commands.append("%s < %s > %s " % (mlab_cmd, spm_jobfile(data,study,type), spm_logfile(data,study,type)))   
-    pipeline.write_file_with_list(shell_script,"\n".join(commands))
+    pipeline.write_file_with_list(shell_script, commands)
     pipeline.make_file_exec(shell_script)
 
 
@@ -577,7 +577,7 @@ def spm_run_art(data):
         sess_contents.append("end")
         sess_path = pj(data["mri_dir"],study,"art_sess.txt")
         sessions.append(sess_path)
-        pipeline.write_file_with_list(sess_path,"\n".join(sess_contents))
+        pipeline.write_file_with_list(sess_path, sess_contents)
     art_m = []
     for session in sessions:
         art_m.append("art('sess_file','{0}');".format(session))
@@ -590,7 +590,7 @@ def spm_run_art(data):
     art_m.append("exit;")
     art_path = pj(data["mri_dir"], 'scripts', "spm_run_art.m")
 
-    pipeline.write_file_with_list(art_path,"\n".join(art_m))
+    pipeline.write_file_with_list(art_path, art_m)
     my_args = ["matlab7.11", "-nodisplay","-nosplash","-nodesktop", "<", art_path]
     proc = pipeline.run_process(my_args,output=sys.stdout,error=sys.stderr)
     proc.communicate()
@@ -713,7 +713,7 @@ def spm_write_coreg_mprage(data):
         mlab_cmd += " < %s > %s " % (outgoing,lf)
         commands.append(mlab_cmd)
     script_name = spm_script_path(data,'ATLLoc', "cowrite")
-    pipeline.write_file_with_list(script_name,"\n".join(commands))
+    pipeline.write_file_with_list(script_name, commands)
     pipeline.make_file_exec(script_name)
     pipeline.run_process(["nohup",script_name],output=sys.stdout).wait()
 
@@ -745,7 +745,7 @@ def recon_write_script(data):
                                 '--hemi %s' % hemi,
                                 '--annotation %s' % annot,
                                 '--labelbase %s' % base]))
-    pipeline.write_file_with_list(script_path,"\n".join(commands))
+    pipeline.write_file_with_list(script_path, commands)
     pipeline.make_file_exec(script_path)
     
 
@@ -777,7 +777,7 @@ def write_par(data,study,info,run):
     full_par.sort(key=lambda x:int(x[0]))
     par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
     if not data["no_par"]:
-        pipeline.write_file_with_list(par_fname,"\n".join(["\t".join(x) for x in full_par]), True)
+        pipeline.write_file_with_list(par_fname, ["\t".join(x) for x in full_par], True)
     
 
 def fs_setup(data,type,subjects=None):
@@ -815,7 +815,7 @@ def fs_setup(data,type,subjects=None):
             commands.append(preproc_cmd)
             commands.append("exit $?")
             script_path = fs_script_path(data,type,study)
-            pipeline.write_file_with_list(script_path,"\n".join(commands))
+            pipeline.write_file_with_list(script_path, commands)
             pipeline.make_file_exec(script_path)
         
         elif type == "analysis":
@@ -859,13 +859,13 @@ def fs_setup(data,type,subjects=None):
                                     neg_con])
                         commands.append(con_cmd)
             script_path = fs_script_path(data,type,study)
-            pipeline.write_file_with_list(script_path,"\n".join(commands))
+            pipeline.write_file_with_list(script_path, commands)
             pipeline.make_file_exec(script_path)
         
         elif type == "stats":
             sname = [data["subject"]]
             sname_path = pj(sessid,"subjectname")
-            pipeline.write_file_with_list(sname_path,"\n".join(sname),True)
+            pipeline.write_file_with_list(sname_path, sname,True)
             #write .par
             study_dict = pipeline.load_data(info_path(data))[study]
             #amount of runs 
@@ -898,7 +898,7 @@ def fs_setup(data,type,subjects=None):
                     commands.append("let z=z+$?")
             commands.append("exit $z")
             script_path = fs_script_path(data,type,study)
-            pipeline.write_file_with_list(script_path,"\n".join(commands))
+            pipeline.write_file_with_list(script_path, commands)
             pipeline.make_file_exec(script_path)
 
         elif type == "group":       
@@ -916,7 +916,7 @@ def fs_setup(data,type,subjects=None):
                 fsgd.append("Input %s %s" % (sub,data["stype"]))
             fsgd.append("\n")
             fsgd_path = pj(func_dir,"%s.%s.fsgd" % (data["stype"],study))
-            pipeline.write_file_with_list(fsgd_path,"\n".join(fsgd),True)
+            pipeline.write_file_with_list(fsgd_path, fsgd, True)
             for space in ["lh","rh","mni305"]:
                 for shape in ["fir","spm"]:
                     commands = []
@@ -940,7 +940,7 @@ def fs_setup(data,type,subjects=None):
                         print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % isx_cmd_path)
                     else:
                         q = False
-                    pipeline.write_file_with_list(isx_cmd_path,"\n".join(commands),q)
+                    pipeline.write_file_with_list(isx_cmd_path, commands,q)
                     pipeline.make_file_exec(isx_cmd_path)
             
         elif type == "glm":
@@ -996,10 +996,10 @@ def fs_setup(data,type,subjects=None):
                             wls_opt =""
                         glm_path = pj(func_dir,"fsfast_scripts","%s.%s-glmfit%s.%s.%s.sh" % (data['stype'], study, wls_opt, aname, con))
                         if data["launchpad"]:
-                            pipeline.write_file_with_list(glm_path, "\n".join(commands),True)
+                            pipeline.write_file_with_list(glm_path, commands,True)
                             print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % glm_path)
                         else:
-                            pipeline.write_file_with_list(glm_path, "\n".join(commands))
+                            pipeline.write_file_with_list(glm_path, commands)
                         pipeline.make_file_exec(glm_path)
                 
         elif type == "image":#this is subject-specific
@@ -1015,7 +1015,7 @@ def fs_setup(data,type,subjects=None):
                         pipeline.make_file_exec(oscript)
                         commands.append(oscript)
             script_path = pj(data["mri_dir"],"scripts","%s-fs-images.sh" % study)
-            pipeline.write_file_with_list(script_path,"\n".join(commands))
+            pipeline.write_file_with_list(script_path, commands)
             pipeline.make_file_exec(script_path)
             if not data['dry']:
                 os.system("""xvfb-run -s "-screen 0 2048x2048x24" %s""" % script_path)  
@@ -1042,7 +1042,7 @@ def fs_setup(data,type,subjects=None):
                 image_path = pj(func_dir,"fsfast_scripts","%s.%s-image-wls.sh" % (data['stype'], study))
             else:
                 image_path = pj(func_dir,"fsfast_scripts","%s-image.sh" % study)
-            pipeline.write_file_with_list(image_path, "\n".join(commands))
+            pipeline.write_file_with_list(image_path, commands)
             pipeline.make_file_exec(image_path)
 
 
@@ -1111,7 +1111,13 @@ def meg_script(data,type,extra=None):
         print('Using default script...')
     if not os.path.exists(script_path):
         raise UserError("meg_script: can not locate {0}".format(type))
+    log_dir = pj(data["meg_dir"],"logs")
+    if not os.path.isdir(log_dir):
+        os.mkdir(log_dir)
+    log_file = pj(log_dir,"%s.log" % type)
     my_args = [script_path,data["subject"]]
+    if type != 'preAnat':
+        my_args.append(log_file)
     if type == "preProc_setup":
         bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
         if not os.path.isfile(bad_chan_path):
@@ -1130,19 +1136,18 @@ def meg_script(data,type,extra=None):
         rej_dir = pj(data['meg_dir'], 'rej')
         if not os.path.isdir(rej_dir):
             os.mkdir(rej_dir)
-        pipeline.write_file_with_list(pj(rej_dir, 'reject.m'), '\n'.join(cmd), data['verbose'])
+        pipeline.write_file_with_list(pj(rej_dir, 'reject.m'), cmd, data['verbose'])
     if type == "preProc_avg":
-        pass
+        pass    
     if type == "preProc_cov":
         pass
     if type == "preAnat":
         setup_bem(data)
         #check that flash was unpacked
         if os.path.exists(pj(data["mri_dir"],"MEFLASH")):
-            extra = ["FLASH"]
+            extra = ["FLASH", log_file]
         else:
-            extra = ["WATER"]
-    if extra:
+            extra = ["WATER", log_file]
         my_args.extend(extra)
     if type == "makeInv":
         cor_search = pj(os.environ["SUBJECTS_DIR"],data["subject"],"mri","T1-neuromag","sets","COR-*.fif")
@@ -1150,12 +1155,7 @@ def meg_script(data,type,extra=None):
         if len(cor_files) < 1:
             raise UserError("No good COR file found in SUBJECTS_DIR/%s/mri/T1-neuromag/sets/" % data["subject"])
     #start the process
-    log_dir = pj(data["meg_dir"],"logs")
-    if not os.path.isdir(log_dir):
-        os.mkdir(log_dir)
-    log_file = pj(log_dir,"%s.log" % type)
-    my_args.extend(['>&', log_file])
-    pipeline.run_script('MEG', type, data['subject'], my_args, log_file, pipeToLog=True)    
+    pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
     os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 
@@ -1274,7 +1274,8 @@ def second_package(data,prefix,date,study_contrasts):
     shutil.copyfile(pj(surf_dir,"index.html"),
         pj(package_dir,"index.html"))
     for study in studies:
-        date_dir = pj(prefix,data["stype"],study,date)
+        list_base = "%s_%s" % (os.path.split(data['list_prefix'])[1], study.lower())
+        date_dir = pj(prefix,data["stype"],study,'%s_%s' % (date, list_base))
         #copy <study>.html
         shutil.copyfile(pj(surf_dir,study+".html"),
             pj(package_dir,study+".html"))
@@ -1320,7 +1321,8 @@ def second_surf(data,prefix,date,study_contrasts):
     else:
         studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
     for study in studies:
-        date_dir = pj(prefix,data["stype"],study,date)
+        list_base = "%s_%s" % (os.path.split(data['list_prefix'])[1], study.lower())
+        date_dir = pj(prefix,data["stype"],study,'%s_%s' % (date, list_base))
         for [contrast,XXXX] in study_contrasts[study]:
             print("\n{0}:\t{1}...".format(study,contrast))
             con_dir = pj(date_dir,contrast)
@@ -1384,11 +1386,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
     else:
         studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
     for study in studies:
-        if data["list_prefix"]:
-            head, base = os.path.split(data['list_prefix'])
-            list_path = pj(head, "%s_%s" % (base, study.lower()))
-        else:
-            list_path = pj(mri_scripts, 'input', "%s_mri_%s" % (data['stype'], study.lower()))
+        list_path = "%s_%s" % (data["list_prefix"], study.lower())
         if not os.path.isfile(list_path):
             raise ValueError("Can't find %s" % list_path)
         print("Getting subjects from %s" % list_path)
@@ -1441,7 +1439,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             print("%s -> %s subjects (%s)" % (contrast,N, " ".join(subjects)))
         print('\n\n')
     shell_path = second_script(data)
-    pipeline.write_file_with_list(shell_path,"\n".join(shell_commands))
+    pipeline.write_file_with_list(shell_path, shell_commands)
     pipeline.make_file_exec(shell_path)
 
 
@@ -1764,7 +1762,7 @@ def parse_arguments():
         help="Overwrite p-value with new --pvalue")
     second_group.add_option("--all_second",dest="all_second",action="store_true",default=False,
         help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
-    second_group.add_option("--list_prefix",dest="list_prefix",default=False,action="store",type="string",
+    second_group.add_option("--list_prefix",dest="list_prefix",default='/%s/kuperberg/SemPrMM/MRI/scripts/input/ya_mri'%pre,action="store",type="string",
         help="With --setup_second, specify the prefix to a subject list. Searched path will be [this option]_[lower case paradigm]")
     parser.add_option_group(second_group)
     

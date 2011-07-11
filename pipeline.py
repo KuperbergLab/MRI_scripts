@@ -259,10 +259,11 @@ def write_file_with_list(path,lines,quiet=False):
     """
     try:
         with open(path,'w') as f:
-            f.writelines(lines)
+            text = '\n'.join(lines)
+            f.write(text + '\n')
         make_lingua(path)
         if not quiet:
-            print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines.split("\n"))))
+            print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines)))
     except IOError:
         raise
 
