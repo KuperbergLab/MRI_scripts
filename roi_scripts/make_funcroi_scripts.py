@@ -10,9 +10,15 @@
 #
 ####################################
 
-import options as opt
-# There should be opt.paradigms, opt.spaces, opt.hrf_shapes, opt.labels, opt.contrasts, and opt.map
+###########
+# Import different options for different stuff
+import options_baleen as opt
+#import options_atlloc as opt
+###########
 
+
+import pipeline
+from os.path import join as pj
 
 ##############
 # No more editing unless you know what you're doing
@@ -30,10 +36,10 @@ for par in opt.paradigms:
             else:
                 frame = '0'    
             for label in opt.labels:
-                roidef = '.'.join((par, sp, sh, label % sp, 'roicfg'))
-                analysis = 'ya.%s.%s.sm8.%s' % (par, sh, sp)
+                roidef = '%s/%s' % (opt.roi_cfg, '.'.join((par, sp, sh, label % sp, 'roicfg')))
+                analysis = '%s.%s.%s.sm8.%s' % (opt.stype, par, sh, sp)
                 for contrast in opt.contrasts:
-                    output = 'roi_summary/%s' % '.'.join((par, sp, sh, label % sp, opt.map, contrast, 'dat'))
+                    output = '%s/%s' % (opt.roi_dir, '.'.join((par, sp, sh, label % sp, opt.map, contrast, 'dat')))
                     #funcoir-table-sess
                     ii += 1
                     if ii > 8:
@@ -44,7 +50,7 @@ for par in opt.paradigms:
                     table_com.append(' '.join(['funcroi-table-sess',
                                             '-o %s' % output,
                                             '-roi %s' % roidef,
-                                            '-analysis %s' % analysis,
+                                            '-analysis %s' % pj(opt.analysis_dir,analysis),
                                             '-sf ya.BaleenHP.sessid',
                                             '-d /cluster/kuperberg/SemPrMM/MRI/functionals/',
                                             '-contrast %s' % contrast,
@@ -82,3 +88,4 @@ for fname, command in zip(fnames, commands):
     with open(fname, 'w') as f:
         f.writelines(command)
         print("Wrote %s" % fname)
+    pipeline.make_file_exec(fname)
