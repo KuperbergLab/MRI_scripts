@@ -833,9 +833,10 @@ def fs_setup(data,type,subjects=None):
                         preproc_opt += "-surface fsaverage %s" % space
                     else:
                         preproc_opt += "-mni305 2"
+                    # can we put analyses in a different directory?
                     aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
                     cmd = " ".join(["mkanalysis-sess",
-                                    "-analysis %s" % aname,
+                                    "-analysis %s" % pj(func_dir, 'fsfast_analyses', aname),
                                     "-fsd %s" % study,
                                     "-p %s.par" % study.lower(),
                                     "%s" % shape_opt,
@@ -884,15 +885,14 @@ def fs_setup(data,type,subjects=None):
             commands.append("let z=0")
             for space in ["lh","rh","mni305"]:
                 for shape in ["spm","fir"]:
+                    # can we put analysis in different place?
                     aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
                     srchdir = func_dir
                     sessid = data["subject"]
-                    logfile = pj(data["mri_dir"],"scripts",aname+".log")
                     cmd = " ".join(["selxavg3-sess",
-                                    "-analysis %s" % aname,
+                                    "-analysis %s" % pj(func_dir, 'fsfast_analyses', aname),
                                     "-s %s" % sessid,
                                     "-d %s" % srchdir,
-                                    "-log %s" % logfile,
                                     ">> %s" % lf])
                     commands.append(cmd)
                     commands.append("let z=z+$?")
@@ -1150,6 +1150,8 @@ def meg_script(data,type):
         cor_files = glob(cor_search)
         if len(cor_files) < 1:
             raise UserError("No good COR file found in SUBJECTS_DIR/%s/mri/T1-neuromag/sets/" % data["subject"])
+    if type == 'makeSTC':
+        pass
     #start the process
     pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
     os.system("chgrp -R lingua %s" % data["meg_dir"])
