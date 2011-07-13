@@ -57,7 +57,7 @@ cond_num = dict({"ATLLoc":
                     "BY":"3",
                     "AX":"4"}
                     })
-                    
+# FSFAST contrasts             
 contrasts = dict({"ATLLoc":
                     {"Sentences":(("1"),("0")),
                     "Wordlist":(("2"),("0")),
@@ -836,7 +836,7 @@ def fs_setup(data,type,subjects=None):
                     # can we put analyses in a different directory?
                     aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
                     cmd = " ".join(["mkanalysis-sess",
-                                    "-analysis %s" % pj(func_dir, 'fsfast_analyses', aname),
+                                    "-analysis %s" % aname,
                                     "-fsd %s" % study,
                                     "-p %s.par" % study.lower(),
                                     "%s" % shape_opt,
@@ -890,7 +890,7 @@ def fs_setup(data,type,subjects=None):
                     srchdir = func_dir
                     sessid = data["subject"]
                     cmd = " ".join(["selxavg3-sess",
-                                    "-analysis %s" % pj(func_dir, 'fsfast_analyses', aname),
+                                    "-analysis %s" % aname,
                                     "-s %s" % sessid,
                                     "-d %s" % srchdir,
                                     ">> %s" % lf])
@@ -937,7 +937,7 @@ def fs_setup(data,type,subjects=None):
                     isx_cmd_path = pj(func_dir, "fsfast_scripts","%s.%s-isxconcat.%s.sh" % (data['stype'], study,aname))
                     if data["launchpad"]:
                         q = True
-                        print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % isx_cmd_path)
+                        print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail %s@nmr.mgh.harvard.edu """ % (isx_cmd_path, getuser()))
                     else:
                         q = False
                     pipeline.write_file_with_list(isx_cmd_path, commands,q)
@@ -1052,7 +1052,7 @@ def fs_run(data,type):
     for study in studies_to_setup(data,"fs_"+type):
         script_to_run = fs_script_path(data,type,study)
         if not os.path.exists(script_to_run):
-            raise UserError("Hey dummy, you need to run --setup_fs_preproc")
+            raise UserError("Hey dummy, you need to run --setup_fs_stats")
         if data["group_parallel"]:
             pipeline.run_script(study,"fs-%s"%type,data['subject'],
                 [script_to_run],fs_logfile(data,type,study))
@@ -1887,6 +1887,7 @@ if __name__ == "__main__":
         Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(process_subject)(subject,data) for subject in subjects)
     else:
         [process_subject(subject,data) for subject in subjects]
+    
     #group level options
     if data["setup_fs_analysis"]:
         fs_setup(data,"analysis")
