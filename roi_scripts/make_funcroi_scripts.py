@@ -39,7 +39,7 @@ for par in opt.paradigms:
                 roidef = '%s/%s' % (opt.roi_cfg, '.'.join((par, sp, sh, label % sp, 'roicfg')))
                 analysis = '%s.%s.%s.sm8.%s' % (opt.stype, par, sh, sp)
                 for contrast in opt.contrasts:
-                    output = '%s/%s' % (opt.roi_dir, '.'.join((par, sp, sh, label % sp, opt.map, contrast, 'dat')))
+                    output = '%s/%s' % (opt.roi_dir, '.'.join((par, sp, sh, label % sp, opt.func_map, contrast, 'dat')))
                     #funcoir-table-sess
                     ii += 1
                     if ii > 8:
@@ -50,11 +50,11 @@ for par in opt.paradigms:
                     table_com.append(' '.join(['funcroi-table-sess',
                                             '-o %s' % output,
                                             '-roi %s' % roidef,
-                                            '-analysis %s' % pj(opt.analysis_dir,analysis),
+                                            '-analysis %s' % analysis,
                                             '-sf ya.BaleenHP.sessid',
                                             '-d /cluster/kuperberg/SemPrMM/MRI/functionals/',
                                             '-contrast %s' % contrast,
-                                            '-map %s' % map,
+                                            '-map %s' % opt.func_map,
                                             '-frame %s' % frame,
                                             '&',
                                             '\n',

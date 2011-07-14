@@ -51,7 +51,7 @@ contrasts = ('Sentences', 'Wordlist','Nonwords')
 # 'cesvarpct' (contrast estimate in $ signal change)
 # 'fsig' (unsigned T values)
 # 'sig' (signed T values)
-map = 'cespct'
+func_map = 'cespct'
 
 # Subject type
 stype = 'ya'
