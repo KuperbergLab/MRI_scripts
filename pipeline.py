@@ -298,6 +298,30 @@ def make_lingua(fname):
     os.fchown(fd, -1, grp.getgrnam('lingua').gr_gid)
     os.close(fd)
 
+def pbs(script, email=None, nodes=1, ppn=1, vmem=7, q='p10'):
+    """
+    This returns a proper pbsubmit command that can be used with the Martinos Launchpad system
+    script: (str) path to the (executable) file that will be run by the launchpad engine
+    email: (Str) if specified, user will get email when job begins and finishes
+    nodes: (int) number of "computers" for job (def is 1)
+    ppn: (int) processors per node (def is 1)
+    vmem: (int) (GB) virtual memory per node (def is 7GB)
+    q: (str) which queue to submit the command to, defaults to p10
+
+    DOES NOT ERROR CHECK USE WISELY
+    
+    See https://www.nmr.mgh.harvard.edu/martinos/itgroup/launchpad.html for more info
+    """
+    cmd = """pbsubmit -c "%s" -l nodes=%d:ppn=%d,vmem=%dgb -q %s""" % (script,
+                                                                    nodes,
+                                                                    ppn,
+                                                                    vmem,
+                                                                    q)
+    if email:
+        cmd += """ -mail %s"""  % email
+    return cmd
+    
+    
 class SPM(object):
     
     """SPM object for first-level analysis"""

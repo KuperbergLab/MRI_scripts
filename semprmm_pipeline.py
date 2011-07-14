@@ -790,6 +790,8 @@ def fs_setup(data,type,subjects=None):
                     "BaleenHP":(6,18),
                     "BaleenLP":(6,18),                  
                     "AXCPT":(4,16)})
+    if type in ('glm', 'group'):
+        group_commands = []
     for study in studies_to_setup(data,"fs_"+type):
         if data["verbose"]:
             print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
@@ -936,11 +938,10 @@ def fs_setup(data,type,subjects=None):
                     commands.append(isx_cmd)
                     isx_cmd_path = pj(func_dir, "fsfast_scripts","%s.%s-isxconcat.%s.sh" % (data['stype'], study,aname))
                     if data["launchpad"]:
-                        q = True
-                        print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail %s@nmr.mgh.harvard.edu """ % (isx_cmd_path, getuser()))
+                        print(pipeline.pbs(isx_cmd_path, email='%s@nmr.mgh.harvard.edu'%getuser(), nodes=1, ppn=1,vmem=16,q='p10'))
                     else:
-                        q = False
-                    pipeline.write_file_with_list(isx_cmd_path, commands,q)
+                        group_commands.append(isx_cmd_path)
+                    pipeline.write_file_with_list(isx_cmd_path, commands, True)
                     pipeline.make_file_exec(isx_cmd_path)
             
         elif type == "glm":
@@ -996,10 +997,10 @@ def fs_setup(data,type,subjects=None):
                             wls_opt =""
                         glm_path = pj(func_dir,"fsfast_scripts","%s.%s-glmfit%s.%s.%s.sh" % (data['stype'], study, wls_opt, aname, con))
                         if data["launchpad"]:
-                            pipeline.write_file_with_list(glm_path, commands,True)
-                            print("""pbsubmit -c "%s" -l nodes=1:ppn=1,vmem=16gb -mail sburns@nmr.mgh.harvard.edu """ % glm_path)
+                            print(pipeline.pbs(glm_path, email='%s@nmr.mgh.harvard.edu'%getuser(), nodes=1, ppn=1,vmem=16, q='p10'))
                         else:
-                            pipeline.write_file_with_list(glm_path, commands)
+                            group_commands.append(glm_path)
+                        pipeline.write_file_with_list(glm_path, commands, True)
                         pipeline.make_file_exec(glm_path)
                 
         elif type == "image":#this is subject-specific
@@ -1044,7 +1045,12 @@ def fs_setup(data,type,subjects=None):
                 image_path = pj(func_dir,"fsfast_scripts","%s-image.sh" % study)
             pipeline.write_file_with_list(image_path, commands)
             pipeline.make_file_exec(image_path)
-
+    # for group options, write out the all_group.sh file
+    if type in ('glm', 'group') and not data['launchpad']:
+        all_fname = pj(func_dir,'fsfast_scripts', 'all_group.sh')
+        pipeline.write_file_with_list(all_fname, group_commands)
+        pipeline.make_file_exec(all_fname)
+        
 
 def fs_run(data,type):
     scripts_to_run = []
