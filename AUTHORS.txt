@@ -1,4 +1,4 @@
-Most everything in this folder was written and is maintained by Scott Burns wit the help of Ellen Lau, both of whom work in Gina Kuperberg's lab.
+Most everything in this folder was written and is maintained by Scott Burns with the help of Ellen Lau, both of whom work in Gina Kuperberg's lab at Massachusetts General Hospital.
 
 Any questions, comments, or suggestions should be sent to:
 
