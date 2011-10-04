@@ -507,7 +507,7 @@ def spm_setup(data,type):
     """
     #does this subject exist?
     if not os.path.exists(data["mri_dir"]):
-        print("Hey dummy, no MRI dir for {0}".format(data["subject"]))
+        print("Hey, no MRI dir for {0}".format(data["subject"]))
         raise UserError("Broke in spm_setup")
     for study in studies_to_setup(data, "spm_"+type):
         job_dir = pj(data["mri_dir"],study,"jobs")
@@ -517,7 +517,7 @@ def spm_setup(data,type):
             stat_dir = pj(data["mri_dir"],study,type)
             if not os.path.exists(stat_dir):
                     os.mkdir(stat_dir)
-            for smooth in ["6mm","8mm"]:
+            for smooth in ["8mm"]:
                 smooth_dir = pj(stat_dir,smooth)
                 if not os.path.exists(smooth_dir):
                     os.mkdir(smooth_dir)
