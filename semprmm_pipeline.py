@@ -517,7 +517,7 @@ def spm_setup(data,type):
             stat_dir = pj(data["mri_dir"],study,type)
             if not os.path.exists(stat_dir):
                     os.mkdir(stat_dir)
-            for smooth in ["8mm"]:
+            for smooth in ["8mm_fs_pp"]:
                 smooth_dir = pj(stat_dir,smooth)
                 if not os.path.exists(smooth_dir):
                     os.mkdir(smooth_dir)
