@@ -8,7 +8,7 @@ function [conArray,p,stats] = mb_structROI(expName, contrastName,roi_file)
 
 
 
-subjList = [1 2 3 4 5 6 7 9 12 15 16 17 18 19 20 21 22 23 24 25 26 27 29 30 31 33]
+subjList = [1 2 3 4 5 6 7 9 12 15 16 17 18 19 20 21 22 23 24 25 26 27 29 30 31 32 33]
 spm('defaults','fmri');
 conArray = [];
 roi_dir = '/autofs/cluster/kuperberg/Software/spm/toolbox/marsbar-aal-0.2';
