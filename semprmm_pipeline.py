@@ -730,7 +730,9 @@ def recon_script_path(data):
 def recon_write_script(data):
     script_path = recon_script_path(data)
     commands = []
-    commands.append("#!/bin/sh")
+    commands.append("#!/bin/csh")
+    commands.append("setenv USE_STABLE_5_0_0")
+    commands.append("source /usr/local/freesurfer/nmr-stable50-env")
     recon_cmd = "recon-all -all -s " + data["subject"]
     #find all mprages 
     mprages = glob(pj(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
@@ -796,7 +798,10 @@ def fs_setup(data,type,subjects=None):
         if data["verbose"]:
             print("fs_setup:{0}:{1}:{2}".format(type,data["subject"],study))
         commands = []
-        commands.append("#!/bin/sh")
+        commands.append("#!/bin/csh")
+        commands.append("setenv USE_STABLE_5_0_0")
+        commands.append("source /usr/local/freesurfer/nmr-stable50-env")
+
         
         if type == "preproc" or type == "stats":
             fsd = pj(data["mri_dir"],study)
@@ -813,7 +818,7 @@ def fs_setup(data,type,subjects=None):
                                     "-surface fsaverage lhrh",
                                     "-sliceorder siemens ",
                                     "-mni305",
-                                    "> %s %s" % lf])
+                                    "> %s" % lf])
             commands.append(preproc_cmd)
             commands.append("exit $?")
             script_path = fs_script_path(data,type,study)
@@ -922,7 +927,10 @@ def fs_setup(data,type,subjects=None):
             for space in ["lh","rh","mni305"]:
                 for shape in ["fir","spm"]:
                     commands = []
-                    commands.append("#!/bin/sh")
+                    commands.append("#!/bin/csh")
+                    commands.append("setenv USE_STABLE_5_0_0")
+                    commands.append("source /usr/local/freesurfer/nmr-stable50-env")
+
                     commands.append("cd %s" % func_dir)
                     aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
                     lf = pj(func_dir,"fsfast_scripts","%s.%s-isxconcat.%s.log" % (data['stype'], study,aname))
@@ -957,7 +965,10 @@ def fs_setup(data,type,subjects=None):
                         adir = pj(group_dir,aname)
                         con_dir = pj(adir,con)
                         commands = []
-                        commands.append("#!/bin/sh")
+                        commands.append("#!/bin/csh")
+                        commands.append("setenv USE_STABLE_5_0_0")
+                        commands.append("source /usr/local/freesurfer/nmr-stable50-env")
+                        
                         commands.append("cd %s" % con_dir)
                         if shape == "fir":
                             #build XXX
