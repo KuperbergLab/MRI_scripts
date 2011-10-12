@@ -1397,6 +1397,9 @@ def second_setup(data,prefix,date_dir,study_contrasts):
     shell_commands = []
     shell_commands.append("#!/bin/sh")
     shell_commands.append("unset DISPLAY")
+    #new_dir = pj(prefix, data['stype'],"_".join([date_
+    
+    
     if data["single_study"]:
         studies = data["single_study"]
     else:
@@ -1474,7 +1477,7 @@ def second_script(data):
     """
     returns the path to the second-level script.
     """
-    return pj(func_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
+    return pj(results_dir,"SecondLevelStats",data["stype"],"all_studies.sh")
 
 
 #####MISC#####
