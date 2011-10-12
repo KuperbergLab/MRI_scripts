@@ -112,6 +112,7 @@ else:
 
 batch_dir = "/%s/kuperberg/SemPrMM/MRI/scripts/spm_batches/" % pre
 func_dir = "/%s/kuperberg/SemPrMM/MRI/functionals/"  % pre
+results_dir = "/%s/kuperberg/SemPrMM/MRI/results/"  % pre
 dicom_dir = "/%s/kuperberg/SemPrMM/MRI/dicoms/" % pre
 meg_dir = "/%s/kuperberg/SemPrMM/MEG/data/" % pre
 meg_scripts = "/%s/kuperberg/SemPrMM/MEG/scripts/" % pre
@@ -1251,7 +1252,7 @@ def second_level(data,type):
     """
     All second level functions pass through here.
     """
-    prefix = pj(func_dir,"SecondLevelStats")
+    prefix = pj(results_dir,"SecondLevelStats")
     study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
         ["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
         "MaskedMM": [["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
