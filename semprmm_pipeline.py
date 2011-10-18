@@ -809,6 +809,10 @@ def fs_setup(data,type,subjects=None):
             sessid = data["mri_dir"]
         
         if type == "preproc":
+            sname = [data["subject"]]
+            sname_path = pj(sessid,"subjectname")
+            pipeline.write_file_with_list(sname_path, sname,True)
+
             study_dict = pipeline.load_data(info_path(data))[study]
             #amount of runs 
             runsXXX = [key for key in study_dict.keys() if ("XXX" in key and "Run" in key)]
