@@ -809,6 +809,18 @@ def fs_setup(data,type,subjects=None):
             sessid = data["mri_dir"]
         
         if type == "preproc":
+            study_dict = pipeline.load_data(info_path(data))[study]
+            #amount of runs 
+            runsXXX = [key for key in study_dict.keys() if ("XXX" in key and "Run" in key)]
+            for runXXX in runsXXX:
+                run = runXXX.partition("Run")[2].partition("XXX")[0]
+                write_par(data,study,study_dict,run)
+                #*.nii -> f.nii
+                real_path = pj(fsd,study_dict[runXXX],study+run+".nii")
+                sym_path = pj(fsd,study_dict[runXXX],"f.nii")
+                if not os.path.exists(sym_path):
+                    os.symlink(real_path,sym_path)
+        
             lf = fs_logfile(data,type,study)
             preproc_cmd = " ".join(["preproc-sess",
                                     "-d /cluster/kuperberg/SemPrMM/MRI/functionals/",
