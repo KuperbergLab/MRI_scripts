@@ -518,12 +518,19 @@ def spm_setup(data,type):
             stat_dir = pj(data["mri_dir"],study,type)
             if not os.path.exists(stat_dir):
                     os.mkdir(stat_dir)
-            for smooth in ["8mm_fs_pp"]:
-                smooth_dir = pj(stat_dir,smooth)
-                if not os.path.exists(smooth_dir):
-                    os.mkdir(smooth_dir)
+            if data['spm_fs_pp']:
+    			good_type = "stats_fs_pp"
+    			smooth = "8mm_fs_pp"
+            else:
+            	smooth = "8mm"
+            smooth_dir = pj(stat_dir,smooth)
+            if not os.path.exists(smooth_dir):
+                os.mkdir(smooth_dir)
         spm_write_mlab_script(data,study,type)
-        spm_write_script(data,study,type)
+        if data['spm_fs_pp']:
+        	spm_write_script(data,study,good_type)
+        else:
+        	spm_write_script(data,study,type)
 
 
 def spm_script_path(data,study,type):
@@ -544,6 +551,12 @@ def spm_write_script(data,study,type):
     shell_script = spm_script_path(data,study,type)
     commands = []
     commands.append("#!/bin/sh")
+    if "stats" in type or "spm_fs_pp" in type:
+    	if data['spm_fs_pp']:
+    		spmfile = pj(data["mri_dir"],study,"stats_outliers","8mm_fs_pp","SPM.mat")
+    	else:
+    		spmfile = pj(data["mri_dir"],study,"stats_outliers","8mm","SPM.mat")
+    	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
         commands.append("unset DISPLAY")
@@ -604,6 +617,8 @@ def spm_write_mlab_script(data,study,type):
     """
     if "stats_outliers" in type:
         good_type = "stats"
+    elif data['spm_fs_pp']:
+    	good_type = "stats_fs_pp"
     else:
         good_type = type
     batch_dict = spm_matlab_dict(data,study,type)
@@ -612,10 +627,10 @@ def spm_write_mlab_script(data,study,type):
     if data['misses']:
         batch_i = pj(batch_dir,data['stype'],'_'.join([study.lower(),good_type,"miss.m"]))
     else:
-        batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+    	batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
     if not os.path.isfile(batch_i):
         raise IOError("Cannot locate %s" % batch_i)
-    batch_o = spm_jobfile(data,study,type)
+    batch_o = spm_jobfile(data,study,good_type)
     pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
@@ -686,6 +701,8 @@ def spm_run(data,type):
     scripts_to_run = []
     studies = []
     for study in studies_to_setup(data,"spm_"+type):
+        if data['spm_fs_pp']:
+			type = "stats_fs_pp"
         script_to_run = spm_script_path(data,study,type)
         if not os.path.exists(script_to_run):
             raise UserError("spm_run: no script found for %s" % study)
@@ -830,12 +847,13 @@ def fs_setup(data,type,subjects=None):
                                     "-d /cluster/kuperberg/SemPrMM/MRI/functionals/",
                                     "-s %s" % data["subject"],
                                     "-fsd %s" % study, 
-                                    "-per-run",
+                                    "-per-session",
                                     "-fwhm 8",
-                                    "-surface fsaverage lhrh",
-                                    "-sliceorder siemens ",
+                                    "-sliceorder siemens",
                                     "-mni305",
+                                    "-force",
                                     "> %s" % lf])
+            #temporarily removed surface from preprocessing: "-surface fsaverage lhrh",
             commands.append(preproc_cmd)
             commands.append("exit $?")
             script_path = fs_script_path(data,type,study)
@@ -1216,7 +1234,7 @@ def run_ica(data):
 
 def setup_bem(data):
     """
-    This makes symbolic links to the MEFLASH_8e_1mm_iso_5deg dicom images. This is called for --preProc.
+    This makes symbolic links to the MEFLASH_8e_1mm_iso_5deg dicom images. This is called for --preAnat.
     """
     print("Setup_BEM:{0}".format(data["subject"]))
     #must have env var set
@@ -1709,6 +1727,7 @@ def parse_arguments():
         help="Register the subject's MPRAGE to each functional run")
     spm_group.add_option("--unwarp",dest="unwarp",action="store_true",default=False,
         help="Use with --setup_preproc, do unwarping")
+    spm_group.add_option("--spm_fs_pp",dest="spm_fs_pp",action="store_true",default=False, help="Uses fs preprocessing with spm stats")
     parser.add_option_group(spm_group)
     
     #FSFast options
