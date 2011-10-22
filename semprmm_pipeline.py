@@ -77,7 +77,7 @@ contrasts = dict({"ATLLoc":
                 "BaleenLP":
                     {"Related":(("1"),("0")),
                     "Unrelated":(("2"),("0")),
-                    "UnrelateFiller":(("3"),("0")),
+                    "UnrelatedFiller":(("3"),("0")),
                     "AnimalTarget":(("4"),("0")),
                     "AnimalPrime":(("5"),("0")),
                     "Unrelated-Related":(("2"),("1")),
@@ -87,7 +87,7 @@ contrasts = dict({"ATLLoc":
                     {"Related":(("1"),("0")),
                     "Unrelated":(("2"),("0")),
                     "RelatedFiller":(("3"),("0")),
-                    "UnrelateFiller":(("4"),("0")),
+                    "UnrelatedFiller":(("4"),("0")),
                     "AnimalTarget":(("5"),("0")),
                     "AnimalPrime":(("6"),("0")),
                     "Unrelated-Related":(("2"),("1")),
@@ -518,19 +518,12 @@ def spm_setup(data,type):
             stat_dir = pj(data["mri_dir"],study,type)
             if not os.path.exists(stat_dir):
                     os.mkdir(stat_dir)
-            if data['spm_fs_pp']:
-    			good_type = "stats_fs_pp"
-    			smooth = "8mm_fs_pp"
-            else:
-            	smooth = "8mm"
+            smooth = "8mm"
             smooth_dir = pj(stat_dir,smooth)
             if not os.path.exists(smooth_dir):
                 os.mkdir(smooth_dir)
         spm_write_mlab_script(data,study,type)
-        if data['spm_fs_pp']:
-        	spm_write_script(data,study,good_type)
-        else:
-        	spm_write_script(data,study,type)
+        spm_write_script(data,study,type)
 
 
 def spm_script_path(data,study,type):
@@ -551,11 +544,8 @@ def spm_write_script(data,study,type):
     shell_script = spm_script_path(data,study,type)
     commands = []
     commands.append("#!/bin/sh")
-    if "stats" in type or "spm_fs_pp" in type:
-    	if data['spm_fs_pp']:
-    		spmfile = pj(data["mri_dir"],study,"stats_outliers","8mm_fs_pp","SPM.mat")
-    	else:
-    		spmfile = pj(data["mri_dir"],study,"stats_outliers","8mm","SPM.mat")
+    if "stats" in type:
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","8mm","SPM.mat")
     	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
@@ -617,8 +607,6 @@ def spm_write_mlab_script(data,study,type):
     """
     if "stats_outliers" in type:
         good_type = "stats"
-    elif data['spm_fs_pp']:
-    	good_type = "stats_fs_pp"
     else:
         good_type = type
     batch_dict = spm_matlab_dict(data,study,type)
@@ -701,8 +689,6 @@ def spm_run(data,type):
     scripts_to_run = []
     studies = []
     for study in studies_to_setup(data,"spm_"+type):
-        if data['spm_fs_pp']:
-			type = "stats_fs_pp"
         script_to_run = spm_script_path(data,study,type)
         if not os.path.exists(script_to_run):
             raise UserError("spm_run: no script found for %s" % study)
@@ -1616,6 +1602,8 @@ def process_subject(subject,data):
         spm_setup(data,"stats")
     if data["setup_outliers"]:
         spm_setup(data,"stats_outliers")
+    if data["setup_spm_fspp"]:
+        spm_setup(data,"stats_spm_fspp")
     if data["setup_fs_image"]:
         fs_setup(data,"image")
     if data["run_art"]:
@@ -1626,6 +1614,9 @@ def process_subject(subject,data):
         spm_run(data,"stats")
     if data["run_outliers"]:
         spm_run(data,"stats_outliers")
+    if data["run_spm_fspp"]:
+        spm_run(data,"stats_spm_fspp")
+
     
 	#recon
     if data["setup_recon"]:
@@ -1715,7 +1706,10 @@ def parse_arguments():
     spm_group.add_option("--setup_outliers",dest="setup_outliers",
         help="Make spm (stats) batch files using outliers as mult regressors",action="store_true",
         default=False)
+    spm_group.add_option("--setup_spm_fspp",dest="setup_spm_fspp",action="store_true",default=False, help="Uses fs preprocessing with spm stats")
     spm_group.add_option("--run_outliers",dest="run_outliers",help="Run outlier script",
+        action="store_true",default=False)
+    spm_group.add_option("--run_spm_fspp",dest="run_spm_fspp",help="Run fs preproc with spm stats script",
         action="store_true",default=False)
     spm_group.add_option("--run_stats",dest="run_stats",help="Run stats script",action="store_true",
         default=False)
@@ -1727,7 +1721,7 @@ def parse_arguments():
         help="Register the subject's MPRAGE to each functional run")
     spm_group.add_option("--unwarp",dest="unwarp",action="store_true",default=False,
         help="Use with --setup_preproc, do unwarping")
-    spm_group.add_option("--spm_fs_pp",dest="spm_fs_pp",action="store_true",default=False, help="Uses fs preprocessing with spm stats")
+
     parser.add_option_group(spm_group)
     
     #FSFast options
