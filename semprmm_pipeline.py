@@ -606,7 +606,7 @@ def spm_write_mlab_script(data,study,type):
     This basically just wraps f2f_replace and uses the dictionary from spm_matlab_dict.
     """
     if "stats_outliers" in type:
-        good_type = "stats"
+        good_type = "stats_outliers"
     else:
         good_type = type
     batch_dict = spm_matlab_dict(data,study,type)
@@ -836,10 +836,10 @@ def fs_setup(data,type,subjects=None):
                                     "-per-session",
                                     "-fwhm 8",
                                     "-sliceorder siemens",
+                                    "-surface fsaverage lhrh",
                                     "-mni305",
                                     "-force",
                                     "> %s" % lf])
-            #temporarily removed surface from preprocessing: "-surface fsaverage lhrh",
             commands.append(preproc_cmd)
             commands.append("exit $?")
             script_path = fs_script_path(data,type,study)
@@ -1273,6 +1273,8 @@ def second_level(data,type):
     All second level functions pass through here.
     """
     prefix = pj(results_dir,"SecondLevelStats")
+    data["list_prefix"] = data["list_prefix"]+data["stype"]+"_mri"
+    print data["list_prefix"]
     study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
         ["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
         "MaskedMM": [["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
@@ -1447,7 +1449,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "8mm_fs_pp", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_spm_fspp", "8mm", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
@@ -1810,7 +1812,7 @@ def parse_arguments():
         help="Overwrite p-value with new --pvalue")
     second_group.add_option("--all_second",dest="all_second",action="store_true",default=False,
         help="Run --setup_second,--run_second,--surf_second, and --package_second all in one call")
-    second_group.add_option("--list_prefix",dest="list_prefix",default='/%s/kuperberg/SemPrMM/MRI/scripts/input/ya_mri'%pre,action="store",type="string",
+    second_group.add_option("--list_prefix",dest="list_prefix",default='/%s/kuperberg/SemPrMM/MRI/scripts/input/'%pre,action="store",type="string",
         help="With --setup_second, specify the prefix to a subject list. Searched path will be [this option]_[lower case paradigm]")
     parser.add_option_group(second_group)
     
@@ -1892,6 +1894,7 @@ if __name__ == "__main__":
     
     if not data["stype"]:
         data['stype'] = subject_type(subjects)
+
 
     # handle full stream options
     if data['first']:
