@@ -833,7 +833,7 @@ def fs_setup(data,type,subjects=None):
                                     "-d /cluster/kuperberg/SemPrMM/MRI/functionals/",
                                     "-s %s" % data["subject"],
                                     "-fsd %s" % study, 
-                                    "-per-session",
+                                    "-per-run",
                                     "-fwhm 8",
                                     "-sliceorder siemens",
                                     "-surface fsaverage lhrh",
