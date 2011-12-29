@@ -911,10 +911,10 @@ def fs_setup(data,type,subjects=None):
             lf = fs_logfile(data,type,study)
             commands.append("rm %s" % lf)
             commands.append("let z=0")
-            for space in ["lh","rh","mni305"]:
-                for shape in ["spm","fir"]:
+            for space in ["lh","rh"]: #orig: ["lh","rh","mni305"]
+                for shape in ["spm"]:  #orig: ["spm","fir"]
                     # can we put analysis in different place?
-                    aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+                    aname = "%s.%s.sm8.%s" % (study,shape,space)  #changed from (data["stype"],study,shape,space)
                     srchdir = func_dir
                     sessid = data["subject"]
                     cmd = " ".join(["selxavg3-sess",
@@ -1183,7 +1183,7 @@ def meg_script(data,type):
         else:
             extra = "WATER"
         my_args.insert(2, extra)
-    if type == "makeInv":
+    if type == "makeFwd":
         cor_search = pj(os.environ["SUBJECTS_DIR"],data["subject"],"mri","T1-neuromag","sets","COR-*.fif")
         cor_files = glob(cor_search)
         if len(cor_files) < 1:
@@ -1650,6 +1650,8 @@ def process_subject(subject,data):
         new_preProc(data)
     if data["preAnat"]:
         meg_script(data,"preAnat")
+    if data["makeFwd"]:
+        meg_script(data,"makeFwd")        
     if data["makeInv"]:
         meg_script(data,"makeInv")
     if data["makeSTC"]:
@@ -1778,6 +1780,8 @@ def parse_arguments():
         action="store_true",default=False)
     meg_group.add_option("--makeInv",dest="makeInv",action="store_true",default=False,
         help="Run the MEG makeInv script")
+    meg_group.add_option("--makeFwd",dest="makeFwd",action="store_true",default=False,
+        help="Run the MEG makeFwd script")        
     meg_group.add_option("--run_ica",dest="run_ica",action="store_true",default=False,
         help="Run ICA processing (takes 90-120 minutes).")
     meg_group.add_option("--setup_bem",dest="setup_bem",help="Setup BEM folders/dicoms",
