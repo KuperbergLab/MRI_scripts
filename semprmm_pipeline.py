@@ -936,14 +936,14 @@ def fs_setup(data,type,subjects=None):
             fsgd.append("Class %s plus blue" % data["stype"])
             fsgd.append("Variables")
             #take subjects from fuctionals/data["stype"].study.sessid
-            sessid = pj(func_dir,"%s.%s.sessid" % (data["stype"],study))
+            sessid = pj(func_dir,"%s.group-analysis" % data["stype"],"%s.%s.sessid" % (data["stype"],study))
             subjects = get_subjects(sessid)
             if not subjects:
                 raise UserError("Couldn't read %s" % sessid)
             for sub in subjects:
                 fsgd.append("Input %s %s" % (sub,data["stype"]))
             fsgd.append("\n")
-            fsgd_path = pj(func_dir,"%s.%s.fsgd" % (data["stype"],study))
+            fsgd_path = pj(func_dir,"%s.group-analysis" % data["stype"],"%s.%s.fsgd" % (data["stype"],study))
             pipeline.write_file_with_list(fsgd_path, fsgd, True)
             for space in ["lh","rh","mni305"]:
                 for shape in ["fir","spm"]:
@@ -954,7 +954,7 @@ def fs_setup(data,type,subjects=None):
 
                     commands.append("cd %s" % func_dir)
                     aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
-                    lf = pj(func_dir,"fsfast_scripts","%s.%s-isxconcat.%s.log" % (data['stype'], study,aname))
+                    lf = pj(mri_scripts,"fsfast_scripts","%s.%s-isxconcat.%s.log" % (data['stype'], study,aname))
                     isx_cmd = " ".join(["isxconcat-sess",
                                         "-a %s" % aname,
                                         "-d %s" % func_dir,
@@ -965,7 +965,7 @@ def fs_setup(data,type,subjects=None):
                                         "-o %s.group-analysis/%s/" % (data["stype"], study),
                                         ">& %s" % lf])
                     commands.append(isx_cmd)
-                    isx_cmd_path = pj(func_dir, "fsfast_scripts","%s.%s-isxconcat.%s.sh" % (data['stype'], study,aname))
+                    isx_cmd_path = pj(mri_scripts, "fsfast_scripts","%s.%s-isxconcat.%s.sh" % (data['stype'], study,aname))
                     if data["launchpad"]:
                         print(pipeline.pbs(isx_cmd_path, email='%s@nmr.mgh.harvard.edu'%getuser(), nodes=1, ppn=1,vmem=16,q='p10'))
                     else:
@@ -1079,9 +1079,9 @@ def fs_setup(data,type,subjects=None):
             pipeline.make_file_exec(image_path)
     # for group options, write out the all_group.sh file
     if type in ('glm', 'group') and not data['launchpad']:
-        all_fname = pj(func_dir,'fsfast_scripts', 'all_group.sh')
+        all_fname = pj(mri_scripts,'fsfast_scripts', 'all_group.sh')
         pipeline.write_file_with_list(all_fname, group_commands)
-        pipeline.make_file_exec(all_fname)
+        #pipeline.make_file_exec(all_fname)    ##uncomment if you want to run *everything* at once
         
 
 def fs_run(data,type):
