@@ -946,7 +946,7 @@ def fs_setup(data,type,subjects=None):
             fsgd_path = pj(func_dir,"%s.group-analysis" % data["stype"],"%s.%s.fsgd" % (data["stype"],study))
             pipeline.write_file_with_list(fsgd_path, fsgd, True)
             for space in ["lh","rh","mni305"]:
-                for shape in ["fir","spm"]:
+                for shape in ["shrf"]:  #add fir if desired
                     commands = []
                     commands.append("#!/bin/csh")
                     commands.append("setenv USE_STABLE_5_0_0")
@@ -976,7 +976,7 @@ def fs_setup(data,type,subjects=None):
         elif type == "glm":
             for con in contrasts[study].keys():
                 for space in ["lh","rh","mni305"]:
-                    for shape in ["fir","spm"]:
+                    for shape in ["shrf"]:   #update if you want to run fir as well
                         if space != "mni305":
                             space_opt = "--surf fsaverage %s" % space
                         else:
@@ -1038,7 +1038,7 @@ def fs_setup(data,type,subjects=None):
         elif type == "image":#this is subject-specific
             for con in ["Unrelated-Related"]:#contrasts[study].keys()
                 for space in ["lh","rh"]:
-                    for shape in ["spm"]:
+                    for shape in ["shrf"]:
                         aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
                         con_dir = pj(data["mri_dir"],study,aname,con)
                         replace = {"con_dir":con_dir,"hemil":space,"overlay":"sig.nii.gz","subject":"fsaverage","thresh":"0.1"}
@@ -1056,7 +1056,7 @@ def fs_setup(data,type,subjects=None):
         elif type == "group_image":
             for con in contrasts[study].keys():
                 for space in ["lh","rh"]:
-                    for shape in ["spm"]: #only spm for now
+                    for shape in ["shrf"]: #only standard hrf for now
                         aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
                         group_dir = pj(func_dir,"%s.group-analysis" % data["stype"])
                         adir = pj(group_dir,aname)
