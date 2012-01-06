@@ -118,6 +118,7 @@ meg_dir = "/%s/kuperberg/SemPrMM/MEG/data/" % pre
 meg_scripts = "/%s/kuperberg/SemPrMM/MEG/scripts/" % pre
 mri_scripts = "/%s/kuperberg/SemPrMM/MRI/scripts/" % pre
 mri_vtsd = "/%s/kuperberg/SemPrMM/MRI/vtsd_logs/" % pre
+mri_results = "/%s/kuperberg/SemPrMM/MRI/results/" % pre
 running_jobs = []
 
 
@@ -953,7 +954,7 @@ def fs_setup(data,type,subjects=None):
                     commands.append("source /usr/local/freesurfer/nmr-stable50-env")
 
                     commands.append("cd %s" % func_dir)
-                    aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
+                    aname = "%s.%s.sm8.%s" % (study,shape,space)
                     lf = pj(mri_scripts,"fsfast_scripts","%s.%s-isxconcat.%s.log" % (data['stype'], study,aname))
                     isx_cmd = " ".join(["isxconcat-sess",
                                         "-a %s" % aname,
@@ -981,8 +982,8 @@ def fs_setup(data,type,subjects=None):
                             space_opt = "--surf fsaverage %s" % space
                         else:
                             space_opt = ""
-                        aname = "%s.%s.%s.sm8.%s" % (data["stype"],study,shape,space)
-                        group_dir = pj(func_dir,"%s.group-analysis/%s" % (data["stype"], study))
+                        aname = "%s.%s.sm8.%s" % (study,shape,space)
+                        group_dir = pj(mri_results,"fsfast_SecondLevel",data["stype"])
                         adir = pj(group_dir,aname)
                         con_dir = pj(adir,con)
                         commands = []
@@ -1007,7 +1008,6 @@ def fs_setup(data,type,subjects=None):
                                                         "--glmdir %s" % glmdir,
                                                         "--y ces.%s.nii.gz" % cesXXX,
                                                         wls_opt,
-                                                        "--mask %s" % pj(adir,"mask.nii.gz"),
                                                         space_opt]))
                         else:
                             if data["wls"]:
@@ -1021,13 +1021,12 @@ def fs_setup(data,type,subjects=None):
                                                     "--glmdir %s" % glmdir,
                                                     "--y ces.nii.gz",
                                                     wls_opt,
-                                                    "--mask %s" % pj(adir,"mask.nii.gz"),
                                                     space_opt]))
                         if data["wls"]:
                             wls_opt = "-wls"
                         else:
                             wls_opt =""
-                        glm_path = pj(func_dir,"fsfast_scripts","%s.%s-glmfit%s.%s.%s.sh" % (data['stype'], study, wls_opt, aname, con))
+                        glm_path = pj(mri_scripts,"fsfast_scripts","%s.%s-glmfit%s.%s.%s.sh" % (data['stype'], study, wls_opt, aname, con))
                         if data["launchpad"]:
                             print(pipeline.pbs(glm_path, email='%s@nmr.mgh.harvard.edu'%getuser(), nodes=1, ppn=1,vmem=16, q='p10'))
                         else:
