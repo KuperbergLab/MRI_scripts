@@ -963,7 +963,7 @@ def fs_setup(data,type,subjects=None):
                                         "-sf %s" % sessid,
                                         "-no-hrf",
                                         "-fsgd %s" % fsgd_path,
-                                        "-o %s.group-analysis/%s/" % (data["stype"], study),
+                                        "-o %sfsfast_SecondLevel/%s/" % (mri_results,data["stype"]),
                                         ">& %s" % lf])
                     commands.append(isx_cmd)
                     isx_cmd_path = pj(mri_scripts, "fsfast_scripts","%s.%s-isxconcat.%s.sh" % (data['stype'], study,aname))
