@@ -998,7 +998,7 @@ def fs_setup(data,type,subjects=None):
                             XXX = [conc((x+fir_wind[study][0])/2) for x in range(-1*fir_wind[study][0],fir_wind[study][1],2)]
                             for cesXXX in XXX:
                                 if data["wls"]:
-                                    wls_opt = "--wls cesvar.%s.nii.gz" % cesXXX
+                                    wls_opt = "--wls cesvar.%s.nii" % cesXXX
                                     glmdir = "glm.%s.wls" % cesXXX
                                 else:
                                     wls_opt = ""
@@ -1006,12 +1006,12 @@ def fs_setup(data,type,subjects=None):
                                 commands.append(" ".join(["mri_glmfit",
                                                         "--osgm",
                                                         "--glmdir %s" % glmdir,
-                                                        "--y ces.%s.nii.gz" % cesXXX,
+                                                        "--y ces.%s.nii" % cesXXX,
                                                         wls_opt,
                                                         space_opt]))
                         else:
                             if data["wls"]:
-                                wls_opt = "--wls cesvar.nii.gz"
+                                wls_opt = "--wls cesvar.nii"
                                 glmdir = "glm.wls"
                             else:
                                 wls_opt = ""
@@ -1019,7 +1019,7 @@ def fs_setup(data,type,subjects=None):
                             commands.append(" ".join(["mri_glmfit",
                                                     "--osgm",
                                                     "--glmdir %s" % glmdir,
-                                                    "--y ces.nii.gz",
+                                                    "--y ces.nii",
                                                     wls_opt,
                                                     space_opt]))
                         if data["wls"]:
@@ -1080,7 +1080,7 @@ def fs_setup(data,type,subjects=None):
     if type in ('glm', 'group') and not data['launchpad']:
         all_fname = pj(mri_scripts,'fsfast_scripts', 'all_group.sh')
         pipeline.write_file_with_list(all_fname, group_commands)
-        #pipeline.make_file_exec(all_fname)    ##uncomment if you want to run *everything* at once
+        #pipeline.make_file_exec(all_fname)    
         
 
 def fs_run(data,type):
