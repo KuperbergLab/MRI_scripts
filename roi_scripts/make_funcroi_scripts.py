@@ -36,10 +36,11 @@ for par in opt.paradigms:
             else:
                 frame = '0'    
             for label in opt.labels:
-                roidef = '%s/%s' % (opt.roi_cfg, '.'.join((par, sp, sh, label % sp, 'roicfg')))
-                analysis = '%s.%s.%s.sm8.%s' % (opt.stype, par, sh, sp)
+                roidef = '%s/%s' % (opt.roi_cfg, '.'.join((par, sp, sh, opt.labels[label], 'roicfg')))
+                print roidef
+                analysis = '%s.%s.sm8.%s' % (par, sh, sp)
                 for contrast in opt.contrasts:
-                    output = '%s/%s' % (opt.roi_dir, '.'.join((par, sp, sh, label % sp, opt.func_map, contrast, 'dat')))
+                    output = '%s/%s' % (opt.roi_dir, '.'.join((par, sp, sh, opt.labels[label], opt.func_map, contrast, 'dat')))
                     #funcoir-table-sess
                     ii += 1
                     if ii > 8:
@@ -51,7 +52,7 @@ for par in opt.paradigms:
                                             '-o %s' % output,
                                             '-roi %s' % roidef,
                                             '-analysis %s' % analysis,
-                                            '-sf ya.BaleenHP.sessid',
+                                            '-sf %s.group-analysis/%s.%s.sessid' % (opt.stype, opt.stype, par),
                                             '-d /cluster/kuperberg/SemPrMM/MRI/functionals/',
                                             '-contrast %s' % contrast,
                                             '-map %s' % opt.func_map,
@@ -73,7 +74,7 @@ for par in opt.paradigms:
                     wait = ''
                 #funcroi-sess
                 sess_com.append(' '.join(['funcroi-sess',
-                                        '-sf ya.%s.sessid' % par,
+                                        '-sf %s.group-analysis/%s.%s.sessid' % (opt.stype, opt.stype, par),
                                         '-d /cluster/kuperberg/SemPrMM/MRI/functionals/',
                                         '-roi %s' % roidef,
                                         ' &',

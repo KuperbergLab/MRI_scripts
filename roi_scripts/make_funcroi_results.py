@@ -3,10 +3,12 @@
 import sys
 
 
+##This just works for the .shrf analysis currently
+
 #########
 # Import different options to work on different things
-import options_baleen as opt
-#import options_atlloc as opt
+#import options_baleen as opt
+import options_atlloc as opt
 #########
 
 
@@ -36,7 +38,7 @@ def dat_dict(paradigm, labels, contrasts, spaces):
         for contrast in contrasts:
             data[label][contrast] = {}
             for sp in spaces:
-                input = '%s/%s.%s.spm.%s.%s.%s.dat' % (opt.roi_dir, paradigm, sp, label % sp, opt.func_map, contrast)
+                input = '%s/%s.%s.shrf.%s.%s.%s.dat' % (opt.roi_dir, paradigm, sp, opt.labels[label], opt.func_map, contrast)
                 data[label][contrast][sp] = parse_dat(input)
     return data
 
