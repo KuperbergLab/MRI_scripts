@@ -72,7 +72,7 @@ contrasts = dict({"ATLLoc":
                     "Unrelated":(("3"),("0")),
                     "InsectPrime":(("4"),("0")),
                     "InsectTarget":(("5"),("0")),
-                    "Dir-Unr":(("1"),("3")),
+                    "Unr-Dir":(("3"),("1")),"Unr-Indir":(("3"),("2")),
                     "all":(("1","2","3","4","5"),("0"))},
                 "BaleenLP":
                     {"Related":(("1"),("0")),
