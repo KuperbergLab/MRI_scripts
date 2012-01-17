@@ -8,7 +8,7 @@ import sys
 #########
 # Import different options to work on different things
 #import options_baleen as opt
-import options_maskedmm_ya as opt
+import options_atlloc_ac as opt
 #########
 
 
@@ -38,7 +38,7 @@ def dat_dict(paradigm, labels, contrasts, spaces):
         for contrast in contrasts:
             data[label][contrast] = {}
             for sp in spaces:
-                input = '%s/dat/%s.%s.%s.shrf.%s.%s.%s.dat' % (opt.roi_dir, opt.stype, paradigm, sp, opt.labels[label], opt.func_map, contrast)
+                input = '%s/dat/%s.%s.shrf.%s.%s.%s.dat' % (opt.roi_dir, paradigm, sp, opt.labels[label], opt.func_map, contrast)
                 data[label][contrast][sp] = parse_dat(input)
     return data
 
