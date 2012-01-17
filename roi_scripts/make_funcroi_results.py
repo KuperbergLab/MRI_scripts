@@ -8,7 +8,7 @@ import sys
 #########
 # Import different options to work on different things
 #import options_baleen as opt
-import options_atlloc as opt
+import options_maskedmm_ya as opt
 #########
 
 
@@ -102,7 +102,7 @@ def print_paradigm(data, paradigm, labels, contrasts, spaces):
         #append to entire text field
         txt.extend(sub_txt)
     #format results file and write out
-    f = open(opt.results_fname % paradigm, 'w')
+    f = open(opt.results_fname % (opt.stype, paradigm), 'w')
     f.write('\n'.join(txt))
     f.close()
     
