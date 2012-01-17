@@ -40,7 +40,7 @@ for par in opt.paradigms:
                 print roidef
                 analysis = '%s.%s.sm8.%s' % (par, sh, sp)
                 for contrast in opt.contrasts:
-                    output = '%s/%s' % (opt.roi_dir, '.'.join((par, sp, sh, opt.labels[label], opt.func_map, contrast, 'dat')))
+                    output = '%s/dat/%s' % (opt.roi_dir, '.'.join((opt.stype,par, sp, sh, opt.labels[label], opt.func_map, contrast, 'dat')))
                     #funcoir-table-sess
                     ii += 1
                     if ii > 8:
