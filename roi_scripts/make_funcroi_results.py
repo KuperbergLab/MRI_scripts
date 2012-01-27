@@ -8,7 +8,7 @@ import sys
 #########
 # Import different options to work on different things
 #import options_baleen as opt
-import options_atlloc_ac as opt
+import options_maskedmm_sc as opt
 #########
 
 
