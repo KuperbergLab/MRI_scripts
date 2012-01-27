@@ -72,7 +72,7 @@ def main():
 		for study in studies:
 			subjects = get_subjects(mod,study)
 			study_results = parse_study(mod,study,subjects)
-			with open(mod+'_'+study+'_accuracy.log','w') as f:
+			with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy'+mod+'_'+study+'_accuracy.log','w') as f:
 				#write out header
 				f.write('sub:\t\t')
 				for code in code_names[study]:
