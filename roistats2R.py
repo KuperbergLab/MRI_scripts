@@ -41,16 +41,16 @@ def roistats2R(subj_gp, exp):
         Contrasts.append(Con[1])
         Contrasts.append(Con[3])
         Contrasts.append(Con[5])
-        print Contrasts
-        for i in range(0, subj_num):
-                print subj[i]
+##        print Contrasts
+##        for i in range(0, subj_num):
+##                print subj[i]
         
         i = 0
         for i in range(1, trialCount):
              line = dataTable1[i]
              if len(line) < 4:
                           c_label = line[2]
-                          print c_label
+##                          print c_label
              if len(line) > 4:
                           count=1  ##for signal values
                           for l in range(0, len(Contrasts)):
@@ -69,7 +69,7 @@ def roistats2R(subj_gp, exp):
         outFile = "/cluster/kuperberg/SemPrMM/MRI/results/roi_fsfast/R/" + subj_gp +"_" + exp + "_" + "roiTable"                                              
         writeOutput.writeTable(outFile, allData)                                            
 
-        print allData
+##        print allData
         
 if __name__ == "__main__":
         
