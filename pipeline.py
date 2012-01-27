@@ -180,7 +180,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
         with open(outgoing,"w") as f:
             f.write(new_string)
             if verbose:
-                print("Wrote %s" % outgoing )
+                print("Hello! Wrote %s" % outgoing )
     except IOError:
         print("IOError with %s or %s" % (incoming,outgoing))
         raise       
@@ -263,7 +263,7 @@ def write_file_with_list(path,lines,quiet=False):
             f.write(text + '\n')
         make_lingua(path)
         if not quiet:
-            print("Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines)))
+            print("Hi! Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines)))
     except IOError:
         raise
 
