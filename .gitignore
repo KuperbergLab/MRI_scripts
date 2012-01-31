@@ -9,7 +9,7 @@ art_mask.img
 *.pyc
 art_mask_temporalfile.mat
 spm_batches*
-input*
+input/*
 */options*
 roi_scripts/config.sh
 roi_scripts/table.sh
