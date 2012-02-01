@@ -11,9 +11,7 @@ art_mask_temporalfile.mat
 spm_batches*
 input/*
 */options*
-roi_scripts/config.sh
-roi_scripts/table.sh
-roi_scripts/sess.sh
+roi_fsfast/shscripts/*
 fsfast_scripts/*
 
 launchpad.sh
