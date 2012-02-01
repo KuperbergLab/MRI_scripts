@@ -1,7 +1,7 @@
 import sys
 import os
 import writeOutput
-
+import readInput
 
 def roistats2R(subj_gp, exp):
 
@@ -13,18 +13,9 @@ def roistats2R(subj_gp, exp):
         hem = ['lh', 'rh']
         roiName = []
         
-        
         inFile = "/cluster/kuperberg/SemPrMM/MRI/results/roi_fsfast/roi_summary/" + subj_gp +"_" + exp +"FullTable.txt"
-        myFile1 = open(inFile, "r") 
-        temp = 1
-        while temp:
-           temp = myFile1.readline()
-           temp1 = temp.strip() # when I included (' ') it did not return the items as a list, but when I just wrote () it did the trick!
-           if temp1:
-              temp2 = temp1.split()
-              dataTable1.append(temp2) # Save information as a list of items in a DataTable
-              trialCount=len(dataTable1)   
-        myFile1.close()      
+        dataTable1 = readInput.readTable(inFile)
+        trialCount = len(dataTable1)     
         
         for i in range(1, trialCount):
             lineTemp = dataTable1[i]
@@ -66,7 +57,7 @@ def roistats2R(subj_gp, exp):
                                                         count =count+1
                                                         
 
-        outFile = "/cluster/kuperberg/SemPrMM/MRI/results/roi_fsfast/R/" + subj_gp +"_" + exp + "_" + "roiTable"                                              
+        outFile = "/cluster/kuperberg/SemPrMM/MRI/results/roi_fsfast/R/" + subj_gp +"_" + exp + "_" + "roiTable.txt"                                              
         writeOutput.writeTable(outFile, allData)                                            
 
 ##        print allData
