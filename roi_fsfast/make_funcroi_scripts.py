@@ -13,7 +13,7 @@
 ###########
 # Import different options for different stuff
 #import options_baleen as opt
-import options_maskedmm_sc as opt
+import options_maskedmm_ya as opt
 ###########
 
 
@@ -82,7 +82,8 @@ for par in opt.paradigms:
                                         wait]))
 
 
-fnames = ('config.sh', 'sess.sh', 'table.sh')
+fnames = ('/cluster/kuperberg/SemPrMM/MRI/scripts/roi_fsfast/shscripts/'+opt.stype+par+'_config.sh', '/cluster/kuperberg/SemPrMM/MRI/scripts/roi_fsfast/shscripts/'+opt.stype+par+'_sess.sh', '/cluster/kuperberg/SemPrMM/MRI/scripts/roi_fsfast/shscripts/'+opt.stype+par+'_table.sh')
+print fnames[0]
 commands = (config_com, sess_com, table_com)
 
 for fname, command in zip(fnames, commands):
