@@ -49,12 +49,31 @@ roi_anova_Baleen <-function(subj_gp, label){
 	print(eztest)
 
 	#############
-	############COMPUTE PAIRED COMPARISON FOR EACH HEMISPHERE FOR EACH PROPORTION
-	
-	roiData.label.2x2.lh.hi = subset(roiData.label.2x2.lh, prop=='hi', select=c(subj, cond, prop, signal))
-	eztest <-ezANOVA(data=roiData.label.2x2.lh.hi,dv = .(signal),wid=.(subj),within=.(cond),type=3,detailed=TRUE)
-	print("hi related vs unrelated in left hemisphere")
+	############COMPUTE 2x2 ANOVA FOR EACH LEVEL OF PROPORTION
+
+	roiData.label.2x2.lo = subset(roiData.label.2x2, prop=='lo', select=c(subj, cond, hemCode, signal))
+	eztest <-ezANOVA(data=roiData.label.2x2.lo,dv = .(signal),wid=.(subj),within=.(cond,hemCode),type=3,detailed=TRUE)
+	print("2x2 in lo prop")
 	print(eztest)
+
+	roiData.label.2x2.hi = subset(roiData.label.2x2, prop=='hi', select=c(subj, cond, hemCode, signal))
+	eztest <-ezANOVA(data=roiData.label.2x2.hi,dv = .(signal),wid=.(subj),within=.(cond,hemCode),type=3,detailed=TRUE)
+	print("2x2 in hi prop")
+	print(eztest)
+
+
+	#############
+	#############COMPUTE OVERALL 2x2x2 ANOVA FOR AnimalTarget vs. Unrelated comparison
+
+	roiData.label = subset(roiData.all, roi==label, select=c(subj, cond, prop, hemCode, signal))
+	roiData.label.2x2 = subset(roiData.label, cond != "Related", select=c(subj, cond, prop, hemCode, signal))
+
+
+	eztest <-ezANOVA(data=roiData.label.2x2,dv = .(signal),wid=.(subj),within=.(cond,prop, hemCode),type=3,detailed=TRUE)
+	print("2x2x2 UnrelatedvsAnimal x prop x hem")
+	print(eztest)
+
+
 
 
 	##################	
