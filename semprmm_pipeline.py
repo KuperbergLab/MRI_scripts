@@ -566,7 +566,8 @@ def spm_run_art(data):
     sessions = []
     for study in studies:
         #glob the images
-        images = glob(pj(data["mri_dir"],study,"*",study+"*.nii"))
+        images = glob(pj(data["mri_dir"],study,"*",study+"?.nii"))
+        print images
         motions = glob(pj(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
         if len(images) != len(motions):
             raise UserError("spm_run_art: Not the same amount of images and motion files")
@@ -1448,7 +1449,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "8mm_fs_pp", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "8mm", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
