@@ -14,6 +14,11 @@ roi_barplot_hemSummary <-function(subj_gp, exp,hem){
 	load(paste(dataPath,subj_gp,'_',exp,'_roiTable.df',sep=''))
 	##subsetting
 	roiData.hem = subset(roiData.all, hemCode==hem, select=c(subj, cond, roi, signal))
+	
+	#if (exp=='BaleenLP' | exp == 'BaleenHP') {
+		#roiData.hem = subset(roiData.hem, cond!='Related', select=c(subj, cond, roi, signal))}
+		#roiData.hem <- droplevels(roiData.hem)
+	
 	attach(roiData.hem)
 	roiData.hem.mean = tapply(signal, list(cond, roi), mean)
 	roiData.hem.sd = tapply(signal, list(cond, roi), sd)
@@ -23,7 +28,7 @@ roi_barplot_hemSummary <-function(subj_gp, exp,hem){
 	
 	rownames(roiData.hem.mean)
 	
-	labelx = cbind('BA44','BA47','BA45','AG','ITG','MTG','STG','TP','ITS','STS')
+	labelx = cbind('aM','44','47','45','AG','6','ITG','MTG','STG','pol','IFG','pM','TP','ITS','STS')
 	
 	##plotting
 	##for documentation see http://www.stat.berkeley.edu/classes/s133/saving.html
