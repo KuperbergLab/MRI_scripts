@@ -385,24 +385,33 @@ def makeMC(data):
                 "2":("Wordlist",False),
                 "3":("Nonwords",False),
                 "duration": "4",
-                "on_sub":0.4},
+		"duration2":"4",
+		"duration3":"4",
+                "on_sub":0.4,
+		"on_sub2":0.4},
             "BaleenLP":{
-                "1":("RelatedTarget",False),
-                "2":("UnrelatedTarget",False),
+                "1":("Related",False),
+                "2":("Unrelated",False),
                 "4":("UnrelatedFiller",False),
                 "5":("AnimalTarget",True),
                 "11":("AnimalPrime",True),
-                "duration":"2",
-                "on_sub":1},
+                "duration":"1.0",
+		"duration2":"0.8",
+		"duration3":"1.8",
+                "on_sub":0.0,
+		"on_sub2":0.8},
             "BaleenHP":{
-                "6":("RelatedTarget",False),
-                "7":("UnrelatedTarget",False),
+                "6":("Related",False),
+                "7":("Unrelated",False),
                 "8":("RelatedFiller",False),
                 "9":("UnrelatedFiller",False),
                 "10":("AnimalTarget",True),
                 "12":("AnimalPrime",True),
-                "duration": "2",
-                "on_sub":1},
+                "duration":"1.0",
+		"duration2":"0.8",
+		"duration3":"1.8",
+                "on_sub":0.0,
+		"on_sub2":0.8},
             "MaskedMM":{
                 "1":("DirectlyRelated",False),
                 "2":("IndirectlyRelated",False),
@@ -410,14 +419,20 @@ def makeMC(data):
                 "4":("InsectPrime",True),
                 "5":("InsectTarget",True),
                 "duration": "2",
-                "on_sub":1},
+		"duration2":"2",
+		"duration3":"2",
+                "on_sub":1,
+		"on_sub2":1},
             "AXCPT":{
                 "1":("AY",False),
                 "2":("BX",False),
                 "3":("BY",False),
                 "4":("AX",True),
                 "duration": "2",
-                "on_sub": 0}
+		"duration2":"2",
+		"duration3":"2",
+                "on_sub": 0,
+		"on_sub2":0}
             }
     #first, just glob all the vtsd_logs from mri_vtsd/data["subject"]
     vtsd_logs = glob(pj(mri_vtsd,data["subject"],"*.vtsd_log"))
@@ -452,6 +467,7 @@ def makeMC(data):
             elif study == "AXCPT_SC":
                 study_key = "AXCPT"
         sub = codes[study_key]["on_sub"]
+	sub2 = codes[study_key]["on_sub2"]
         uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
         misses = []
         if data['debug']:
@@ -471,22 +487,30 @@ def makeMC(data):
             else: # don't worry about misses, just find all onsets
                 good_onsets = [line[onset_ind] for line in code_lines]
             #xfm to floats, subtract, round,int,back to string
-            xfm_onsets = map(str,[int(round(float(x) - sub)) for x in good_onsets])
-            if len(xfm_onsets) == 0:
+            xfm_onsets = map(str,[round((float(x) - sub), 1) for x in good_onsets])
+	    xfm_onsets2 = map(str,[round((float(x) - sub2), 1) for x in good_onsets])
+	    xfm_duration=map(str,[round(float(codes[study_key]["duration"]),1) for x in good_onsets])
+            xfm_duration2=map(str,[round(float(codes[study_key]["duration2"]),1) for x in good_onsets])
+    	    xfm_duration3=map(str,[round(float(codes[study_key]["duration3"]),1) for x in good_onsets])
+	    if len(xfm_onsets) == 0:
                 print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study_key, run, codes[study_key][code][0]))
-            new_dict = {"Run"+run+codes[study_key][code][0]+"Onsets": " ".join(xfm_onsets),
-                "Run"+run+codes[study_key][code][0]+"Durations": " ".join(codes[study_key]["duration"] * len(xfm_onsets))}
+            new_dict = {"Run"+run+codes[study_key][code][0]+"Onsets": " ".join(xfm_onsets2),
+                "Run"+run+codes[study_key][code][0]+"Durations": " ".join(xfm_duration3),
+		"Run"+run+codes[study_key][code][0]+"PrimeOnsets": " ".join(xfm_onsets2),
+                "Run"+run+codes[study_key][code][0]+"PrimeDurations": " ".join(xfm_duration2),
+		"Run"+run+codes[study_key][code][0]+"TargetOnsets": " ".join(xfm_onsets),
+                "Run"+run+codes[study_key][code][0]+"TargetDurations": " ".join(xfm_duration)}#+ xfm_duration}#" ".join(codes[study_key]["duration"] *					len(xfm_onsets))}
             if study_key in info:
                 info[study_key].update(new_dict)
         if study_key != "ATLLoc":
             if data['misses']:
                 if len(misses) > 0:
-                    xfm_misses = [str(int(round(float(x) - sub))) for x in misses]
+                    xfm_misses = [str(round(float(x) - sub),1) for x in misses]
                     miss_dur = [codes[study_key]["duration"]] * len(xfm_misses)
                     print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study_key,run,len(xfm_misses)))
                 else: # no misses, need to insert some misses from iti time
                     trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
-                    xfm_misses = [str(int(round(float(trials_with_iti[0][onset_ind]))+float(codes[study_key]["duration"])))]
+                    xfm_misses = [str(round(float(trials_with_iti[0][onset_ind])+float(codes[study_key]["duration"]), 1))]
                     miss_dur = ["2"]
                     if study_key in info:
                         info[study_key].update({"Run"+run+"MissesOnsets": " ".join(xfm_misses),
@@ -546,7 +570,7 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","8mm","SPM.mat")
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_fillersplit","SPM.mat")
     	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
@@ -642,7 +666,7 @@ def spm_matlab_dict(data,study,type):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"8mm","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_fillersplit","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
@@ -1278,9 +1302,8 @@ def second_level(data,type):
     study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
         ["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
         "MaskedMM": [["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
-        "BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0007"]],
-        "BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0008"],
-        ["UnRelFillvRelFill","0009"]],"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
+        "BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"]],
+        "BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"]],"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
     if data["date"]:
         date_dir = data["date"]
     else:
@@ -1449,7 +1472,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "8mm", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra_fillersplit", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
@@ -1458,7 +1481,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
                 mask = match[0][2]
                 print("Using mask at {0}".format(mask))
             else:
-                mask = ""
+                mask = "'/autofs/cluster/kuperberg/Software/spm/templates/mask20_no_eyeballs.nii,1'"
             replace_dict["mask"] = mask
             replace_dict["email_fail"] = "{0} {1} 2nd Level failed".format(study,contrast)
             replace_dict['email'] = '%s@nmr.mgh.harvard.edu' % getuser()
