@@ -11,8 +11,9 @@ roi_barplot <-function(subj_gp, exp, label){
 	dataPath = '/cluster/kuperberg/SemPrMM/MRI/results/roi_fsfast/R/'
 	load(paste(dataPath,subj_gp,'_',exp,'_roiTable.df',sep=''))
 
-	##subsetting
+	##subsetting  ##& cond != 'AnimalTarget'
 	roiData.label = subset(roiData.all, roi==label, select=c(subj, cond, hemCode, signal))
+	roiData.label <- droplevels(roiData.label)
 	attach(roiData.label)
 	roiData.label.mean = tapply(signal, list(cond, hemCode), mean)
 	roiData.label.sd = tapply(signal, list(cond, hemCode), sd)
@@ -23,7 +24,7 @@ roi_barplot <-function(subj_gp, exp, label){
 	##plotting
 	##for documentation see http://www.stat.berkeley.edu/classes/s133/saving.html
 	pdf(paste(dataPath, 'barplots/',subj_gp,'_', exp,'_', label, '.pdf', sep=''))
-	bp <- barplot(roiData.label.mean, beside=TRUE, main= label)
+	bp <- barplot(roiData.label.mean, beside=TRUE, main= paste(exp,label),ylim=c(-.05, .05))
 	error.bar(bp, roiData.label.mean, roiData.label.stderr)
 	
 	
