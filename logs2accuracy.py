@@ -59,6 +59,7 @@ def parse_study(modality,study,subjects):
 	for sub in subjects:
 		subj_results = dict()
 		study_logs =  glob(os.path.join('/cluster/kuperberg/SemPrMM/',modality,'vtsd_logs',sub,study+'*log'))
+		##print(study_logs)
 		for log in study_logs:
 			results= parse_logfile(log)
 			for key in results.keys():
@@ -80,14 +81,15 @@ def get_subjects(modality,study,subjType):
                 subs =  [subj for subj in all_dirs if subj.startswith('s')]
         else:
                 subs =  [subj for subj in all_dirs if subj.startswith('y')]
+        ##subs = ['ya1' 'ya2'
                 
 	return [sub for sub in subs if len(glob(os.path.join(path,sub,study+'*log'))) > 0]
-        print(subs)
 
-def mriaccuracy2R(modality,study,subjType):
+
+def mriaccuracy2R(modality,study,subjType, listPrefix):
         data_path = '/cluster/kuperberg/SemPrMM/MRI/'
-        inFile1 = data_path + 'results/behavioral_accuracy/' + modality + '_'+ subjType + '_' + str(study)+ "_accuracy-short.log"
-        outFile1 = data_path + 'results/behavioral_accuracy/R/' + modality + '_'+ subjType +'_' + str(study)+ "_accuracy.log"    
+        inFile1 = data_path + 'results/behavioral_accuracy/' + modality + '_'+ listPrefix + '_' + str(study)+ "_accuracy-short.log"
+        outFile1 = data_path + 'results/behavioral_accuracy/R/' + modality + '_'+ listPrefix +'_' + str(study)+ "_accuracy.log"    
         totalTrials = 0 # Must be initialised within the loop to refresh for each subject :) 
         dataTable1=[]
         dataTable2=[]
@@ -117,8 +119,6 @@ def mriaccuracy2R(modality,study,subjType):
         for i in range(1, runCount):
                lineTemp = (dataTable1[i])
                #print(lineTemp[0][:-1])
-               if (lineTemp[0] == 'ya13:' and study == 'BaleenMM' or lineTemp[0] == 'ac4:'): #removing ya13 BaleenMM and ac4 from the accuracy calculation due to incomplete data.
-                       continue
                for j in range(1,cond_len):
                              myFile2.write(lineTemp[0][:-1] + '\t\t')  #the [:-1] reference removes the closing colon from the subject code
                              myFile2.write(header[j] + '\t\t')
@@ -126,13 +126,16 @@ def mriaccuracy2R(modality,study,subjType):
                              myFile2.write('\n')
         
 
-def main(subjType):
+def main(subjType, listPrefix, study):
         for mod in modalities:
-		for study in studies:
-			subjects = get_subjects(mod,study,subjType)
+		##for study in studies:
+			##subjects = get_subjects(mod,study,subjType)
+                        subjects = readInput.readList('/cluster/kuperberg/SemPrMM/MRI/scripts/input/' +listPrefix+ '.txt')
+			print(subjects)
 			print(study)
 			study_results = parse_study(mod,study,subjects)
-			with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+subjType+'_'+study+'_accuracy-short.log','w') as f:
+			with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+listPrefix+'_'+study+'_accuracy-short.log','w') as f:
+                                #print f
 				#write out header
 				f.write('sub:\t\t')
 				for code in code_names[study]:
@@ -151,7 +154,7 @@ def main(subjType):
 					for result in sorted_results:
 						f.write(str(round(result,3))+'\t\t')
 					f.write(str(round(float(num)/den,3))+'\n')
-                        mriaccuracy2R(mod,study,subjType)
+                        mriaccuracy2R(mod,study,subjType, listPrefix)
         print("Completed. See results in /MRI/results/behavioral_accuracy/R/ folder")
 
 
@@ -159,4 +162,4 @@ def main(subjType):
 
 						
 if __name__ == "__main__":
-	main(sys.argv[1])
+	main(sys.argv[1], sys.argv[2], sys.argv[3])
