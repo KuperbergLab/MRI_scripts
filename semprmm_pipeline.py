@@ -419,10 +419,10 @@ def makeMC(data):
                 "4":("InsectPrime",True),
                 "5":("InsectTarget",True),
                 "duration": "2",
-		"duration2":"2",
+		"duration2":"1.4",
 		"duration3":"2",
                 "on_sub":1,
-		"on_sub2":1},
+		"on_sub2":0.6},
             "AXCPT":{
                 "1":("AY",False),
                 "2":("BX",False),
@@ -570,7 +570,7 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_fillersplit","SPM.mat")
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra","SPM.mat")
     	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
@@ -666,7 +666,7 @@ def spm_matlab_dict(data,study,type):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_fillersplit","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
@@ -1301,9 +1301,10 @@ def second_level(data,type):
     print data["list_prefix"]
     study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
         ["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
-        "MaskedMM": [["Rel","0001"],["UnRel","0003"],["UnRelVRel","0007"]],
-        "BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"]],
-        "BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"]],"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
+        "MaskedMM": [["DirectRel","0001"],["IndirectRel","0002"],["UnRel","0003"],["Insetcts","0004"],["DirectRelUnrel","0005"],["IndirectRelUnrel","0006"]],
+        "BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"],["Animals","0008"]],
+        "BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"],["Animals","0008"]],
+	"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
     if data["date"]:
         date_dir = data["date"]
     else:
@@ -1472,7 +1473,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra_fillersplit", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
