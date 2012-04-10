@@ -39,14 +39,14 @@ cond_num = dict({"ATLLoc":
                     "InsectPrime":"4",
                     "InsectTarget":"5"},
                 "BaleenLP":
-                    {"RelatedTarget":"1",
-                    "UnrelatedTarget":"2",
+                    {"Related":"1",
+                    "Unrelated":"2",
                     "UnrelatedFiller":"3",
                     "AnimalTarget":"4",
                     "AnimalPrime":"5"},
                 "BaleenHP":
-                    {"RelatedTarget":"1",
-                    "UnrelatedTarget":"2",
+                    {"Related":"1",
+                    "Unrelated":"2",
                     "RelatedFiller":"3",
                     "UnrelatedFiller":"4",
                     "AnimalTarget":"5",
@@ -800,9 +800,12 @@ def write_par(data,study,info,run):
     cond_onsets = [key for key in info.keys() if "Run"+run in key and "XXX" not in key and "Onsets" in key]
     full_par = []
     for cond_onset in cond_onsets:
+    	print cond_onset
         cond_name = cond_onset.partition("Run"+run)[2].partition("Onsets")[0]
         onsets = info[cond_onset]
+        print onsets
         duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
+        print duration
         if cond_name in cond_num[study]:
         	for onset in onsets.split():
         		code_num = cond_num[study][cond_name]
