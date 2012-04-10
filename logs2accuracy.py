@@ -116,11 +116,11 @@ def mriaccuracy2R(modality,study,subjType):
         myFile2.write("Sub:\t\tCond\t\tAccuracy\n")	
         for i in range(1, runCount):
                lineTemp = (dataTable1[i])
-               #print(lineTemp[0])
+               #print(lineTemp[0][:-1])
                if (lineTemp[0] == 'ya13:' and study == 'BaleenMM' or lineTemp[0] == 'ac4:'): #removing ya13 BaleenMM and ac4 from the accuracy calculation due to incomplete data.
                        continue
                for j in range(1,cond_len):
-                             myFile2.write(lineTemp[0] + '\t\t')
+                             myFile2.write(lineTemp[0][:-1] + '\t\t')  #the [:-1] reference removes the closing colon from the subject code
                              myFile2.write(header[j] + '\t\t')
                              myFile2.write(lineTemp[j])
                              myFile2.write('\n')
