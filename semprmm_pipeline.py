@@ -803,10 +803,11 @@ def write_par(data,study,info,run):
         cond_name = cond_onset.partition("Run"+run)[2].partition("Onsets")[0]
         onsets = info[cond_onset]
         duration = info["Run"+run+cond_name+"Durations"].split()[0] #assume all are same
-        for onset in onsets.split():
-            code_num = cond_num[study][cond_name]
-            full_par.append([onset,code_num,duration,"1.0",cond_name])
-    full_par.sort(key=lambda x:int(x[0]))
+        if cond_name in cond_num[study]:
+        	for onset in onsets.split():
+        		code_num = cond_num[study][cond_name]
+        		full_par.append([onset,code_num,duration,"1.0",cond_name]) #1.0 is the weight 
+    full_par.sort(key=lambda x:float(x[0]))
     par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
     if not data["no_par"]:
         pipeline.write_file_with_list(par_fname, ["\t".join(x) for x in full_par], True)
