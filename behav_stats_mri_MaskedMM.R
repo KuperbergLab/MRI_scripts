@@ -11,26 +11,33 @@ outFile <- paste(filePath,'MRI_',subjType,'_MaskedMM_acc_stats.txt',sep="")
 sink(outFile)
 
 ##exclude subjects for whom there were errors in behavioral data recording
-##behavData.all = subset(behavData.all, subj != 'ya1')
+behavData.all = subset(behavData.all, subj != 'ya10' & subj != 'ya8')
 
-##include only animal trials
-behavData.maskedmm<-behavData.all[behavData.all$cond == "InsPr" | behavData.all$cond == "InsTar", ] 
+##include only insect trials
+behavData.insect<-behavData.all[behavData.all$cond == "InsPr" | behavData.all$cond == "InsTar", ] 
 
 
 ###################################################
 #################DESCRIPTIVE STATS#################
-Instar<-behavData.maskedmm[behavData.maskedmm$cond == "InsTar", ]
-print(paste("InsectTarget_MeanAccuracy:", round(mean(Instar$acc),5), sep=" "))
 
-Insprime<-behavData.maskedmm[behavData.maskedmm$cond == "InsPr", ]
-print(paste("InsectPrime_MeanAccuracy:", round(mean(Insprime$acc),5), sep=" "))
+behavData.insect$pos <-factor(behavData.insect$cond, exclude=NULL);
+levels(behavData.insect$pos) <-c("prime","targ")
+behavData.insect.aov = aov(acc ~ pos,data=behavData.insect)
 
-##compute overall Mean Accuracy
-print(paste("InsectTargetPrime_MeanAccuracy:", round(mean(behavData.maskedmm$acc),5), sep=" "))
+numSubj <-nlevels(factor(behavData.all$subj, exclude= NA))
+print(paste("Table of Mean Accuracies, n:", numSubj,sep=" "))
+print(model.tables(behavData.insect.aov, "means"), digits = 5)
 
-##compute overall SD
-print(paste("InsectprimetargSD:",round(sd(behavData.maskedmm$acc),3), sep=" "))
 
+
+##################################################
+##################ANOVAS##########################
+
+library('ez')
+eztest <-ezANOVA(data=behavData.insect,dv = .(acc),wid=.(subj),within=.(pos),type=3,detailed=TRUE)
+print("Type III ANOVA on accuracy depending on position of target")
+print(eztest)
 
 sink()
+
 }
