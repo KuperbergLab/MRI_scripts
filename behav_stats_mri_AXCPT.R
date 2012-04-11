@@ -67,6 +67,10 @@ eztest <-ezANOVA(data=behavData.ayby,dv = .(acc),wid=.(subj),within=.(cond),type
 print("Paired comparison AY vs BY")
 print(eztest)
 
+library('ez')
+eztest <-ezANOVA(data=behavData.all,dv = .(acc),wid=.(subj),within=.(cond),type=3,detailed=TRUE)
+print("Type III ANOVA on accuracy depending on position of target")
+print(eztest)
 
 sink()
 
