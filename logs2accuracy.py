@@ -119,7 +119,7 @@ def mriaccuracy2R(modality,study,subjType, listPrefix):
         for i in range(1, runCount):
                lineTemp = (dataTable1[i])
                #print(lineTemp[0][:-1])
-               for j in range(1,cond_len):
+               for j in range(1,cond_len-1):
                              myFile2.write(lineTemp[0][:-1] + '\t\t')  #the [:-1] reference removes the closing colon from the subject code
                              myFile2.write(header[j] + '\t\t')
                              myFile2.write(lineTemp[j])
@@ -130,7 +130,7 @@ def main(subjType, listPrefix, study):
         for mod in modalities:
 		##for study in studies:
 			##subjects = get_subjects(mod,study,subjType)
-                        subjects = readInput.readList('/cluster/kuperberg/SemPrMM/MRI/scripts/input/' +listPrefix+ '.txt')
+                        subjects = readInput.readList('/cluster/kuperberg/SemPrMM/MRI/scripts/input/' +listPrefix)
 			print(subjects)
 			print(study)
 			study_results = parse_study(mod,study,subjects)
