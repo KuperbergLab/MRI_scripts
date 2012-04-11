@@ -806,7 +806,12 @@ def write_par(data,study,info,run):
         if cond_name in cond_num[study]:
         	for onset in onsets.split():
         		code_num = cond_num[study][cond_name]
-        		full_par.append([onset,code_num,duration,"1.0",cond_name]) #1.0 is the weight 
+        		full_par.append([onset,code_num,duration,"1.0",cond_name]) #1.0 is the weight
+    ##combining animal prime and target to one regressor; comment this loop if not desired
+    for row in full_par:
+    	if row[4] == 'AnimalTarget' or row[4] == 'AnimalPrime':
+    		row[4] = 'Animal'
+    		row[1] = '5'
     full_par.sort(key=lambda x:float(x[0]))
     par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
     if not data["no_par"]:
