@@ -69,7 +69,7 @@ print(eztest)
 
 library('ez')
 eztest <-ezANOVA(data=behavData.all,dv = .(acc),wid=.(subj),within=.(cond),type=3,detailed=TRUE)
-print("Type III ANOVA on accuracy depending on position of target")
+print("Type III ANOVA on accuracy depending condition")
 print(eztest)
 
 sink()
