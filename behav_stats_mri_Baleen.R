@@ -4,10 +4,10 @@ behav_stats_mri_Baleen <-function(subjType){
 ###Currently focuses on the animal (go) trials only
 	
 filePath <- "/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/R/"
-fileName <- paste(filePath,'MRI_',subjType,'_BaleenMM_accuracy.df',sep="")
+fileName <- paste(filePath,'MRI_',subjType,'_mri_baleenlp_BaleenMM_accuracy.df',sep="")  ##assuming that we always use the subjType_mri_baleenlp function input to run the logs2accuray.py script. 
 load(fileName)
 
-outFile <- paste(filePath,'MRI_',subjType,'_Baleen_acc_stats.txt',sep="")
+outFile <- paste(filePath,'MRI_',subjType,'_mri_baleenlp_Baleen_acc_stats.txt',sep="")
 sink(outFile)
 
 ##exclude subjects for whom there were errors in behavioral data recording
