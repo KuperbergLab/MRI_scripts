@@ -4,10 +4,10 @@ behav_stats_mri_MaskedMM <-function(subjType){
 ###Currently focuses on the nsect prime and Target trials only
 
 filePath <- "/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/R/"
-fileName <- paste(filePath,'MRI_',subjType,'_MaskedMM_accuracy.df',sep="")
+fileName <- paste(filePath,'MRI_',subjType,'_mri_maskedmm_MaskedMM_accuracy.df',sep="")
 load(fileName)
 
-outFile <- paste(filePath,'MRI_',subjType,'_MaskedMM_acc_stats.txt',sep="")
+outFile <- paste(filePath,'MRI_',subjType,'_mri_maskedmm_MaskedMM_acc_stats.txt',sep="")
 sink(outFile)
 
 ##exclude subjects for whom there were errors in behavioral data recording
