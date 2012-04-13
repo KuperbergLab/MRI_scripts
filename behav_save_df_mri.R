@@ -9,4 +9,3 @@ outFile <-paste(filePath, 'MRI_', listPrefix, '_', exp, '_accuracy.df', sep="")
 save(behavData.all, file=outFile)
 
 }
-ex
