@@ -137,13 +137,13 @@ def main(subjType, listPrefix, study):
 			with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+listPrefix+'_'+study+'_accuracy-short.log','w') as f:
                                 #print f
 				#write out header
-				f.write('sub:\t\t')
+				f.write('sub:\t')
 				for code in code_names[study]:
-					f.write(code+'\t\t')
+					f.write(code+'\t')
 				f.write('AllTasks\n')	
 				for sub in sorted(study_results.keys()):
 					num = den = 0
-					f.write(sub+':\t\t')
+					f.write(sub+':\t')
 					results = study_results[sub]
 					#print(study,sub,results)
 					#sort codes numerically
@@ -152,7 +152,7 @@ def main(subjType, listPrefix, study):
 					den = sum([item[1] for code,item in results.items() if int(code) in studies_tasks[study]])
 					sorted_results = [float(results[str(code)][0])/float(results[str(code)][1]) for code in codes]
 					for result in sorted_results:
-						f.write(str(round(result,3))+'\t\t')
+						f.write(str(round(result,3))+'\t')
 					f.write(str(round(float(num)/den,3))+'\n')
                         mriaccuracy2R(mod,study,subjType, listPrefix)
         print("Completed. See results in /MRI/results/behavioral_accuracy/R/ folder")
