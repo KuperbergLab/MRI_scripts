@@ -571,7 +571,7 @@ def spm_write_script(data,study,type):
     commands.append("#!/bin/sh")
     if "stats" in type:
     	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_fir","SPM.mat")
-    	commands.append(("rm " + spmfile))
+   	#commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
         commands.append("unset DISPLAY")
@@ -808,10 +808,15 @@ def write_par(data,study,info,run):
         		code_num = cond_num[study][cond_name]
         		full_par.append([onset,code_num,duration,"1.0",cond_name]) #1.0 is the weight
     ##combining animal prime and target to one regressor; comment this loop if not desired
+    #for row in full_par:
+    #	if row[4] == 'AnimalTarget' or row[4] == 'AnimalPrime':
+    #		row[4] = 'Animal'
+    #		row[1] = '5'
+    ##setting the onset back by .2s for FIR to have integer values, comment if not desired
     for row in full_par:
-    	if row[4] == 'AnimalTarget' or row[4] == 'AnimalPrime':
-    		row[4] = 'Animal'
-    		row[1] = '5'
+        row[0] = str(float(row[0])-.2)
+        row[2] = str(float(row[2])+.2)
+
     full_par.sort(key=lambda x:float(x[0]))
     par_fname = pj(data["mri_dir"],study,info["Run"+run+"XXX"],study.lower()+".par")
     if not data["no_par"]:
