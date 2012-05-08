@@ -1230,7 +1230,6 @@ def meg_script(data,type):
         my_args = [script_path,data["subject"], studyname, log_file]
         pass
     #start the process
-    print "my args", my_args
     pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
     os.system("chgrp -R lingua %s" % data["meg_dir"])
 
