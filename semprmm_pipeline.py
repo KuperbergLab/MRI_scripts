@@ -570,7 +570,7 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_fir","SPM.mat")
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","s10wra","SPM.mat")
    	#commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
@@ -666,7 +666,7 @@ def spm_matlab_dict(data,study,type):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_fir","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"s10wra","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
@@ -1173,6 +1173,7 @@ def meg_script(data,type):
     type: name of meg script (e.g. "preProc_setup","preAnat",etc)
     """
     user_script = pj(data['meg_dir'], 'scripts', '%s.sh' % type)
+    print user_script
     if os.path.exists(user_script):
         script_path = user_script
         pipeline.make_file_exec(script_path)
@@ -1224,8 +1225,12 @@ def meg_script(data,type):
         if len(cor_files) < 1:
             raise UserError("No good COR file found in SUBJECTS_DIR/%s/mri/T1-neuromag/sets/" % data["subject"])
     if type == 'makeSTC':
+        studyname = data["single_study"][0]
+        print "study", studyname
+        my_args = [script_path,data["subject"], studyname, log_file]
         pass
     #start the process
+    print "my args", my_args
     pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
     os.system("chgrp -R lingua %s" % data["meg_dir"])
 
@@ -1484,7 +1489,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra_fir", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "s10wra", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
