@@ -231,11 +231,12 @@ def scan2cfg(data):
     data["cfg_path"] = cfg_path(data)
     dir_map = dict({"MEMPRAGE_4e_p2_1mm_iso": "MPRAGE", "ge_functionals_atlloc": "ATLLoc",
             "field_mapping": "FieldMap", "ge_functionals_maskmm": "MaskedMM", 
-            "ge_functionals_baleen": "BaleenMM", "MEFLASH_8e_1mm_iso_5deg": "MEFLASH",
+            "ge_functionals_baleen": "BaleenMM", "MEFLASH_5deg_fixed": "MEFLASH", "MEFLASH_8e_1mm_iso_5deg": "MEFLASH",
             "ge_functionals_axcpt": "AXCPT", "ge_functionals_axcpt_sc": "AXCPT"})
     scan_list = [["MEMPRAGE_4e_p2_1mm_iso","ok","256","256","1"], 
                 ["ge_functionals_atlloc","ok","160"],["ge_functionals_maskmm","ok","148"],
                 ["ge_functionals_baleen","ok","130"],["ge_functionals_axcpt","ok","240"],
+                ["MEFLASH_5deg_fixed","256","256","ok","1"],
                 ["MEFLASH_8e_1mm_iso_5deg","256","256","ok","1"],["field_mapping","ok","1"],
                 ["ge_functionals_axcpt_sc","ok","140"]]
     good_lines = pipeline.scan_to_cfg(dir_map,dir_map,scan_list,data["scan_path"])
@@ -762,7 +763,7 @@ def recon_write_script(data):
     commands = []
     commands.append("#!/bin/csh")
     commands.append("setenv USE_STABLE_5_0_0")
-    commands.append("source /usr/local/freesurfer/nmr-stable50-env")
+    commands.append(" /usr/local/freesurfer/nmr-stable50-env")
     recon_cmd = "recon-all -all -s " + data["subject"]
     #find all mprages 
     mprages = glob(pj(data["mri_dir"],"MPRAGE","*","MPRAGE*.nii"))
