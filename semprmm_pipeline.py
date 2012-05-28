@@ -1260,7 +1260,7 @@ def run_ica(data):
 
 def setup_bem(data):
     """
-    This makes symbolic links to the MEFLASH_8e_1mm_iso_5deg dicom images. This is called for --preAnat.
+    This makes symbolic links to the MEFLASH_8e_1mm_iso_5deg or MEFLASH_5deg_fixed dicom images. This is called for --preAnat.
     """
     print("Setup_BEM:{0}".format(data["subject"]))
     #must have env var set
@@ -1282,13 +1282,18 @@ def setup_bem(data):
     try:
         scanlog_path = scan_path(data)
         all_lines = pipeline.list_from_file(scanlog_path,data["verbose"])
-        dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]
+        ##### Including this part to accomodate flash_fixed and flash_iso in teh preAnat script. #### 
+        if [line.split()[7] for line in all_lines if "MEFLASH_5deg_fixed" in line and " 8 " in line]:    
+            dcm = [line.split()[7] for line in all_lines if "MEFLASH_5deg_fixed" in line and " 8 " in line]
+        elif [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]:
+             dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]    
         if len(dcm) > 1:
             ProgrammerError("More than one MEFLASH5 with 8 frames...check scan.log")
         elif len(dcm) == 0:
             dcm = None;     
         else:
             dcm = dcm[0]
+        print len(dcm)
     except IOError:
         raise ProgrammerError("Could not open scan.log file")
     if dcm:
