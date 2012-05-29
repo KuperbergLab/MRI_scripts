@@ -1199,7 +1199,7 @@ def meg_script(data,type):
         fiffs = glob(pj(data["meg_dir"],'*_raw.fif'))
         fiffs[:] = filter(lambda x: 'emptyroom' not in x and 'Blink' not in x, fiffs)
         fiffs.sort()
-        mlab = "fif2rej('%s');"
+        mlab = "rej_fif2rej('%s');"
         cmd = ['warning off all']
         for fif in fiffs:
             cmd.append(mlab % fif)
