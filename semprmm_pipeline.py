@@ -593,7 +593,7 @@ def spm_run_art(data):
         #glob the images
         images = glob(pj(data["mri_dir"],study,"*",study+"?.nii"))
         print images
-        motions = glob(pj(data["mri_dir"],study,"*","rp_"+study+"*.txt"))
+        motions = glob(pj(data["mri_dir"],study,"*","rp_a"+study+"*.txt")) ##to account for the change in the spm preprocessing order
         if len(images) != len(motions):
             raise UserError("spm_run_art: Not the same amount of images and motion files")
         sess_contents = []
