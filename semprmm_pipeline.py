@@ -312,7 +312,8 @@ def studies_to_setup(data,type):
         studies = [k for k,v in info.iteritems() if os.path.exists(
             touch_file_path(data,k,"preproc","run"))]
     elif type in ["fs_preproc", "spm_preproc", "fs_stats"]:
-        studies = [k for k,v in info.iteritems() if v["was_run"] and v['complete']]
+        #studies = [k for k,v in info.iteritems() if v["was_run"] and v['complete']]
+        studies = [k for k,v in info.iteritems() if v["was_run"]]
     return studies
 
 
