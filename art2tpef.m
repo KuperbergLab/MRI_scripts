@@ -8,7 +8,9 @@ if sizee(2) > 6
     [row,col] = find(R(:,1:6) == 1);
     stu = lower(study);
     %write out rows * 2 because tpef should be in seconds, not time points 
-    dlmwrite([stu '.tpef'], row*2,'delimiter','\n')
+    %dlmwrite([stu '.tpef'], row*2,'delimiter','\n')  %%%this previous version resulted in
+    %the wrong timepoints being excluded
+    dlmwrite([stu '.tpef'], (row-1)*2,'delimiter','\n') %%subtracting 1 gives the right times, starting with 0
     disp(['art2tpef:' num2str(length(row)) ' time points excluded'])
 else
     disp(['art2tpef: 0 time points excluded'])
