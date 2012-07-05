@@ -490,8 +490,9 @@ def makeMC(data):
                 good_onsets = [line[onset_ind] for line in code_lines]
             #xfm to floats, subtract, round,int,back to string
             xfm_onsets = map(str,[round((float(x) - sub), 1) for x in good_onsets])
+	    xfm_duration=map(str,[round(float(codes[study_key]["duration"]),1) for x in good_onsets])	    
 	    xfm_onsets2 = map(str,[round((float(x) - sub2), 1) for x in good_onsets])
-	    xfm_duration=map(str,[round(float(codes[study_key]["duration"]),1) for x in good_onsets])
+	    
             xfm_duration2=map(str,[round(float(codes[study_key]["duration2"]),1) for x in good_onsets])
     	    xfm_duration3=map(str,[round(float(codes[study_key]["duration3"]),1) for x in good_onsets])
 	    if len(xfm_onsets) == 0:
@@ -507,8 +508,10 @@ def makeMC(data):
         if study_key != "ATLLoc":
             if data['misses']:
                 if len(misses) > 0:
-                    xfm_misses = [str(round(float(x) - sub),1) for x in misses]
-                    miss_dur = [codes[study_key]["duration"]] * len(xfm_misses)
+                    xfm_misses = map(str,[round((float(x) - sub), 1) for x in misses])#[str(round(float(x) - sub),1) for x in misses]
+
+                    miss_dur =map(str,[round(float(codes[study_key]["duration"]),1) for x in misses]) #[codes[study_key]["duration"]] * len(xfm_misses)
+
                     print("{0}:{1}:Run{2}:{3} miss(es)".format(data["subject"],study_key,run,len(xfm_misses)))
                 else: # no misses, need to insert some misses from iti time
                     trials_with_iti = [x for x in vtsd_data if x[iti_ind] == "2.000"]
@@ -572,7 +575,7 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","s10wra","SPM.mat")
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra","SPM.mat")
    	#commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
@@ -592,7 +595,7 @@ def spm_run_art(data):
     sessions = []
     for study in studies:
         #glob the images
-        images = glob(pj(data["mri_dir"],study,"*",study+"?.nii"))
+        images = glob(pj(data["mri_dir"],study,"*","a"+study+"?.nii")) ## Images changed to the slice time corrected images a* to be compared with the rp_a* motion param files. 
         print images
         motions = glob(pj(data["mri_dir"],study,"*","rp_a"+study+"*.txt")) ##to account for the change in the spm preprocessing order
         if len(images) != len(motions):
@@ -668,7 +671,7 @@ def spm_matlab_dict(data,study,type):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"s10wra","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
@@ -698,10 +701,10 @@ def spm_funcdir_info(data,study,type):
             run_num = mr_key.split("Run")[1]
             mr_key += "MR"
             if "outliers" in type:
-                study_dict[mr_key] = "art_regression_outliers_and_movement_{0}{1}.mat".format(
+                study_dict[mr_key] = "art_regression_outliers_and_movement_a{0}{1}.mat".format(
                     study,run_num)
             else:
-                study_dict[mr_key] = "rp_{0}{1}.txt".format(study,run_num)
+                study_dict[mr_key] = "rp_a{0}{1}.txt".format(study,run_num)
     elif type == "preproc":
         #find mprage xxx (hardcoded to use the first)
         study_dict["MPRAGEXXX"] = study_dict["MPRAGE_runs"][0]
@@ -985,14 +988,14 @@ def fs_setup(data,type,subjects=None):
             fsgd_path = pj(func_dir,"%s.group-analysis" % data["stype"],"%s.%s.fsgd" % (data["stype"],study))
             pipeline.write_file_with_list(fsgd_path, fsgd, True)
             for space in ["lh","rh","mni305"]:
-                for shape in ["shrf"]:  #add fir if desired
+                for shape in ["shrf", "fir"]:  #add fir if desired
                     commands = []
                     commands.append("#!/bin/csh")
                     commands.append("setenv USE_STABLE_5_0_0")
                     commands.append("source /usr/local/freesurfer/nmr-stable50-env")
 
                     commands.append("cd %s" % func_dir)
-                    aname = "%s.%s.sm8.%s" % (study,shape,space)
+                    aname = "%s.%s.sm10.%s" % (study,shape,space) #Using sm10 -6/27
                     lf = pj(mri_scripts,"fsfast_scripts","%s.%s-isxconcat.%s.log" % (data['stype'], study,aname))
                     isx_cmd = " ".join(["isxconcat-sess",
                                         "-a %s" % aname,
@@ -1015,7 +1018,7 @@ def fs_setup(data,type,subjects=None):
         elif type == "glm":
             for con in contrasts[study].keys():
                 for space in ["lh","rh","mni305"]:
-                    for shape in ["shrf"]:   #update if you want to run fir as well
+                    for shape in ["shrf", "fir"]:   #update if you want to run fir as well
                         if space != "mni305":
                             space_opt = "--surf fsaverage %s" % space
                         else:
@@ -1399,14 +1402,18 @@ def second_surf(data,prefix,date,study_contrasts):
     """
     from scipy import stats
     import shutil
+    import string
+    import os
+    from os.path import join as pj
     print("We're going surfing....\n")
     if data["single_study"]:
         studies = [data["single_study"]]
     else:
         studies = ["ATLLoc","BaleenLP","BaleenHP","MaskedMM","AXCPT"]
     for study in studies:
-        list_base = "%s_%s" % (os.path.split(data['list_prefix'])[1], study.lower())
-        date_dir = pj(prefix,data["stype"],study,'%s_%s' % (date, list_base))
+	print study
+        list_base ="%s_%s" % (os.path.split(data['list_prefix'])[1], str(study).lower()) # "%s_%s" % (data["list_prefix"], study.lower()) #
+        date_dir = pj(prefix,data["stype"],str(study),'%s_%s' % (date, list_base))
         for [contrast,XXXX] in study_contrasts[study]:
             print("\n{0}:\t{1}...".format(study,contrast))
             con_dir = pj(date_dir,contrast)
@@ -1495,7 +1502,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "s10wra", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
@@ -2013,3 +2020,4 @@ if __name__ == "__main__":
         second_level(data,"surf")
     if data["package_second"]:
         second_level(data,"package")
+                      
