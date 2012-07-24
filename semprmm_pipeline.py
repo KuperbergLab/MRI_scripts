@@ -614,6 +614,7 @@ def spm_run_art(data):
         sessions.append(sess_path)
         pipeline.write_file_with_list(sess_path, sess_contents)
     art_m = []
+    print len(sessions)
     for session in sessions:
         art_m.append("art('sess_file','{0}');".format(session))
         study = session.split(os.sep)[-2]
@@ -2020,4 +2021,3 @@ if __name__ == "__main__":
         second_level(data,"surf")
     if data["package_second"]:
         second_level(data,"package")
-                      
