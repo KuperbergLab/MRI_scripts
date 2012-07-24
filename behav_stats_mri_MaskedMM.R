@@ -11,7 +11,7 @@ outFile <- paste(filePath,'MRI_',subjType,'_mri_maskedmm_MaskedMM_acc_stats.txt'
 sink(outFile)
 
 ##exclude subjects for whom there were errors in behavioral data recording
-behavData.all = subset(behavData.all, subj != 'ya10' & subj != 'ya8')
+behavData.all = subset(behavData.all, subj != 'ya13')
 
 ##include only insect trials
 behavData.insect<-behavData.all[behavData.all$cond == "InsPr" | behavData.all$cond == "InsTar", ] 
