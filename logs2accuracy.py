@@ -3,20 +3,63 @@
 ##usage: python logs2accuracy_v2.py ac ac_mri_axcpt AXCPT
 
 ##study_rt_max = dict({'BaleenMM':9,'MaskedMM':9,'AXCPT':9})				
+import sys
+import os 
+import os.path
+import readInput
+from operator import itemgetter, attrgetter
+from glob import glob
+subjType = sys.argv[1]
+listPrefix = sys.argv[2]
+study = sys.argv[3]
 
+
+
+
+
+
+def mriaccuracy2R(modality,study,subjType, listPrefix):
+        data_path = '/cluster/kuperberg/SemPrMM/MRI/'
+        inFile1 = data_path + 'results/behavioral_accuracy/' + modality + '_'+ listPrefix + '_' + str(study)+ "_accuracy-short_new.log"
+        outFile1 = data_path + 'results/behavioral_accuracy/R/' + modality + '_'+ listPrefix +'_' + str(study)+ "_accuracy_new.log"    
+        totalTrials = 0 # Must be initialised within the loop to refresh for each subject :) 
+        dataTable1=[]
+        dataTable2=[]
+        lineTemp = []
+        lineTemp1 = []
+        temp = 1
+        header = []
+        if os.path.exists(inFile1):
+            print("File exists")
+        else:
+            print("Check the input paradigm file name")
+        myFile1 = open(inFile1, "r") 
+        while temp:
+             temp = myFile1.readline()
+             temp1 = temp.strip() # not ('')
+             if temp1:
+                  temp2 = temp1.split()
+                  dataTable1.append(temp2) # Save information as a list of items in a DataTable
+        runCount=len(dataTable1)   
+        myFile1.close()
+        header = dataTable1[0]
+        cond_len = len(header)
+        myFile2 = open(outFile1, "w")
+        myFile2.write("Sub:\t\tCond\t\tAccuracy\n")	
+        for i in range(1, runCount):
+               lineTemp = (dataTable1[i])
+               print lineTemp
+               for j in range(1,cond_len):
+                        myFile2.write(lineTemp[0] + '\t\t')  ##the [:-1] reference removes the closing colon from the subject code
+                        myFile2.write(header[j] + '\t\t')
+                        myFile2.write(lineTemp[j] + '\n')
+                        myFile2.write('\n')
+        
 
 						
 if __name__ == "__main__":
 
-        import sys
-        import os 
-        import os.path
-        import readInput
-        from operator import itemgetter, attrgetter
-        from glob import glob
-        subjType = sys.argv[1]
-        listPrefix = sys.argv[2]
-        study = sys.argv[3]
+
         
         modalities = ['MRI']
         studies = ['MaskedMM','BaleenMM','AXCPT']
@@ -28,8 +71,10 @@ if __name__ == "__main__":
           print(subjects)
           with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+listPrefix+'_'+study+'_accuracy-short_new.log','w') as d:
             #print(study)
-            d.write('sub' + '\t' + 'Acc_AX' + '\t' + 'RT_AX' + '\t' + 'Acc_AY' + '\t' + 'Acc_BX' + '\t' + 'Acc_BY' + '\n')
-            for sub in subjects:
+ ##           d.write('sub' + '\t' + 'Acc_AX' + '\t' + 'RT_AX' + '\t' + 'Acc_AY' + '\t' + 'Acc_BX' + '\t' + 'Acc_BY' + '\n')
+             d.write('sub' + '\t' + 'Acc_AX' + '\t'  + 'Acc_AY' + '\t' + 'Acc_BX' + '\t' + 'Acc_BY' + '\t' + 'RT_AX' + '\n')
+
+             for sub in subjects:
                 acc_ax_avg = 0.0
                 acc_ay_avg = 0.0
                 acc_bx_avg = 0.0
@@ -93,7 +138,7 @@ if __name__ == "__main__":
                                              elif (line[7] != 'A' and line[8] != 'X'):
                                                      acc_by += 1
                     rt_ax_avg = rt_ax_avg + float(rt_ax/(ax_trials))
-                    print sub
+                    #print sub
 		    #print acc_ax, acc_ay, ax_trials, ay_trials
                     acc_ax_avg= acc_ax_avg + float(acc_ax/ax_trials)
                     acc_ay_avg= acc_ay_avg + float(acc_ay/ay_trials)
@@ -115,12 +160,13 @@ if __name__ == "__main__":
 			rt_AX = round ((float(rt_ax_avg)/2),3)
                 d.write(sub+'\t')#write out header
 	        d.write(str(acc_AX) + '\t')
-		d.write(str(rt_AX) + '\t')
                 d.write(str(acc_AY) + '\t')
                 d.write(str(acc_BX) + '\t')
-                d.write(str(acc_BY) + '\n')
+                d.write(str(acc_BY) + '\t')
+		d.write(str(rt_AX) + '\n')
+
           d.close()
-	            
+        mriaccuracy2R('MRI', study, subjType, listPrefix)  
                 
 
 
