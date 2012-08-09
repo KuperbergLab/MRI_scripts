@@ -4,10 +4,10 @@ behav_stats_mri_AXCPT <-function(subjType){
 ###Currently focuses on the nsect prime and Target trials only
 
 filePath <- "/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/R/"
-fileName <- paste(filePath,'MRI_',subjType,'_mri_axcpt_AXCPT_accuracy.df',sep="")
+fileName <- paste(filePath,'MRI_',subjType,'_mri_axcpt_AXCPT_accuracy_new.df',sep="")
 load(fileName)
 
-outFile <- paste(filePath,'MRI_',subjType,'_mri_axcpt_AXCPT_acc_stats.txt',sep="")
+outFile <- paste(filePath,'MRI_',subjType,'_mri_axcpt_AXCPT_acc_stats_new.txt',sep="")
 sink(outFile)
 
 ##exclude subjects for whom there were errors in behavioral data recording
@@ -56,13 +56,13 @@ behavData.all.stderr = behavData.all.sd/sqrt(behavData.all.n)  #for error bars
 library('ez')
 
 ####COMPARE BX and BY#####
-behavData.bxby = subset(behavData.all, cond == 'BX' | cond == 'BY')
+behavData.bxby = subset(behavData.all, cond == 'Acc_BX' | cond == 'Acc_BY')
 eztest <-ezANOVA(data=behavData.bxby,dv = .(acc),wid=.(subj),within=.(cond),type=3,detailed=TRUE)
 print("Paired comparison BX vs BY")
 print(eztest)
 
 ####COMPARE BX and BY#####
-behavData.ayby = subset(behavData.all, cond == 'AY' | cond == 'BY')
+behavData.ayby = subset(behavData.all, cond == 'Acc_AY' | cond == 'Acc_BY')
 eztest <-ezANOVA(data=behavData.ayby,dv = .(acc),wid=.(subj),within=.(cond),type=3,detailed=TRUE)
 print("Paired comparison AY vs BY")
 print(eztest)
