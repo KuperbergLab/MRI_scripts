@@ -449,7 +449,7 @@ def makeMC(data):
         #study scanner subject list run onset # stims..... code item iti response_time
         code_ind = len(vtsd_data[0]) - 1 - 3
         response_ind = len(vtsd_data[0]) - 1
-        iti_ind = len(vtsd_data[0]) - 1 - 1
+        iti_ind = 11#len(vtsd_data[0]) - 1 - 1
         onset_ind = 5
         run = vtsd_data[0][4]
         study = vtsd_data[0][0]
@@ -470,6 +470,7 @@ def makeMC(data):
                 study_key = "AXCPT"
         sub = codes[study_key]["on_sub"]
 	sub2 = codes[study_key]["on_sub2"]
+	sub3=1
         uncodes = sorted(set([x[code_ind] for x in vtsd_data]),cmp=lambda x,y: cmp(int(x),int(y)))
         misses = []
         if data['debug']:
@@ -514,6 +515,7 @@ def makeMC(data):
                                                  good_onsets.append(trial[onset_ind])
             else: # don't worry about misses, just find all onsets
                   good_onsets = [line[onset_ind] for line in code_lines]
+		  good_iti=[line[iti_ind] for line in code_lines]
             #xfm to floats, subtract, round,int,back to string
             xfm_onsets = map(str,[round((float(x) - sub), 1) for x in good_onsets])
 	    xfm_duration=map(str,[round(float(codes[study_key]["duration"]),1) for x in good_onsets])	    
@@ -521,7 +523,10 @@ def makeMC(data):
             xfm_duration2=map(str,[round(float(codes[study_key]["duration2"]),1) for x in good_onsets])
     	    xfm_duration3=map(str,[round(float(codes[study_key]["duration3"]),1) for x in good_onsets])
 	    xfm_misses=map(str,[round((float(x) - sub), 1) for x in misses])
-	    xfm_duration_misses=map(str,[round(float(codes[study_key]["duration"]),1) for x in misses])	 
+	    xfm_duration_misses=map(str,[round(float(codes[study_key]["duration"]),1) for x in misses])
+            #if x[iti_ind] == "2.000":	    	
+	   # xfm_onsetsFix=map(str,[round((float(x) + sub3), 1) for x in good_onsets]) #if code_lines[iti_ind] != "0.000"])
+	    #xfm_durationFix=map(str,[round(float(x),1) for x in good_iti]) #if (x[iti_ind] == "2.000" or x[iti_ind] == "4.000" or x[iti_ind] == "6.000")])
 	    if len(xfm_onsets) == 0:
                 print("WARNING: %s:%s:Run %s empty onsets for %s Please fix manually" % (data["subject"], study_key, run, codes[study_key][code][0]))
             new_dict = {"Run"+run+codes[study_key][code][0]+"Onsets": " ".join(xfm_onsets2),
@@ -530,6 +535,8 @@ def makeMC(data):
                 "Run"+run+codes[study_key][code][0]+"PrimeDurations": " ".join(xfm_duration2),
 		"Run"+run+codes[study_key][code][0]+"TargetOnsets": " ".join(xfm_onsets),
                 "Run"+run+codes[study_key][code][0]+"TargetDurations": " ".join(xfm_duration),
+		#"Run"+run+"FixationOnsets": " ".join(xfm_onsetsFix),
+                #"Run"+run+"FixationDurations": " ".join(xfm_durationFix),
 		"Run"+run+codes[study_key][code][0]+"MissesOnsets": " ".join(xfm_misses),
                 "Run"+run+codes[study_key][code][0]+"MissesDurations": " ".join(xfm_duration_misses),}#+ xfm_duration}#" ".join(codes[study_key]["duration"] *					len(xfm_onsets))}
             if study_key in info:
@@ -605,8 +612,8 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra","SPM.mat")
-   	#commands.append(("rm " + spmfile))
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","s10wra","SPM.mat")
+   ##	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
         commands.append("unset DISPLAY")
@@ -702,7 +709,7 @@ def spm_matlab_dict(data,study,type):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"s10wra","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
@@ -1533,7 +1540,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "s10wra", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?

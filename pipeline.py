@@ -131,6 +131,28 @@ def unpack(src,targ,cfg_path,output=None,verbose=False):
     process = run_process(args,output)
     output = process.communicate()[0]
 
+# def 4Dto3Dnii(involume,outdir,outvolume,output=None,verbose=False):
+# 	""" also find a way to add that --out_type spm output"""	
+# 	if not (src and targ and cfg_path):
+#         	raise ProgrammerError('pipeline:4Dto3Dnii - empty arg(s)')
+#     	args = ['mri_convert',involume,outvolume,'-ot',spm,'-fsfast']
+#     	if verbose:
+#         	print('pipeline:4Dto3Dnii')
+#         	print(' '.join(args))
+#     	process = run_process(args,output)
+#     	output = process.communicate()[0]
+# 	
+# # def 4Dto3Dnii2(involume,outvolume,cfg_path,output=None,verbose=False):
+# # 	""" also find a way to add that --out_type spm output"""	
+# # 	if not (src and targ and cfg_path):
+# #         	raise ProgrammerError('pipeline:4Dto3Dnii2 - empty arg(s)')
+# #     	args = ['mri_convert',involume,outvolume,'--out_type',spm,'-fsfast']
+# #     	if verbose:
+# #         	print('pipeline:4Dto3Dnii2')
+# #         	print(' '.join(args))
+# #     	process = run_process(args,output)
+# #     	output = process.communicate()[0]
+
 def load_data(path,verbose=False):
     """
     Read the file at path as pickled object and return the object.
