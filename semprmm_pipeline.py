@@ -188,6 +188,27 @@ def unpack(data):
     else:
         print("ALERT: cannot find cfg file for {0}, re-run --scan2cfg".format(data["subject"]))
 
+# def 4Dto3Dnii(data):
+#     """put in mri_convert input.nii --out_type spm output converts all #files into img hdr then make loop to change each single one #into 3D nii mri_convert outputXXX.img outputXXX.nii"""
+#     4dnii_path = pj(data["mri_dir"], "BaleenHP/018/BaleenHP1.nii")
+#     if os.access(data["mri_dir"], os.R_OK):
+#         pipeline.4Dto3Dnii(4dnii_path, data["3dnii_dir"], "BaleenHP") # put in involume, outvolume etc( data["mri_dir"])
+#     else:
+#         print("ALERT: cannot access mri_dir".format(data["subject"]))
+# 
+# 
+# #def 3Dto4Dnii(data):
+# #	"""mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
+# 
+# def 3dmri_path(data):
+#     """
+#     data: dict with keys:"3dnii_dir"
+#     Returns path to 3dnii folder.
+#     """
+#     3dnii_dir = pj(data["mri_dir"],"BaleenHP","/3dnii/")
+#     if not os.path.exists(3dnii_dir):
+#             os.mkdir(3dnii_dir)
+#     return pj(data["3dnii_dir"])
 
 def cfg_path(data):
     """
@@ -1674,6 +1695,10 @@ def process_subject(subject,data):
         cfg2info(data)
     if data["unpack"]:
         unpack(data)
+    if data["4Dto3Dnii"]:
+        4Dto3Dnii(data)
+    if data["3Dto4Dnii"]:
+        3Dto4Dnii(data)
     if data["unpack_all"]:
         unpack_all(data)
     if data["makeMC"]:
