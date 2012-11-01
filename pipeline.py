@@ -125,23 +125,24 @@ def unpack(src,targ,cfg_path,output=None,verbose=False):
     if not (src and targ and cfg_path):
         raise ProgrammerError('pipeline:unpack - empty arg(s)')
     args = ['unpacksdcmdir','-src',src,'-targ',targ,'-cfg',cfg_path,'-fsfast']
+    print args
     if verbose:
         print('pipeline:unpack')
         print(' '.join(args))
     process = run_process(args,output)
     output = process.communicate()[0]
 
-
-def jane(involume,outdir,outvolumename,output=None,verbose=False):	
-        if not (involume and outdir and outvolumename):
-            raise ProgrammerError('pipeline:4Dto3Dnii - empty arg(s)')
-        args = ['mri_convert', involume, outdir+"/"+outvolumename, '--out_type spm']
-        if verbose:
-            print('pipeline:4Dto3Dnii')
-            print(' '.join(args))
-       # print args
-        process = run_process(args, output)
-        output = process.communicate()[0]
+# 
+# def jane(involume,outdir,outvolumename,output=None,verbose=False):	
+#         if not (involume and outdir and outvolumename):
+#             raise ProgrammerError('pipeline:4Dto3Dnii - empty arg(s)')
+#         args = ['mri_convert','--out_type analyze', '-i', involume,'-o', outdir+"/"+outvolumename ]
+#         if verbose:
+#             print('pipeline:4Dto3Dnii')
+#             print(' '.join(args))
+#        # print args
+#         process = run_process(args, output)
+#         output = process.communicate()[0]
 # 	
 # # def 4Dto3Dnii2(involume,outvolume,cfg_path,output=None,verbose=False):
 # # 	""" also find a way to add that --out_type spm output"""	
@@ -394,5 +395,4 @@ class SPM(object):
     def run(script, logfile=None):
         """
         Executes the script argument, emails logfile
-        """
-        pass
+   
