@@ -131,16 +131,17 @@ def unpack(src,targ,cfg_path,output=None,verbose=False):
     process = run_process(args,output)
     output = process.communicate()[0]
 
-# def 4Dto3Dnii(involume,outdir,outvolume,output=None,verbose=False):
-# 	""" also find a way to add that --out_type spm output"""	
-# 	if not (src and targ and cfg_path):
-#         	raise ProgrammerError('pipeline:4Dto3Dnii - empty arg(s)')
-#     	args = ['mri_convert',involume,outvolume,'-ot',spm,'-fsfast']
-#     	if verbose:
-#         	print('pipeline:4Dto3Dnii')
-#         	print(' '.join(args))
-#     	process = run_process(args,output)
-#     	output = process.communicate()[0]
+
+def jane(involume,outdir,outvolumename,output=None,verbose=False):	
+        if not (involume and outdir and outvolumename):
+            raise ProgrammerError('pipeline:4Dto3Dnii - empty arg(s)')
+        args = ['mri_convert', involume, outdir+"/"+outvolumename, '--out_type spm']
+        if verbose:
+            print('pipeline:4Dto3Dnii')
+            print(' '.join(args))
+       # print args
+        process = run_process(args, output)
+        output = process.communicate()[0]
 # 	
 # # def 4Dto3Dnii2(involume,outvolume,cfg_path,output=None,verbose=False):
 # # 	""" also find a way to add that --out_type spm output"""	
