@@ -16,6 +16,7 @@ from getpass import getuser
 import stat
 import sys
 import time
+import subprocess
 try:
     from joblib import Parallel, delayed
     use_joblib = True
@@ -175,9 +176,8 @@ def scan_only(data):
         raise UserError("scan_only: start nmrenv and try again.")
         
         
-def jane(data):
+def convert_4Dto3Dnii(data):
 #"""put in mri_convert input.nii --out_type spm output converts all #files into img hdr then make loop to change each single one #into 3D nii mri_convert outputXXX.img outputXXX.nii"""
-    print("jane")
     cfg_fname = cfg_path(data)
     if not os.path.exists(cfg_fname):
         print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
@@ -207,21 +207,36 @@ def jane(data):
         #data["4dnii_path"] = pj(data["mri_dir"], "BaleenHP/018/BaleenHP1.nii
                 #os.mkdir(pj(data["mri_dir"],study,runNum,"3Dnii"))
                 data["3dmri_dir"] = pj(data["mri_dir"],study,runNum,"3Dnii")
-               # data["3dmri_dir"] = pj("3Dnii")
     # 	if not os.path.exists(data["3dnii_dir"]):
-         	
-                print(data["4dnii_path"])
+                outvolume = data["3dmri_dir"]+"/"+ "BaleenHP"+run[3]
+                involume = data["4dnii_path"]
+                print involume
+                print outvolume
+                command = []
+##                command.append("#!/bin/csh")
+##                command.append("setenv USE_STABLE_5_0_0")
+##                command.append(" /usr/local/freesurfer/nmr-stable50-env")
+                command.append(' '.join(["mri_convert",
+                                        '-i %s' % involume,
+                                        '-o %s' % outvolume,
+                                        '--out_type spm',
+                                         '> %s' % outvolume+'convert_4D3Dnii.log']))
+                print command 
                 if os.access(data["mri_dir"], os.R_OK):
-                        pipeline.jane(data["4dnii_path"], data["3dmri_dir"], "BaleenHP"+run[3]) 
+                        #pipeline.jane(data["4dnii_path"], data["3dmri_dir"], "BaleenHP"+run[3]) 
+                        subprocess.call(command, shell=True)
                 else:
                         print("ALERT: cannot access mri_dir".format(data["subject"]))
 			
         
 
 
-#def 3Dto4Dnii(data):
-#	"""mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
+def convert_3Dto4Dnii(data):
+        """mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
+        print "Jane"
 
+
+    
 # def 3dmri_path(data):
 #     """
 #     data: dict with keys:"3dnii_dir"
@@ -1732,10 +1747,10 @@ def process_subject(subject,data):
         cfg2info(data)
     if data["unpack"]:
         unpack(data)
-    if data["jane"]:
-        jane(data)
-#     if data["3Dto4Dnii"]:
-#         3Dto4Dnii(data)
+    if data["convert_4Dto3Dnii"]:
+        convert_4Dto3Dnii(data)
+    if data["convert_3Dto4Dnii"]:
+       convert_3Dto4Dnii(data)
     if data["unpack_all"]:
         unpack_all(data)
     if data["makeMC"]:
@@ -1808,8 +1823,7 @@ def process_subject(subject,data):
     if data["makeInv"]:
         meg_script(data,"makeInv")
     if data["makeSTC"]:
-        meg_script(data,"makeSTC")
-        
+        meg_script(data,"makeSTC")       
     if data["print_info"]:
         print_info(data)
 
@@ -1837,7 +1851,9 @@ def parse_arguments():
         help='With --makeMultCond, seperate misses from correct responses.')
     copy_group.add_option('--info_name', dest='info_name', action='store', default='', 
         help="Load/save info using MRI/functionals/$sub/[this option]")
-    copy_group.add_option("--jane",dest="jane",help="Run 4Dto3Dnii conversion for art slice step",
+    copy_group.add_option("--4Dto3Dnii",dest="convert_4Dto3Dnii",help="Run 4Dto3Dnii conversion for art slice step",
+        action="store_true",default=False)
+    copy_group.add_option("--3Dto4Dnii",dest="convert_3Dto4Dnii",help="Run 3Dto4Dnii conversion for art slice step",
         action="store_true",default=False)
     parser.add_option_group(copy_group)
 
