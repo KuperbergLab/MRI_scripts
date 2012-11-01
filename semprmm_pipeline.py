@@ -173,6 +173,64 @@ def scan_only(data):
         pipeline.scan_only(data["dicom_dir"], data["mri_dir"], data["scan_path"])
     except OSError:
         raise UserError("scan_only: start nmrenv and try again.")
+        
+        
+def jane(data):
+#"""put in mri_convert input.nii --out_type spm output converts all #files into img hdr then make loop to change each single one #into 3D nii mri_convert outputXXX.img outputXXX.nii"""
+    print("jane")
+    cfg_fname = cfg_path(data)
+    if not os.path.exists(cfg_fname):
+        print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
+        raise UserError
+    cfg = readTable(cfg_fname)    
+    info = dict({})
+    prepend_zero = lambda x: "00"+x if int(x)<10 else "0"+x
+    #int(code) in possible_studies[study]
+    if data["single_study"]:
+        studies = (data["single_study"])
+    else:
+        studies = possible_studies
+    for study in studies:
+        print study
+        study_dict = dict({})
+        runs = [x for x in cfg if x[1] == study]
+        if len(runs) > 0:
+            for run in runs:
+                run_num = run[3].split(".")[0].split(study)[1]
+                study_dict["Run"+run_num] = prepend_zero(run[0])
+#         print study_dict.values()
+#         print study_dict.keys()
+        for run in study_dict:
+                print run  
+                runNum = study_dict[run]
+                data["4dnii_path"] = pj(data["mri_dir"], study, runNum, study+ run[3]+".nii" )
+        #data["4dnii_path"] = pj(data["mri_dir"], "BaleenHP/018/BaleenHP1.nii
+                #os.mkdir(pj(data["mri_dir"],study,runNum,"3Dnii"))
+                data["3dmri_dir"] = pj(data["mri_dir"],study,runNum,"3Dnii")
+               # data["3dmri_dir"] = pj("3Dnii")
+    # 	if not os.path.exists(data["3dnii_dir"]):
+         	
+                print(data["4dnii_path"])
+                if os.access(data["mri_dir"], os.R_OK):
+                        pipeline.jane(data["4dnii_path"], data["3dmri_dir"], "BaleenHP"+run[3]) 
+                else:
+                        print("ALERT: cannot access mri_dir".format(data["subject"]))
+			
+        
+
+
+#def 3Dto4Dnii(data):
+#	"""mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
+
+# def 3dmri_path(data):
+#     """
+#     data: dict with keys:"3dnii_dir"
+#     Returns path to 3dnii folder.
+#     """
+#     3dnii_dir = pj(data["mri_dir"],"BaleenHP","/3dnii/")
+#     if not os.path.exists(3dnii_dir):
+#             os.mkdir(pj(data["mri_dir"],"BaleenHP","/3dnii/"))
+#     return pj(data["3dnii_dir"])
 
 
 def unpack(data):
@@ -188,27 +246,6 @@ def unpack(data):
     else:
         print("ALERT: cannot find cfg file for {0}, re-run --scan2cfg".format(data["subject"]))
 
-# def 4Dto3Dnii(data):
-#     """put in mri_convert input.nii --out_type spm output converts all #files into img hdr then make loop to change each single one #into 3D nii mri_convert outputXXX.img outputXXX.nii"""
-#     4dnii_path = pj(data["mri_dir"], "BaleenHP/018/BaleenHP1.nii")
-#     if os.access(data["mri_dir"], os.R_OK):
-#         pipeline.4Dto3Dnii(4dnii_path, data["3dnii_dir"], "BaleenHP") # put in involume, outvolume etc( data["mri_dir"])
-#     else:
-#         print("ALERT: cannot access mri_dir".format(data["subject"]))
-# 
-# 
-# #def 3Dto4Dnii(data):
-# #	"""mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
-# 
-# def 3dmri_path(data):
-#     """
-#     data: dict with keys:"3dnii_dir"
-#     Returns path to 3dnii folder.
-#     """
-#     3dnii_dir = pj(data["mri_dir"],"BaleenHP","/3dnii/")
-#     if not os.path.exists(3dnii_dir):
-#             os.mkdir(3dnii_dir)
-#     return pj(data["3dnii_dir"])
 
 def cfg_path(data):
     """
@@ -1695,10 +1732,10 @@ def process_subject(subject,data):
         cfg2info(data)
     if data["unpack"]:
         unpack(data)
-    if data["4Dto3Dnii"]:
-        4Dto3Dnii(data)
-    if data["3Dto4Dnii"]:
-        3Dto4Dnii(data)
+    if data["jane"]:
+        jane(data)
+#     if data["3Dto4Dnii"]:
+#         3Dto4Dnii(data)
     if data["unpack_all"]:
         unpack_all(data)
     if data["makeMC"]:
@@ -1800,6 +1837,8 @@ def parse_arguments():
         help='With --makeMultCond, seperate misses from correct responses.')
     copy_group.add_option('--info_name', dest='info_name', action='store', default='', 
         help="Load/save info using MRI/functionals/$sub/[this option]")
+    copy_group.add_option("--jane",dest="jane",help="Run 4Dto3Dnii conversion for art slice step",
+        action="store_true",default=False)
     parser.add_option_group(copy_group)
 
     
