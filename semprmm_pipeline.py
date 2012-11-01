@@ -185,11 +185,11 @@ def convert_4Dto3Dnii(data):
     cfg = readTable(cfg_fname)    
     info = dict({})
     prepend_zero = lambda x: "00"+x if int(x)<10 else "0"+x
-    #int(code) in possible_studies[study]
     if data["single_study"]:
         studies = (data["single_study"])
     else:
         studies = possible_studies
+        
     for study in studies:
         print study
         study_dict = dict({})
@@ -198,42 +198,92 @@ def convert_4Dto3Dnii(data):
             for run in runs:
                 run_num = run[3].split(".")[0].split(study)[1]
                 study_dict["Run"+run_num] = prepend_zero(run[0])
-#         print study_dict.values()
-#         print study_dict.keys()
+                
         for run in study_dict:
                 print run  
                 runNum = study_dict[run]
                 data["4dnii_path"] = pj(data["mri_dir"], study, runNum, study+ run[3]+".nii" )
-        #data["4dnii_path"] = pj(data["mri_dir"], "BaleenHP/018/BaleenHP1.nii
-                #os.mkdir(pj(data["mri_dir"],study,runNum,"3Dnii"))
                 data["3dmri_dir"] = pj(data["mri_dir"],study,runNum,"3Dnii")
-    # 	if not os.path.exists(data["3dnii_dir"]):
-                outvolume = data["3dmri_dir"]+"/"+ "BaleenHP"+run[3]
+                outvolume = data["3dmri_dir"]+"/"+ study+run[3]
                 involume = data["4dnii_path"]
+                outdir = data["3dmri_dir"]
+     	        if not os.path.exists(outdir):
+                       os.mkdir(data["3dmri_dir"])                
                 print involume
                 print outvolume
-                command = []
-##                command.append("#!/bin/csh")
-##                command.append("setenv USE_STABLE_5_0_0")
-##                command.append(" /usr/local/freesurfer/nmr-stable50-env")
-                command.append(' '.join(["mri_convert",
+                command1 = []
+
+                command1.append(' '.join(["mri_convert",
                                         '-i %s' % involume,
                                         '-o %s' % outvolume,
                                         '--out_type spm',
                                          '> %s' % outvolume+'convert_4D3Dnii.log']))
-                print command 
+                print command1 
                 if os.access(data["mri_dir"], os.R_OK):
-                        #pipeline.jane(data["4dnii_path"], data["3dmri_dir"], "BaleenHP"+run[3]) 
-                        subprocess.call(command, shell=True)
+                        subprocess.call(command1, shell=True)
                 else:
                         print("ALERT: cannot access mri_dir".format(data["subject"]))
-			
-        
+                for img in os.listdir (outdir):
+                    command2 = []
+                    img_name, extn_name= os.path.splitext(img) ## To take only .img files
+                    #print img
+                    if extn_name == '.img':
+                        #print outdir+'/'+img_name+'.img'
+                        command2.append(' '.join(["mri_convert",
+                                                  '-i %s' % outdir+'/'+img_name+'.img',
+                                                  '-o %s' % outdir+'/'+img_name+'.nii']))
+                        print command2
+                        subprocess.call(command2, shell=True)
 
+##                        
 
 def convert_3Dto4Dnii(data):
-        """mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
-        print "Jane"
+    """mri_concat --i input*.nii --o input-reassembled.nii     * I think stands for any number of these at teh end (and this is actually the inpu    so input could e.g. be ghBaleenHP1*.nii to capture all slice repaired 3D nii files"""
+    print "Jane"
+    cfg_fname = cfg_path(data)
+    if not os.path.exists(cfg_fname):
+        print("ALERT: cannot find cfg file for {0}".format(data["subject"]))
+        raise UserError
+    cfg = readTable(cfg_fname)    
+    info = dict({})
+    prepend_zero = lambda x: "00"+x if int(x)<10 else "0"+x
+    if data["single_study"]:
+        studies = (data["single_study"])
+    else:
+        studies = possible_studies
+        
+    for study in studies:
+        print study
+        study_dict = dict({})
+        runs = [x for x in cfg if x[1] == study]
+        if len(runs) > 0:
+            for run in runs:
+                run_num = run[3].split(".")[0].split(study)[1]
+                study_dict["Run"+run_num] = prepend_zero(run[0])
+        for run in study_dict:
+                print run  
+                runNum = study_dict[run]
+                data["4dnii_path"] = pj(data["mri_dir"], study, runNum, study+ run[3]+".nii" )
+                data["3dmri_dir"] = pj(data["mri_dir"],study,runNum,"3Dnii")
+                involume = data["3dmri_dir"]+"/"+ study+run[3]
+                outvolume = data["3dmri_dir"]+"/"+ study+run[3]+'_r4D.nii'
+                inoutdir = data["3dmri_dir"]
+                command1 = []
+                print outvolume
+                if os.path.exists(outvolume):
+                    print "Reassembled 4D.nii already exists so removing the old one and creating new version."
+                    os.remove(outvolume)
+                command1.append(' '.join(["mri_concat",
+                                          '--i %s' % inoutdir+'/'+'*.nii',
+                                          '--o %s' % outvolume]))
+                if os.access(data["mri_dir"], os.R_OK):
+                        subprocess.call(command1, shell=True)
+                else:
+                        print("ALERT: cannot access mri_dir".format(data["subject"]))
+                
+                
+                
+        
 
 
     
