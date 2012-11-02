@@ -395,4 +395,5 @@ class SPM(object):
     def run(script, logfile=None):
         """
         Executes the script argument, emails logfile
-   
+        """
+        pass

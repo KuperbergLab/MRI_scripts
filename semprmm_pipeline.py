@@ -264,18 +264,20 @@ def convert_3Dto4Dnii(data):
                 print run  
                 runNum = study_dict[run]
                 data["4dnii_path"] = pj(data["mri_dir"], study, runNum, study+ run[3]+".nii" )
+                data["4dnii_dir"] = pj(data["mri_dir"], study, runNum)
                 data["3dmri_dir"] = pj(data["mri_dir"],study,runNum,"3Dnii")
                 involume = data["3dmri_dir"]+"/"+ study+run[3]
-                outvolume = data["3dmri_dir"]+"/"+ study+run[3]+'_r4D.nii'
-                inoutdir = data["3dmri_dir"]
+                outvolume = data["4dnii_dir"]+"/"+ study+run[3]+'_r4D.nii'
+                indir = data["3dmri_dir"]
                 command1 = []
                 print outvolume
-                if os.path.exists(outvolume):
-                    print "Reassembled 4D.nii already exists so removing the old one and creating new version."
-                    os.remove(outvolume)
+#                 if os.path.exists(outvolume):
+#                     print "Reassembled 4D.nii already exists so removing the old one and creating new version."
+#                     os.remove(outvolume)
                 command1.append(' '.join(["mri_concat",
-                                          '--i %s' % inoutdir+'/'+'*.nii',
+                                          '--i %s' % indir+'/'+'gh'+study+'*.nii',
                                           '--o %s' % outvolume]))
+                print command1
                 if os.access(data["mri_dir"], os.R_OK):
                         subprocess.call(command1, shell=True)
                 else:
