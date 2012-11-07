@@ -757,9 +757,9 @@ def spm_run_art(data):
     sessions = []
     for study in studies:
         #glob the images
-        images = glob(pj(data["mri_dir"],study,"*","a"+study+"?.nii")) ## Images changed to the slice time corrected images a* to be compared with the rp_a* motion param files. 
+        images = glob(pj(data["mri_dir"],study,"*","a"+study+"?_r4D.nii")) ## Images changed to the slice time corrected images a* to be compared with the rp_a* motion param files. 
         print images
-        motions = glob(pj(data["mri_dir"],study,"*","rp_a"+study+"*.txt")) ##to account for the change in the spm preprocessing order
+        motions = glob(pj(data["mri_dir"],study,"*","rp_a"+study+"*_r4D.txt")) ##to account for the change in the spm preprocessing order
         if len(images) != len(motions):
             raise UserError("spm_run_art: Not the same amount of images and motion files")
         sess_contents = []
@@ -834,7 +834,7 @@ def spm_matlab_dict(data,study,type):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"s10wra","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_slice","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
