@@ -72,7 +72,7 @@ if __name__ == "__main__":
           with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+listPrefix+'_'+study+'_accuracy-short_new.log','w') as d:
             #print(study)
  ##           d.write('sub' + '\t' + 'Acc_AX' + '\t' + 'RT_AX' + '\t' + 'Acc_AY' + '\t' + 'Acc_BX' + '\t' + 'Acc_BY' + '\n')
-             d.write('sub' + '\t' + 'Acc_AX' + '\t'  + 'Acc_AY' + '\t' + 'Acc_BX' + '\t' + 'Acc_BY' + '\t' + 'RT_AX' + '\n')
+             d.write('sub' + '\t' + 'Acc_AX' + '\t'  + 'Acc_AY' + '\t' + 'Acc_BX' + '\t' + 'Acc_BY'  + '\n')
 
              for sub in subjects:
                 acc_ax_avg = 0.0
@@ -162,8 +162,8 @@ if __name__ == "__main__":
 	        d.write(str(acc_AX) + '\t')
                 d.write(str(acc_AY) + '\t')
                 d.write(str(acc_BX) + '\t')
-                d.write(str(acc_BY) + '\t')
-		d.write(str(rt_AX) + '\n')
+                d.write(str(acc_BY) + '\n')
+		##d.write(str(rt_AX) + '\n')
 
           d.close()
         mriaccuracy2R('MRI', study, subjType, listPrefix)  
