@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Study-agnostic Pipeline functions
@@ -177,7 +177,7 @@ def save_data(data,path,verbose=False):
             pickle.dump(data,f)
             if verbose:
                 print("Saved data to %s" % path )
-        make_lingua(path)
+     #   make_lingua(path)
     except:
         print("Couldn't save data to %s" % path )
         raise
@@ -196,6 +196,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
     try:
         with open(incoming,"r") as f:
             new_string = string.Template(f.read()).safe_substitute(replace)
+            #print new_string
             if verbose:
                 print("Read and replaced %s" % incoming )
             #check if there were $keywords that weren't replaced
@@ -285,7 +286,7 @@ def write_file_with_list(path,lines,quiet=False):
         with open(path,'w') as f:
             text = '\n'.join(lines)
             f.write(text + '\n')
-        make_lingua(path)
+       # make_lingua(path)
         if not quiet:
             print("Hi! Wrote %s (%d)" % (os.sep.join(path.split(os.sep)[5:]),len(lines)))
     except IOError:
