@@ -146,7 +146,7 @@ def archive_to_cluster(data):
     """
     if data["verbose"]:
         print("archive_to_cluster:")
-    data["archive_dir"] = pipeline.find_session([data["subject"], "-x", "Kuperberg"])
+    data["archive_dir"] = pipeline.find_session([data["subject"], "-x", ""])
     if data['wait']:
         while not data['archive_dir']:
             time.sleep(10)
@@ -737,8 +737,8 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","s10wra","SPM.mat")
-   ##	commands.append(("rm " + spmfile))
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_slice","SPM.mat")
+   	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
         commands.append("unset DISPLAY")
@@ -864,10 +864,10 @@ def spm_funcdir_info(data,study,type):
             run_num = mr_key.split("Run")[1]
             mr_key += "MR"
             if "outliers" in type:
-                study_dict[mr_key] = "art_regression_outliers_and_movement_a{0}{1}.mat".format(
+                study_dict[mr_key] = "art_regression_outliers_and_movement_a{0}{1}_r4D.mat".format(
                     study,run_num)
             else:
-                study_dict[mr_key] = "rp_a{0}{1}.txt".format(study,run_num)
+                study_dict[mr_key] = "rp_a{0}{1}_r4D.txt".format(study,run_num)
     elif type == "preproc":
         #find mprage xxx (hardcoded to use the first)
         study_dict["MPRAGEXXX"] = study_dict["MPRAGE_runs"][0]
@@ -1399,7 +1399,7 @@ def meg_script(data,type):
         pass
     #start the process
     pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
-    os.system("chgrp -R lingua %s" % data["meg_dir"])
+    #os.system("chgrp -R lingua %s" % data["meg_dir"])
 
 
 def run_ica(data):
