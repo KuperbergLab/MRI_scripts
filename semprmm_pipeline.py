@@ -25,6 +25,7 @@ except ImportError:
 import shutil
 from readInput import readTable
 import pipeline as pipeline
+from os import listdir
 
 import pdb
 
@@ -328,6 +329,13 @@ def scan_path(data):
     returns path to scan.log file
     """
     return pj(data["mri_dir"], "scan.log")
+
+def dcmlist_path(data):
+    """
+    data: dict with "subject_dir"
+    returns path to dicomdir.sumfile file
+    """
+    return pj(data["mri_dir"], "dicomdir.sumfile")
 
 
 def unpack_all(data):
@@ -1447,32 +1455,39 @@ def setup_bem(data):
     if not os.path.exists(flash_org_dir):   
         os.mkdir(flash_org_dir)
     try:
-        scanlog_path = scan_path(data)
-        all_lines = pipeline.list_from_file(scanlog_path,data["verbose"])
-        ##### Including this part to accomodate flash_fixed and flash_iso in teh preAnat script. #### 
-        if [line.split()[7] for line in all_lines if "MEFLASH_5deg_fixed" in line and " 8 " in line]:    
-            dcm = [line.split()[7] for line in all_lines if "MEFLASH_5deg_fixed" in line and " 8 " in line]
+        dicomlist_path = dcmlist_path(data)
+        #scanlog_path = scan_path(data)
+        print dicomlist_path
+        all_lines = pipeline.list_from_file(dicomlist_path,data["verbose"])
+        ##### Including this part to accomodate flash_fixed and flash_iso in the preAnat script. #### line.split()[9] == "8"
+        if [line.split()[11] for line in all_lines if "MEFLASH_5deg_fixed" in line and  line.split()[9] == "8" ]:    
+            dcm = [line.split()[1] for line in all_lines if "MEFLASH_5deg_fixed" in line and line.split()[9] == "8"]
         elif [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]:
              dcm = [line.split()[7] for line in all_lines if "MEFLASH_8e_1mm_iso_5deg" in line and " 8 " in line]    
-        if len(dcm) > 1:
-            ProgrammerError("More than one MEFLASH5 with 8 frames...check scan.log")
+        #if len(dcm) > 1:
+        #    ProgrammerError("More than one MEFLASH5 with 8 frames...check scan.log")
         elif len(dcm) == 0:
             dcm = None;     
         else:
             dcm = dcm[0]
-        print len(dcm)
     except IOError:
-        raise ProgrammerError("Could not open scan.log file")
+        raise ProgrammerError("Could not open dicomdir.sumfile file")
+    print len(dcm)  
+      
     if dcm:
-        (sub_dcm,dash,after) = dcm.rpartition("-")
-        search_dir = pj(data["dicom_dir"],sub_dcm+"*.dcm")
-        flash_dcms = glob(search_dir)
-        flash_dcms.sort()
-        for flash_dcm in flash_dcms:
+#         (sub_dcm,dash,after) = dcm.rpartition("-") 
+#         search_dir = pj(data["dicom_dir"],sub_dcm+"*.dcm")
+#         (before,dot,sub_dcm) = dcm.rpartition(".") ##04/16/2013 CU Initially was ("-") but after the MGH dicom name convention change, edited to ("."), so that it reads the flash dicoms and runs the preAnat step appropriately. 
+#         search_dir = pj(data["dicom_dir"],before+dot+sub_dcm[:3]+"*.dcm")
+#         flash_dcms = glob(search_dir)
+#         print flash_dcm_dir
+        dcm.sort()
+        for flash_dcm in dcm:
             (path,slash,filename) = flash_dcm.rpartition("/")
             try:
                 sympath = pj(flash_dcm_dir,filename)
-                os.symlink(flash_dcm,sympath)
+                flash_dcmL = pj(data["dicom_dir"],flash_dcm)
+                os.symlink(flash_dcmL,sympath)
             except OSError:
                 pass
     else:
