@@ -26,10 +26,11 @@ import shutil
 from readInput import readTable
 import pipeline as pipeline
 from os import listdir
+import commands
 
 import pdb
 
-possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenLP": 4, "BaleenHP":4, "AXCPT": 2})
+possible_studies = dict({"ATLLoc": 1, "MaskedMM": 2, "BaleenLP": 4, "BaleenHP":4, "AXCPT": 2, "BaleenMM":8})
 cond_num = dict({"ATLLoc":
                     {"Sentences":"1",
                     "Wordlist":"2",
@@ -722,8 +723,41 @@ def spm_setup(data,type):
             smooth_dir = pj(stat_dir,smooth)
             if not os.path.exists(smooth_dir):
                 os.mkdir(smooth_dir)
-        spm_write_mlab_script(data,study,type)
+        print job_dir        
+        if study == "BaleenMM":
+           MM_flag = True
+           spm_write_mlab_script(data,'BaleenHP',type, MM_flag)
+           spm_write_mlab_script(data, 'BaleenLP', type, MM_flag)
+           spm_combine_mlab_BaleenMM(data, type)
+           
+        else:
+           MM_flag = False
+           spm_write_mlab_script(data,study,type, MM_flag)
+        
         spm_write_script(data,study,type)
+
+def spm_combine_mlab_BaleenMM(data, type):
+
+    hp_job_mscript = pj(data["mri_dir"],"BaleenMM","jobs", "BaleenHPmm_"+type+".m")
+    lp_job_mscript = pj(data["mri_dir"],"BaleenMM","jobs", "BaleenLPmm_"+type+".m")
+    mm_dir = pj(data["mri_dir"],"BaleenMM")
+    mm_job_dir = pj(data["mri_dir"],"BaleenMM", "jobs")
+    if not os.path.exists(mm_dir):
+        print("Creating BaleenMM directory...")        
+        os.mkdir(mm_dir)
+        os.mkdir(mm_job_dir)
+    mm_job_mscript = pj(mm_job_dir, '_'.join(["BaleenMM_"+type+".m"]))
+    print mm_job_mscript  
+    print("Combining BaleenHP and BaleenLP mlab scripts")
+    #args = ['cat', hp_job_mscript, 'head -n -8 >', hp_job_mscript]
+    #command = (' '.join(args))
+    #print command
+    #output = str(commands.getstatusoutput(command))
+    args = ['cat',hp_job_mscript, lp_job_mscript, '>', mm_job_mscript]
+        #print args
+    command = (' '.join(args))
+    print command
+    output = str(commands.getstatusoutput(command))
 
 
 def spm_script_path(data,study,type):
@@ -803,7 +837,7 @@ def spm_run_art(data):
     print("Finished ART for {0}".format(data["subject"]))
 
         
-def spm_write_mlab_script(data,study,type):
+def spm_write_mlab_script(data,study,type, MM_flag):
     """
     This basically just wraps f2f_replace and uses the dictionary from spm_matlab_dict.
     """
@@ -817,10 +851,17 @@ def spm_write_mlab_script(data,study,type):
     if data['misses']:
         batch_i = pj(batch_dir,data['stype'],'_'.join([study.lower(),good_type,"miss.m"]))
     else:
-    	batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
+        if MM_flag:
+            batch_i = pj(batch_dir,data["stype"],study.lower()+"mm_"+good_type+".m") 
+        else: 
+    	    batch_i = pj(batch_dir,data["stype"],study.lower()+"_"+good_type+".m")
     if not os.path.isfile(batch_i):
         raise IOError("Cannot locate %s" % batch_i)
-    batch_o = spm_jobfile(data,study,good_type)
+    if MM_flag:
+            batch_o = pj(data["mri_dir"],"BaleenMM","jobs",study+"mm_"+type+".m")
+    else:
+            batch_o = spm_jobfile(data,study,good_type)
+    print batch_i
     pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
@@ -853,6 +894,7 @@ def spm_matlab_dict(data,study,type):
         replace_dict["location"] = "home/scratch"
     else:
         replace_dict["location"] = "cluster/kuperberg/SemPrMM/MRI"
+    #print replace_dict
     return replace_dict
 
 
@@ -862,23 +904,28 @@ def spm_funcdir_info(data,study,type):
     The MPRAGEXXX is filled out here"""
     info = pipeline.load_data(info_path(data),data["verbose"])
     study_dict = info[study];
+    #print study_dict
     study_dict["subject"] = data["subject"]
     study_dict["stat_folder"] = type
     if "stats" in type:
         # we need to insert MRs into study_dict
-        run_keys = [k for k,v in study_dict.iteritems() if "Run" in k]
-        for run_key in run_keys:
-            mr_key = run_key.split("XXX")[0]
-            run_num = mr_key.split("Run")[1]
-            mr_key += "MR"
-            if "outliers" in type:
-                study_dict[mr_key] = "art_regression_outliers_and_movement_a{0}{1}_r4D.mat".format(
-                    study,run_num)
-            else:
-                study_dict[mr_key] = "rp_a{0}{1}_r4D.txt".format(study,run_num)
+      run_keys = [k for k,v in study_dict.iteritems() if "Run" in k]
+      for run_key in run_keys:
+        #print run_key
+        mr_key = run_key.split("XXX")[0]
+        run_num = mr_key.split("Run")[1]
+        mr_key += "MR"
+        #print run_num
+        if "outliers" in type:
+               study_dict[mr_key] = "art_regression_outliers_and_movement_a{0}{1}_r4D.mat".format(study,run_num)
+               #print study_dict[mr_key]
+        else:
+               study_dict[mr_key] = "rp_a{0}{1}_r4D.txt".format(study,run_num)
+        #print study_dict[mr_key]
     elif type == "preproc":
         #find mprage xxx (hardcoded to use the first)
         study_dict["MPRAGEXXX"] = study_dict["MPRAGE_runs"][0]
+    #print study_dict
     return study_dict   
 
 
