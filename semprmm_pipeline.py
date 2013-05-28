@@ -845,7 +845,7 @@ def spm_write_mlab_script(data,study,type, MM_flag):
         good_type = "stats_outliers"
     else:
         good_type = type
-    batch_dict = spm_matlab_dict(data,study,type)
+    batch_dict = spm_matlab_dict(data,study,type, MM_flag)
     if data["unwarp"]:
         batch_i = pj(batch_dir,data["stype"],'_'.join([study.lower(),good_type,"unwarp.m"]))
     if data['misses']:
@@ -861,7 +861,7 @@ def spm_write_mlab_script(data,study,type, MM_flag):
             batch_o = pj(data["mri_dir"],"BaleenMM","jobs",study+"mm_"+type+".m")
     else:
             batch_o = spm_jobfile(data,study,good_type)
-    print batch_i
+    #print batch_dict
     pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
@@ -873,7 +873,7 @@ def spm_logfile(data,study,type):
     return pj(data["mri_dir"],study,"jobs",study+"_"+type+".log")
 
 
-def spm_matlab_dict(data,study,type):
+def spm_matlab_dict(data,study,type, MM_flag):
     """
     Adds to the dictionary returned by spm_funcdir_info.  Any keywords you insert to the SPM batches
     should be added here.
@@ -884,8 +884,13 @@ def spm_matlab_dict(data,study,type):
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
         replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_slice","SPM.mat")
+        if MM_flag:
+             replace_dict["EightSPM"] = pj(data["mri_dir"],'BaleenMM',type,"swra_slice","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
+    if MM_flag: 
+           replace_dict["run_file"] = touch_file_path(data,'BaleenMM',type,"run")
+           replace_dict["start_file"] = touch_file_path(data,'BaleenMM',type,"start")
     replace_dict["email_success"] = "{0} {1} {2} succeeded".format(data["subject"],study,
         type)
     replace_dict["email_fail"] =  "{0} {1} {2} failed".format(data["subject"],study,
@@ -894,7 +899,6 @@ def spm_matlab_dict(data,study,type):
         replace_dict["location"] = "home/scratch"
     else:
         replace_dict["location"] = "cluster/kuperberg/SemPrMM/MRI"
-    #print replace_dict
     return replace_dict
 
 
