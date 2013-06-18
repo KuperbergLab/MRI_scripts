@@ -711,30 +711,184 @@ def spm_setup(data,type):
     if not os.path.exists(data["mri_dir"]):
         print("Hey, no MRI dir for {0}".format(data["subject"]))
         raise UserError("Broke in spm_setup")
+
     for study in studies_to_setup(data, "spm_"+type):
-        job_dir = pj(data["mri_dir"],study,"jobs")
-        if not os.path.exists(job_dir):
-            os.mkdir(job_dir)
-        if "stats" in type:
-            stat_dir = pj(data["mri_dir"],study,type)
-            if not os.path.exists(stat_dir):
-                    os.mkdir(stat_dir)
-            smooth = "8mm"
-            smooth_dir = pj(stat_dir,smooth)
-            if not os.path.exists(smooth_dir):
-                os.mkdir(smooth_dir)
-        print job_dir        
-        if study == "BaleenMM":
+       if study == 'BaleenMM_new':
+           study_dir = pj(data["mri_dir"],study)
+           job_dir = pj(data["mri_dir"],study,"jobs")
+           print job_dir
+           if not os.path.exists(job_dir):
+              os.mkdir(study_dir)
+              os.mkdir(job_dir)
+           if "stats" in type:
+              stat_dir = pj(data["mri_dir"],study,type)
+              if not os.path.exists(stat_dir):
+                  os.mkdir(stat_dir)
            MM_flag = True
            spm_write_mlab_script(data,'BaleenHP',type, MM_flag)
            spm_write_mlab_script(data, 'BaleenLP', type, MM_flag)
-           spm_combine_mlab_BaleenMM(data, type)
-           
-        else:
-           MM_flag = False
-           spm_write_mlab_script(data,study,type, MM_flag)
-        
-        spm_write_script(data,study,type)
+           spm_combine_mlab_BaleenMM(data, type)   
+
+       elif study == 'BaleenMM': 
+ #         MM_flag = True
+          hp_job_mscript = pj(data["mri_dir"],"BaleenHP","jobs", "BaleenHP_"+type+".m")
+          lp_job_mscript = pj(data["mri_dir"],"BaleenLP","jobs", "BaleenLP_"+type+".m")
+          hpm_job_mscript = pj(data["mri_dir"],"BaleenMM","jobs", "BaleenHPmm_"+type+".m")
+          lpm_job_mscript = pj(data["mri_dir"],"BaleenMM","jobs", "BaleenLPmm_"+type+".m")
+          mm_dir = pj(data["mri_dir"],"BaleenMM")
+          mm_job_dir = pj(data["mri_dir"],"BaleenMM", "jobs")
+          mm_stats_dir = pj(data["mri_dir"],"BaleenMM", "stats_outliers")
+          mm_swra_dir = pj(data["mri_dir"],"BaleenMM", "stats_outliers", "swra_slice")
+          print("Creating BaleenMM directory...")        
+          if not os.path.exists(mm_dir): os.mkdir(mm_dir)
+          if not os.path.exists(mm_job_dir): os.mkdir(mm_job_dir)
+          if not os.path.exists(mm_stats_dir):
+              os.mkdir(mm_stats_dir)
+              os.mkdir(mm_swra_dir)
+          mm_job_mscript = pj(mm_job_dir, '_'.join(["BaleenMM_"+type+".m"]))
+          mm_spm_file = pj(mm_stats_dir,"SPM.mat")
+          if os.path.isfile(mm_spm_file): 
+             os.remove(mm_spm_file)
+             os.remove(mm_job_mscript)
+             os.remove(hpm_job_mscript)
+             os.remove(lpm_job_mscript)
+             print("Existing SPM.mat file deleted")
+          ## HP 
+          f1 = open(hp_job_mscript, 'r')
+          f2 = open(hpm_job_mscript, 'w')
+          for line in f1:
+            if 'sess('  in line: 
+               f2.write(line) 
+            elif '/swraBaleenHP' in line:
+               f2.write(line)
+            elif ' };' in line:
+               f2.write(line)
+            elif 'spec.dir' in line:
+               f2.write(line.replace('BaleenHP','BaleenMM'))
+            elif 'spec.timing' in line:
+               f2.write(line)
+            #elif 'mkdir' in line: 
+            #   f2.write(line.replace('BaleenHP','BaleenMM'))
+          f1.close()
+          f2.close()
+          ##LP
+          f3 = open(lp_job_mscript, 'r')
+          f4 = open(lpm_job_mscript, 'w')
+          for line in f3:
+            if 'sess(' in line: 
+               f4.write(line) 
+            elif ' };' in line:
+               f4.write(line)
+            elif '/swraBaleenLP' in line:
+               f4.write(line)
+            elif 'fmri_est' in line:
+               f4.write(line)
+            elif 'stats.con' in line:
+               f4.write(line)
+            elif 'spec.cvi' in line:
+               f4.write(line)
+            elif 'spec.mask' in line: 
+               f4.write(line)
+            elif 'spec.global' in line:
+               f4.write(line)
+            elif 'spec.volt' in line: 
+               f4.write(line)
+            elif 'spec.fact' in line:
+               f4.write(line)
+            elif 'spec.bases' in line: 
+               f4.write(line)
+            elif 'warning' in line: 
+               f4.write(line)
+            elif 'try' in line:
+               f4.write(line)
+            elif 'defaults' in line: 
+               f4.write(line)
+            elif 'spm_jobman' in line:
+               f4.write(line)
+            elif 'fclose(fopen(' in line: 
+               f4.write(line)
+            elif 'ec =' in line:
+               f4.write(line)
+            elif 'catch ' in line:
+               f4.write(line)
+            elif 'end' in line: 
+               f4.write(line)
+            elif 'exit(' in line: 
+               f4.write(line)
+          f3.close()
+          f4.close()
+          ## replacing sessions in lp 
+          args = ['sed -i "s/sess(1)/sess(5)/g" ', lpm_job_mscript]
+          command = (' '.join(args))
+          output = str(commands.getstatusoutput(command))
+          args = ['sed -i "s/sess(2)/sess(6)/g" ', lpm_job_mscript]
+          command = (' '.join(args))
+          output = str(commands.getstatusoutput(command))
+          args = ['sed -i "s/sess(3)/sess(7)/g" ', lpm_job_mscript]
+          command = (' '.join(args))
+          output = str(commands.getstatusoutput(command))
+          args = ['sed -i "s/sess(4)/sess(8)/g" ', lpm_job_mscript]
+          command = (' '.join(args))
+          output = str(commands.getstatusoutput(command))
+
+          ## If HP has only 3 or 2 runs
+          args = ['grep ".scans" ', hp_job_mscript]
+          command = (' '.join(args))
+          output = str(commands.getstatusoutput(command))
+          found2 = found3 = False
+          if 'sess(3)' not in output:
+              found2 = True
+          elif 'sess(4)' not in output:
+              found3 = True
+
+          if found2:
+              print "found 2 HP runs here"
+              args = ['sed -i "s/sess(5)/sess(3)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+              args = ['sed -i "s/sess(6)/sess(4)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+              args = ['sed -i "s/sess(7)/sess(5)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+              args = ['sed -i "s/sess(8)/sess(6)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+          elif found3:
+              print "found 3 HP runs here"
+              args = ['sed -i "s/sess(5)/sess(4)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+              args = ['sed -i "s/sess(6)/sess(5)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+              args = ['sed -i "s/sess(7)/sess(6)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+              args = ['sed -i "s/sess(8)/sess(7)/g" ', lpm_job_mscript]
+              command = (' '.join(args))
+              output = str(commands.getstatusoutput(command))
+          spm_combine_mlab_BaleenMM(data, type) 
+       else:
+	 for study in studies_to_setup(data, "spm_"+type):
+             job_dir = pj(data["mri_dir"],study,"jobs")
+             if not os.path.exists(job_dir):
+                 os.mkdir(job_dir)
+             if "stats" in type:
+                stat_dir = pj(data["mri_dir"],study,type)
+             	if not os.path.exists(stat_dir):
+                    os.mkdir(stat_dir)
+            	smooth = "8mm"
+                smooth_dir = pj(stat_dir,smooth)
+             	if not os.path.exists(smooth_dir):
+                 os.mkdir(smooth_dir)
+             print job_dir   
+             MM_flag = False
+             spm_write_mlab_script(data,study,type, MM_flag)  
+             spm_write_script(data,study,type)
+
+
 
 def spm_combine_mlab_BaleenMM(data, type):
 
@@ -747,17 +901,17 @@ def spm_combine_mlab_BaleenMM(data, type):
         os.mkdir(mm_dir)
         os.mkdir(mm_job_dir)
     mm_job_mscript = pj(mm_job_dir, '_'.join(["BaleenMM_"+type+".m"]))
-    print mm_job_mscript  
+ #   mme_job_mscript = pj(mm_job_dir, '_'.join(["BaleenMM_ext"+type+".m"])) 
     print("Combining BaleenHP and BaleenLP mlab scripts")
+    print mm_job_mscript
     #args = ['cat', hp_job_mscript, 'head -n -8 >', hp_job_mscript]
     #command = (' '.join(args))
-    #print command
     #output = str(commands.getstatusoutput(command))
     args = ['cat',hp_job_mscript, lp_job_mscript, '>', mm_job_mscript]
-        #print args
     command = (' '.join(args))
     print command
     output = str(commands.getstatusoutput(command))
+ 
 
 
 def spm_script_path(data,study,type):
