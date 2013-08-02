@@ -10,7 +10,7 @@ def write_tickle_script(conname, swd, hem, pval, thresh):
     """
     tcl_script = pj(swd, conname+"-"+hem+".tcl")
     commands = []
-    commands.append("set colscalebarflag 1")
+ #   commands.append("set colscalebarvertflag 1")
     commands.append("set file '%s/%s-%s.w'" % (swd, conname, hem))
     commands.append("set val $file") 
     commands.append("sclv_read_from_dotw 0")
