@@ -34,5 +34,4 @@ def write_file_with_list(path,lines,conname,swd,quiet=False):
 
 
 if __name__ == "__main__":
-   
    write_surfrend_script(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
