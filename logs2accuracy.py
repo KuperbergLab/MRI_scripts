@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-##usage: python logs2accuracy_v2.py ac ac_mri_axcpt AXCPT
+##usage: python logs2accuracy.py ac ac_mri_axcpt AXCPT
 
 ##study_rt_max = dict({'BaleenMM':9,'MaskedMM':9,'AXCPT':9})				
 import sys
@@ -67,6 +67,7 @@ if __name__ == "__main__":
  
         all_lines = 0
         for mod in modalities:
+        #if study == 'AXCPT':
           subjects = readInput.readList('/cluster/kuperberg/SemPrMM/MRI/scripts/input/' +listPrefix)
           print(subjects)
           with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+listPrefix+'_'+study+'_accuracy-short_new.log','w') as d:
@@ -112,7 +113,7 @@ if __name__ == "__main__":
 		         for i, line in enumerate(all_split):
                              if i != loglen-1:
                                 next_line = all_split[i+1]
-                                tmin = int(float(line[5])) + 1.1 ## 1100 ms after the prime onset for AX commKirsten: I added 100 ms to allow for motor response
+                                tmin = int(float(line[5])) + 1.1 ## 1100 ms after the prime onset for AX comm Kirsten: I added 100 ms to allow for motor response
                                 tmax = int(float(line[5])) + 2.2 ## 2200 ms after the prime onset for AX 
                                 #if float(line[12]) != 0:
 				ttar = int(float(line[5])) + 1.0
