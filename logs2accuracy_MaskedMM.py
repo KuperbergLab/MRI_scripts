@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
         
         modalities = ['MRI']
-        studies = ['MaskedMM','BaleenMM','AXCPT']
+        studies = ['MaskedMM']
         #subjType = ['ac', 'sc', 'ya']
  
         all_lines = 0
@@ -71,7 +71,7 @@ if __name__ == "__main__":
           print(subjects)
           with open('/cluster/kuperberg/SemPrMM/MRI/results/behavioral_accuracy/'+mod+'_'+listPrefix+'_'+study+'_accuracy-short_new.log','w') as d:
             #print(study)
-             d.write('sub' + '\t' + 'Acc_AniPrime' + 'Acc_AniTarg' + 'Acc_Ani' + '\n')
+             d.write('sub' + '\t' + 'Acc_AniPrime' + 'Acc_AniTarg' +'\n')
 
              for sub in subjects:
                 acc_anipri_avg = 0.0
@@ -143,39 +143,30 @@ if __name__ == "__main__":
                                                        rt_ani = rt_anipri + rt_anitar
 ##                                                       acc_ani = acc_anipri + acc_anitar
 
-
+##                    print sub,acc_anipri, acc_anitar, anipri_trials, anitar_trials
                     rt_anipri_avg = rt_anipri_avg + float(rt_anipri/(anipri_trials))
                     rt_anitar_avg = rt_anitar_avg + float(rt_anitar/(anitar_trials))
                     rt_ani_avg = rt_ani_avg + float(rt_ani/(ani_trials))
-                    acc_ani = acc_ani + float(acc_ani/ani_trials)
-                    print rt_anipri, rt_anitar, rt_ani
-                    print acc_anipri, acc_anitar, acc_ani
-                    print anipri_trials, anitar_trials, ani_trials
-                    
-		    #print acc_ax, acc_ay, ax_trials, ay_trials
-##                    acc_ax_avg= acc_ax_avg + float(acc_ax/ax_trials)
-##                    acc_ay_avg= acc_ay_avg + float(acc_ay/ay_trials)
-##                    acc_bx_avg= acc_bx_avg + float(acc_bx/bx_trials)
-##                    acc_by_avg= acc_by_avg + float(acc_by/by_trials)                   
-##                    #print acc_ax_avg, ax_trials #, rt_ax_avg,
+
+		    acc_anipri_avg= acc_anipri_avg + float(acc_anipri/anipri_trials)
+		    acc_anitar_avg= acc_anitar_avg + float(acc_anitar/anitar_trials)
+		    acc_ani_avg= acc_ani_avg + float(acc_ani/ani_trials)                 
+#                    print acc_anipri_avg, anipri_trials, rt_ani_avg,
+#		    print acc_anitar_avg, anitar_trials
+#		    print sub, acc_anipri_avg, acc_anitar_avg
                     f.close()
 ##		if subjType =='ac' or subjType =='sc':
-##                	acc_AX = round((float(acc_ax_avg)/3),3)
-##                	acc_AY = 1.0 -round((float(acc_ay_avg)/3),3)
-##                	acc_BX = 1.0 - round((float(acc_bx_avg)/3),3)
-##                	acc_BY = 1.0 -round((float(acc_by_avg)/3),3)
-##			rt_AX = round ((float(rt_ax_avg)/3),3)
-##		elif subjType == 'ya':
-##                	acc_AX = round((float(acc_ax_avg)/2),3)
-##                	acc_AY = 1.0 -round((float(acc_ay_avg)/2),3)
-##                	acc_BX = 1.0 - round((float(acc_bx_avg)/2),3)
-##                	acc_BY = 1.0 -round((float(acc_by_avg)/2),3)
-##			rt_AX = round ((float(rt_ax_avg)/2),3)
-##                d.write(sub+'\t')#write out header
-##	        d.write(str(acc_AX) + '\t')
-##                d.write(str(acc_AY) + '\t')
-##                d.write(str(acc_BX) + '\t')
-##                d.write(str(acc_BY) + '\n')
+                acc_AniPri = round((float(acc_anipri_avg)/2),3)
+                acc_AniTar = round((float(acc_anitar_avg)/2),3)
+                acc_Ani = round((float(acc_ani_avg)/2),3)
+		rt_Ani = round ((float(rt_ani_avg)/2),3)
+		print sub, acc_AniPri, acc_AniTar, acc_Ani
+##fill the text file with the numbers
+                d.write(sub+'\t') #write out header
+	        d.write(str(acc_AniPri) + '\t\t')
+                d.write(str(acc_AniTar) + '\n')
+#                  d.write(str(acc_ani_avg) + '\t')
+                #d.write(str(rt_Ani) + '\n')
 		##d.write(str(rt_AX) + '\n')
 
           d.close()
