@@ -170,7 +170,7 @@ if __name__ == "__main__":
                     d.write(str(acc_ani) + '\t')
 		d.write('\n')
           d.close()
-        ##mriaccuracy2R('MRI', study, subjType, listPrefix)  
+        mriaccuracy2R('MRI', study, subjType, listPrefix)  
                 
 
 
