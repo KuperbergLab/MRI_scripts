@@ -27,6 +27,7 @@ from readInput import readTable
 import pipeline as pipeline
 from os import listdir
 import commands
+import getpass
 
 import pdb
 
@@ -805,8 +806,11 @@ def spm_setup(data,type):
                f4.write(line)
             elif 'spm_jobman' in line:
                f4.write(line)
-            elif 'fclose(fopen(' in line: 
-               f4.write(line)
+            elif 'fclose(fopen(' in line:
+                print 'here'
+                if 'BaleenLP' in line:
+                    f4.write(line.replace('BaleenLP','BaleenMM').replace('baleenlp', 'baleenmm'))
+ #                   f4.write(line.)
             elif 'ec =' in line:
                f4.write(line)
             elif 'catch ' in line:
@@ -815,6 +819,7 @@ def spm_setup(data,type):
                f4.write(line)
             elif 'exit(' in line: 
                f4.write(line)
+            
           f3.close()
           f4.close()
           ## replacing sessions in lp 
@@ -885,8 +890,8 @@ def spm_setup(data,type):
                  os.mkdir(smooth_dir)
              print job_dir   
              MM_flag = False
-             spm_write_mlab_script(data,study,type, MM_flag)  
-             spm_write_script(data,study,type)
+             spm_write_mlab_script(data,study,type, MM_flag)
+       spm_write_script(data,study,type)
 
 
 
@@ -929,6 +934,8 @@ def spm_write_script(data,study,type):
     type (string): "preproc","stats","outliers"
     Writes out the shell script with matlab calls.
     """
+    if study == 'BaleenMM_new':
+       study = 'BaleenMM'
     shell_script = spm_script_path(data,study,type)
     commands = []
     commands.append("#!/bin/sh")
@@ -1101,13 +1108,13 @@ def spm_run(data,type):
             raise UserError("spm_run: no script found for %s" % study)
         if data["group_parallel"]:
             pipeline.run_script(study,"spm-%s"%type, data['subject'],
-                            [script_to_run],spm_logfile(data,study,type))
+            [script_to_run],spm_logfile(data,study,type))
         else:
             scripts_to_run.append(script_to_run)
             studies.append(study)
     if use_joblib and data["subject_parallel"]:
         if data["joblib"]:
-            Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"spm-%s"%type,data['subject'],[script_to_run],spm_logfile(data,study,type)) for (study,script_to_run) in zip(studies,scripts_to_run))
+            Parallel(n_jobs=data["joblib"],verbose=data["verbose"])(delayed(pipeline.run_script)(study,"spm-%s"%type,data['subject'],[script_to_run],spm_logfile(data,study,type)) for 	(study,script_to_run) in zip(studies,scripts_to_run))
 
 
 def spm_write_coreg_mprage(data):
@@ -1555,6 +1562,7 @@ def meg_script(data,type):
     """
     user_script = pj(data['meg_dir'], 'scripts', '%s.sh' % type)
     print user_script
+    print type
     if os.path.exists(user_script):
         script_path = user_script
         pipeline.make_file_exec(script_path)
@@ -1562,6 +1570,9 @@ def meg_script(data,type):
     else:
         script_path = pj(meg_scripts, "%s.sh" % type)
         print('Using default script...')
+    if type == "preProc_avg-py":
+       script_path = pj(meg_scripts, "preProc_avg.py")
+    print script_path
     if not os.path.exists(script_path):
         raise UserError("meg_script: can not locate {0}".format(type))
     log_dir = pj(data["meg_dir"],"logs")
@@ -1569,11 +1580,30 @@ def meg_script(data,type):
         os.mkdir(log_dir)
     log_file = pj(log_dir,"%s.log" % type)
     my_args = [script_path,data["subject"], log_file]
-    if type == "preProc_setup":
+    if type == "preProc_avg-py":
+	studyname = data["single_study"][0]
+        print "study", studyname
+	my_args = ['python', script_path, data["subject"], studyname]
+	command = (' '.join(my_args))
+	start_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) began %s" % (start_time,command) )
+        output = str(commands.getstatusoutput(command))
+        finish_time = time.strftime("%Y%m%d %H:%M:%S")
+	print("(%s) finish %s" % (finish_time,command) )
+	log_text = '\n'.join(["%s..."% command,
+                        "Start: %s" % start_time,
+                        "Finish: %s" % finish_time,
+                        studyname])+'\n'
+	add = "%s@nmr.mgh.harvard.edu" % getpass.getuser()
+        subj = "%s %s" % (data["subject"], type)
+        pipeline.email(sender=add,receiver=add,subject=subj,message=log_text)
+	
+    else:
+      if type == "preProc_setup":
         bad_chan_path = pj(data["meg_dir"],"%s_bad_chan.txt" % data["subject"])
         if not os.path.isfile(bad_chan_path):
             raise UserError("%s wasn't found, make it and try again" % bad_chan_path)
-    if type == "preProc_reject":
+      if type == "preProc_reject":
         #write out reject.m
         fiffs = []
         fiffs = glob(pj(data["meg_dir"],'*_raw.fif'))
@@ -1588,11 +1618,11 @@ def meg_script(data,type):
         if not os.path.isdir(rej_dir):
             os.mkdir(rej_dir)
         pipeline.write_file_with_list(pj(rej_dir, 'reject.m'), cmd, data['verbose'])
-    if type == "preProc_avg":
+      if type == "preProc_avg":
         pass    
-    if type == "preProc_cov":
+      if type == "preProc_cov":
         pass
-    if type == "preAnat":
+      if type == "preAnat":
         setup_bem(data)
         #check that flash was unpacked
         if os.path.exists(pj(data["mri_dir"],"MEFLASH")):
@@ -1600,20 +1630,19 @@ def meg_script(data,type):
         else:
             extra = "WATER"
         my_args.insert(2, extra)
-    if type == "makeFwd":
+      if type == "makeFwd":
         cor_search = pj(os.environ["SUBJECTS_DIR"],data["subject"],"mri","T1-neuromag","sets","COR-*.fif")
         cor_files = glob(cor_search)
         if len(cor_files) < 1:
             raise UserError("No good COR file found in SUBJECTS_DIR/%s/mri/T1-neuromag/sets/" % data["subject"])
-    if type == 'makeSTC':
+      if type == 'makeSTC':
         studyname = data["single_study"][0]
         print "study", studyname
         my_args = [script_path,data["subject"], studyname, log_file]
         pass
     #start the process
-    pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
+      pipeline.run_script('MEG', type, data['subject'], my_args, log_file)    
     #os.system("chgrp -R lingua %s" % data["meg_dir"])
-
 
 def run_ica(data):
     """
@@ -2084,6 +2113,8 @@ def process_subject(subject,data):
         meg_script(data, "preProc_reject")
     if data["preProc_avg"]:
         meg_script(data, "preProc_avg")
+    if data["preProc_avg-py"]:
+        meg_script(data, "preProc_avg-py")
     if data["preProc_cov"]:
         meg_script(data, "preProc_cov")
     if data["new_preProc"]:
@@ -2213,6 +2244,8 @@ def parse_arguments():
     meg_group.add_option("--preProc_reject",dest="preProc_reject",help="Run the preProc_reject script",
         action="store_true",default=False)
     meg_group.add_option("--preProc_avg",dest="preProc_avg",help="Run the preProc_avg script",
+        action="store_true",default=False)
+    meg_group.add_option("--preProc_avg-py",dest="preProc_avg-py",help="Run the Python preProc_avg script",
         action="store_true",default=False)
     meg_group.add_option("--preProc_cov",dest="preProc_cov",help="Run the preProc_cov script",
         action="store_true",default=False)
