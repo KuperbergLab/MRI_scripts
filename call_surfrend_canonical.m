@@ -58,15 +58,15 @@ for Ic = 1:connum
             conname  = xCon(Ic).name;
             fprintf('Contrast Number: %d\n', Ic)
             fprintf('Contrast Name: %s\n', conname)
-            %surfrend_canonical(conname, Ic, swd, thresh, exthresh)
+            surfrend_canonical(conname, Ic, swd, thresh, exthresh)
             
             %%Writing ticcle scripts for lh for Contrast Ic
             command = ['python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py ', conname,' ', swd, ' lh ', num2str(thresh), ' ', num2str(exthresh)];
-            %system(command)
+            system(command)
             
             %%Writing ticcle scripts for rh for Contrast Ic
             command = ['python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py ', conname,' ', swd, ' rh ', num2str(thresh), ' ', num2str(exthresh)];
-            %system(command)
+            system(command)
             fprintf('Tickle scripts written...\n\n')
             
             %List of Contrast names that will have to be labeled in Blue to
