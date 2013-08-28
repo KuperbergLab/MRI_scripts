@@ -58,31 +58,37 @@ for Ic = 1:connum
             conname  = xCon(Ic).name;
             fprintf('Contrast Number: %d\n', Ic)
             fprintf('Contrast Name: %s\n', conname)
-            surfrend_canonical(conname, Ic, swd, thresh, exthresh)
+            %surfrend_canonical(conname, Ic, swd, thresh, exthresh)
             
             %%Writing ticcle scripts for lh for Contrast Ic
             command = ['python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py ', conname,' ', swd, ' lh ', num2str(thresh), ' ', num2str(exthresh)];
-            system(command)
+            %system(command)
             
             %%Writing ticcle scripts for rh for Contrast Ic
             command = ['python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py ', conname,' ', swd, ' rh ', num2str(thresh), ' ', num2str(exthresh)];
-            system(command)
-           
+            %system(command)
+            fprintf('Tickle scripts written...\n\n')
+            
             %List of Contrast names that will have to be labeled in Blue to
             %signify deactivation 
-            DeactCons = {'FixationVsAll', 'HPRE', 'LPRE', 'RelatedVsUnrelated', 'RelatedVSUnrelated'};
+            DeactCons = {'FixationVsAll', 'HPRE', 'LPRE', 'RelatedVsUnrelated', 'RelatedVSUnrelated', 'RelatedUnrelated'};
 %             
 %             %Tksurfer
+%              '-fthresh ',num2str(thresh),
             if ismember(conname, DeactCons)
-                            command = ['tksurfer spm_canonical lh inflated -invphaseflag 1 -overlay ', conname, '-lh.w ', '-tcl ', conname, '-lh.tcl'];
+                            command = ['tksurfer spm_canonical lh inflated -invphaseflag 1 -fthresh ', num2str(thresh), ' -overlay ', conname, '-lh.w ', '-tcl ', conname, '-lh.tcl'];
                             system(command)
-                            command = ['tksurfer spm_canonical rh inflated -invphaseflag 1 -overlay ', conname, '-rh.w ', '-tcl ', conname, '-rh.tcl'];
-                            system(command) 
+                            fprintf(command)
+                            command = ['tksurfer spm_canonical rh inflated -invphaseflag 1 -fthresh ', num2str(thresh), ' -overlay ', conname, '-rh.w ', '-tcl ', conname, '-rh.tcl'];
+                            %system(command)
+                            fprintf(command)
             else
-                            command = ['tksurfer spm_canonical lh inflated -overlay ', conname, '-lh.w ', '-tcl ', conname, '-lh.tcl'];
+                            command = ['tksurfer spm_canonical lh inflated -fthresh ', num2str(thresh), ' -overlay ', conname, '-lh.w ', '-tcl ', conname, '-lh.tcl']
                             system(command)
-                            command = ['tksurfer spm_canonical rh inflated -overlay ', conname, '-rh.w ', '-tcl ', conname, '-rh.tcl'];
-                            system(command)                        
+                            fprintf(command)
+                            command = ['tksurfer spm_canonical rh inflated -fthresh ', num2str(thresh), ' -overlay ', conname, '-rh.w ', '-tcl ', conname, '-rh.tcl']
+                            system(command)
+                            fprintf(command)
             end
             
             command = ['convert ', conname, '-lh-', num2str(thresh), '-', num2str(exthresh), '-Lat.rgb -colorspace RGB ', conname, '-lh-', num2str(thresh), '-', num2str(exthresh), '-Lat.png'];

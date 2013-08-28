@@ -147,7 +147,7 @@ if __name__ == "__main__":
                     acc_by_avg= acc_by_avg + float(acc_by/by_trials)                   
                     #print acc_ax_avg, ax_trials #, rt_ax_avg,
                     f.close()
-		if subjType =='ac' or subjType =='sc':
+		if subjType =='ac' or subjType =='sc' or sub == 'ya15' or sub == 'ya18':
                 	acc_AX = round((float(acc_ax_avg)/3),3)
                 	acc_AY = 1.0 -round((float(acc_ay_avg)/3),3)
                 	acc_BX = 1.0 - round((float(acc_bx_avg)/3),3)
