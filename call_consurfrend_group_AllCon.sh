@@ -1,10 +1,10 @@
 #!/bin/csh -f
-##Usage: ./call_consurfrend_group.sh modelLocation pval Extent-threshold
-##Example: ./call_consurfrend_group.sh ac/FlexFactorialBaleen/swra_slice 0.01 0 
+##Usage: ./call_consurfrend_group_AllCon.sh modelLocation pval Extent-threshold
+##Example: ./call_consurfrend_group_AllCon.sh ac/FlexFactorialBaleen/swra_slice 0.01 0 
 ## matlab7.11 -nosplash -nodesktop -nodisplay < /autofs/cluster/kuperberg/Sofspm/toolbox/surfrend/surfrend_canonical.m surfrend_canonical 1 /cluster/kuperberg/SemPrMM/MRI/functionals/ac1/ATLLoc/stats_outliers/swra/ 0.01 0
 
 ##Inputs: 
-## Threshold Ex 0.001, 0.0001 
+## Threshold Ex 0.001, 0.05 
 ## Extent Threshold(Cluster Threshold)  
 ## Model Ex: ac/FlexFactorialBaleen/swra_slice
 
