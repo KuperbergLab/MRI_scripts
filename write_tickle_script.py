@@ -10,7 +10,8 @@ def write_tickle_script(conname, swd, hem, pval, thresh):
     """
     tcl_script = pj(swd, conname+"-"+hem+".tcl")
     commands = []
- #   commands.append("set colscalebarvertflag 1")
+##    commands.append("set colscalebarvertflag 1")
+ #   commands.append("set fthresh %s" % pval)
     commands.append("set file '%s/%s-%s.w'" % (swd, conname, hem))
     commands.append("set val $file") 
     commands.append("sclv_read_from_dotw 0")
@@ -29,6 +30,7 @@ def write_tickle_script(conname, swd, hem, pval, thresh):
     commands.append("save_rgb")
     commands.append("\n")
     commands.append("rotate_brain_x 90")
+    commands.append("set fthresh %s" % pval)
     if hem == 'rh':
          commands.append("rotate_brain_z 180")
     commands.append("redraw")
