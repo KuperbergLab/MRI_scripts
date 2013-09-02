@@ -21,17 +21,17 @@ set swd = /autofs/cluster/kuperberg/SemPrMM/MRI/results/SecondLevelStats/$model
 
 
 ## Writes the m file that calls the surfrend_canonical script that creates the w files
-# python write_surfrend_script.py $conname $connum $swd $pval $exthresh 
+python write_surfrend_script.py $conname $connum $swd $pval $exthresh 
 #   
-# echo 'Calling' {$swd}/{$conname}'.m that runs the surfrend_canonical command' 
+echo 'Calling' {$swd}/{$conname}'.m that runs the surfrend_canonical command' 
 #  
 # ## Runs the matlab script that creates the w files
-# cd /autofs/cluster/kuperberg/Software/spm/toolbox/surfrend/
-# nohup matlab7.11 -nosplash -nodesktop -nodisplay < /autofs/cluster/kuperberg/SemPrMM/MRI/results/SecondLevelStats/$model/$conname'.m'
+cd /autofs/cluster/kuperberg/Software/spm/toolbox/surfrend/
+nohup matlab7.11 -nosplash -nodesktop -nodisplay < /autofs/cluster/kuperberg/SemPrMM/MRI/results/SecondLevelStats/$model/$conname'.m'
 # 
 # # ## Writes the tickle script that specifies the tksurfer Snapshot images and locations
-# python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py $conname $swd lh $pval $exthresh ##Specifiy the hemisphere here, default lh
-# python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py $conname $swd rh $pval $exthresh
+python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py $conname $swd lh $pval $exthresh ##Specifiy the hemisphere here, default lh
+python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py $conname $swd rh $pval $exthresh
 
 ##Visualisation of SPM output(w files)in the inflated subject averages using tksurfer 
 cd /autofs/cluster/kuperberg/SemPrMM/MRI/results/SecondLevelStats/$model
