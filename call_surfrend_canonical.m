@@ -1,6 +1,8 @@
 function call_surfrend_canonical(swd, thresh, exthresh)
 
-%
+%%
+%% Candida Ustine
+%% Usage: call_surfrend_canonical ('Path_to_SPM.mat_Model_folder', 0.01, 0) 
 %_______________________________________________________________________
 % @(#)surfrend_canonical.m	V1.0 CVS $Author: itamarkahn $ $Date: 2008/04/03 13:10:38 $ $Name:  $ $RCSfile: surfrend_canonical.m,v $ $Revision: 1.14 $
 
@@ -19,6 +21,7 @@ switch IMAGEformat,
    end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 load(fullfile(swd,'SPM.mat'));
 SPM.swd = swd;
@@ -58,7 +61,7 @@ for Ic = 1:connum
             conname  = xCon(Ic).name;
             fprintf('Contrast Number: %d\n', Ic)
             fprintf('Contrast Name: %s\n', conname)
-            surfrend_canonical(conname, Ic, swd, thresh, exthresh)
+            %surfrend_canonical(conname, Ic, swd, thresh, exthresh)
             
             %%Writing ticcle scripts for lh for Contrast Ic
             command = ['python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py ', conname,' ', swd, ' lh ', num2str(thresh), ' ', num2str(exthresh)];
@@ -71,7 +74,7 @@ for Ic = 1:connum
             
             %List of Contrast names that will have to be labeled in Blue to
             %signify deactivation 
-            DeactCons = {'FixationVsAll', 'HPRE', 'LPRE', 'RelatedVsUnrelated', 'RelatedVSUnrelated', 'RelatedUnrelated'};
+            DeactCons = {'BaselineVsExp', 'DirectVsUnrel', 'IndirectVsUnrel', 'FixationVsAll', 'HPRE', 'LPRE', 'RelatedVsUnrelated', 'RelatedVSUnrelated', 'RelatedUnrelated'};
 %             
 %             %Tksurfer
 %              '-fthresh ',num2str(thresh),
@@ -80,7 +83,7 @@ for Ic = 1:connum
                             system(command)
                             fprintf(command)
                             command = ['tksurfer spm_canonical rh inflated -invphaseflag 1 -fthresh ', num2str(thresh), ' -overlay ', conname, '-rh.w ', '-tcl ', conname, '-rh.tcl'];
-                            %system(command)
+                            system(command)
                             fprintf(command)
             else
                             command = ['tksurfer spm_canonical lh inflated -fthresh ', num2str(thresh), ' -overlay ', conname, '-lh.w ', '-tcl ', conname, '-lh.tcl']
