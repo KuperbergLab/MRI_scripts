@@ -22,7 +22,6 @@ switch IMAGEformat,
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 load(fullfile(swd,'SPM.mat'));
 SPM.swd = swd;
 
@@ -53,15 +52,14 @@ try, SPM.VM        = spm_check_filename(SPM.VM);        end
 %==========================================================================
 % - C O N T R A S T S ,   S P M    C O M P U T A T I O N ,    M A S K I N G
 %==========================================================================
-
-for Ic = 1:connum
+for Ic = [1:connum]
 			%Ic = connum;
 			[SPM] = spm_contrasts(SPM,Ic);
 			xCon = SPM.xCon;
             conname  = xCon(Ic).name;
             fprintf('Contrast Number: %d\n', Ic)
             fprintf('Contrast Name: %s\n', conname)
-            %surfrend_canonical(conname, Ic, swd, thresh, exthresh)
+            surfrend_canonical(conname, Ic, swd, thresh, exthresh)
             
             %%Writing ticcle scripts for lh for Contrast Ic
             command = ['python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py ', conname,' ', swd, ' lh ', num2str(thresh), ' ', num2str(exthresh)];
@@ -74,7 +72,7 @@ for Ic = 1:connum
             
             %List of Contrast names that will have to be labeled in Blue to
             %signify deactivation 
-            DeactCons = {'BaselineVsExp', 'DirectVsUnrel', 'IndirectVsUnrel', 'FixationVsAll', 'HPRE', 'LPRE', 'RelatedVsUnrelated', 'RelatedVSUnrelated', 'RelatedUnrelated'};
+            DeactCons = {'BaselineVsExp', 'DirectIndirectVsUnrelated', 'DirectVsUnrel', 'IndirectVsUnrel', 'FixationVsAll', 'HPRE', 'LPRE', 'RelatedVsUnrelated','RelatedVSUnrelated', 'RelatedUnrelated', 'FixationVsLPUnrelated', 'FixationVsHPUnrelated', 'FixationVsLPRelated', 'FixationVsHPRelated'};
 %             
 %             %Tksurfer
 %              '-fthresh ',num2str(thresh),
