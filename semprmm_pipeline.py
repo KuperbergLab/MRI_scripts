@@ -739,7 +739,7 @@ def spm_setup(data,type):
           mm_dir = pj(data["mri_dir"],"BaleenMM")
           mm_job_dir = pj(data["mri_dir"],"BaleenMM", "jobs")
           mm_stats_dir = pj(data["mri_dir"],"BaleenMM", "stats_outliers")
-          mm_swra_dir = pj(data["mri_dir"],"BaleenMM", "stats_outliers", "swra_slice")
+          mm_swra_dir = pj(data["mri_dir"],"BaleenMM", "stats_outliers", "swra_temp")
           print("Creating BaleenMM directory...")        
           if not os.path.exists(mm_dir): os.mkdir(mm_dir)
           if not os.path.exists(mm_job_dir): os.mkdir(mm_job_dir)
@@ -890,7 +890,7 @@ def spm_setup(data,type):
                  os.mkdir(smooth_dir)
              print job_dir   
              MM_flag = False
-             spm_write_mlab_script(data,study,type, MM_flag)
+       spm_write_mlab_script(data,study,type, MM_flag)
        spm_write_script(data,study,type)
 
 
@@ -940,7 +940,7 @@ def spm_write_script(data,study,type):
     commands = []
     commands.append("#!/bin/sh")
     if "stats" in type:
-    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_slice","SPM.mat")
+    	spmfile = pj(data["mri_dir"],study,"stats_outliers","swra_temp","SPM.mat")
    	commands.append(("rm " + spmfile))
     mlab_cmd = "nohup matlab7.11 -nosplash -nodesktop"
     if "stats" in type:
@@ -1022,12 +1022,19 @@ def spm_write_mlab_script(data,study,type, MM_flag):
             batch_o = pj(data["mri_dir"],"BaleenMM","jobs",study+"mm_"+type+".m")
     else:
             batch_o = spm_jobfile(data,study,good_type)
-    #print batch_dict
+	    batch_o_lower = spm_jobfile(data,study.lower(),good_type)
+    print batch_o
+    if os.path.isfile(batch_o):
+        print "Jane's assistant here"
+        os.remove(batch_o)
+    if os.path.isfile(batch_o_lower):
+	os.remove(batch_o_lower)
+    print batch_o
     pipeline.f2f_replace(batch_i,batch_o,batch_dict,data["verbose"])
 
 
 def spm_jobfile(data,study,type):
-    return pj(data["mri_dir"],study,"jobs",study+"_"+type+".m")
+    return pj(data["mri_dir"],study,"jobs",study+"_"+type+".m") 
 
 
 def spm_logfile(data,study,type):
@@ -1044,9 +1051,9 @@ def spm_matlab_dict(data,study,type, MM_flag):
     replace_dict["type"] = type
     if "stats" in type:
         replace_dict["SixSPM"] = pj(data["mri_dir"],study,type,"6mm","SPM.mat")
-        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_slice","SPM.mat")
+        replace_dict["EightSPM"] = pj(data["mri_dir"],study,type,"swra_temp","SPM.mat")
         if MM_flag:
-             replace_dict["EightSPM"] = pj(data["mri_dir"],'BaleenMM',type,"swra_slice","SPM.mat")
+             replace_dict["EightSPM"] = pj(data["mri_dir"],'BaleenMM',type,"swra_temp","SPM.mat")
     replace_dict["run_file"] = touch_file_path(data,study,type,"run")
     replace_dict["start_file"] = touch_file_path(data,study,type,"start")
     if MM_flag: 
@@ -1738,7 +1745,7 @@ def second_level(data,type):
     print data["list_prefix"]
     study_contrasts = dict({"ATLLoc": [["Nonwords","0003"],["WordLists","0002"],["Sentences","0001"],
         ["SentencesVWordLists","0004"],["SentencesVNonwords","0006"],["WordListsVNonwords","0008"]],
-        "MaskedMM": [["DirectRel","0001"],["IndirectRel","0002"],["UnRel","0003"],["Insetcts","0004"],["DirectRelUnrel","0005"],["IndirectRelUnrel","0006"]],
+        "MaskedMM": [["DirectRel","0001"],["IndirectRel","0002"],["UnRel","0003"],["DirectVsUnrel","0004"],["IndirectVsUnrel","0005"],["DirectIndirectVsUnrelated","0006"],["ExpVsBaseline","0007"]],
         "BaleenLP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"],["Animals","0008"]],
         "BaleenHP": [["Rel","0001"],["UnRel","0002"],["UnRelVRel","0003"],["Filler","0006"],["Target","0007"],["Animals","0008"]],
 	"AXCPT": [["AYvBY","0009"],["BXvBY","0011"]]})
@@ -1914,7 +1921,7 @@ def second_setup(data,prefix,date_dir,study_contrasts):
             if not os.path.exists(con_dir):
                 os.mkdir(con_dir)
             subjects = get_subjects(list_path)
-            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "s10wra", "con_%s.img" % XXXX) for sub in subjects]
+            good_img = ["'%s'" % pj(func_dir, sub , study, "stats_outliers", "swra_temp", "con_%s.img" % XXXX) for sub in subjects]
             N = len(subjects)
             replace_dict["contrast_images"] = "\n".join(good_img)
             #are we masking?
