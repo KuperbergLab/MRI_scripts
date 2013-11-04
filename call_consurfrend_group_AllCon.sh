@@ -1,5 +1,5 @@
 #!/bin/csh -f
-##Usage: ./call_consurfrend_group_AllCon.sh modelLocation pval Extent-threshold
+##Usage: ./call_consurfrend_group_AllCon.sh modelLocation pval Extent-threshold PPI(optional) 
 ##Example: ./call_consurfrend_group_AllCon.sh ac/FlexFactorialBaleen/swra_slice 0.01 0 
 ## matlab7.11 -nosplash -nodesktop -nodisplay < /autofs/cluster/kuperberg/Sofspm/toolbox/surfrend/surfrend_canonical.m surfrend_canonical 1 /cluster/kuperberg/SemPrMM/MRI/functionals/ac1/ATLLoc/stats_outliers/swra/ 0.01 0
 
@@ -10,9 +10,13 @@
 
 set model = $1 
 set pval = $2
-set exthresh = $3
+set exthresh = $3 
+set mode = $4 ##use PPI here 
 set swd = /autofs/cluster/kuperberg/SemPrMM/MRI/results/SecondLevelStats/$model
-
+if $mode == 'PPI' then  
+ set swd = /autofs/cluster/kuperberg/SemPrMM/MRI/PPI/$model
+endif
+$swd
 ## Writes the m file that calls the surfrend_canonical script that creates the w files
 python write_surfrend_script_AllCon.py $swd $pval $exthresh 
   
@@ -21,7 +25,7 @@ echo 'Calling' {$swd}/'AllContrasts.m that runs the surfrend_canonical command f
 ## Runs the matlab script that creates the w files
 #cd /autofs/cluster/kuperberg/Software/spm/toolbox/surfrend/
 cd /cluster/kuperberg/SemPrMM/MRI/scripts
-nohup matlab7.11 -nosplash -nodesktop -nodisplay < /autofs/cluster/kuperberg/SemPrMM/MRI/results/SecondLevelStats/$model/'AllContrasts.m'
+nohup matlab7.11 -nosplash -nodesktop -nodisplay < $swd/'AllContrasts.m'
 
 # ## Writes the tickle script that specifies the tksurfer Snapshot images and locations
 # python /cluster/kuperberg/SemPrMM/MRI/scripts/write_tickle_script.py $conname $swd lh $pval $exthresh ##Specifiy the hemisphere here, default lh
