@@ -182,7 +182,7 @@ def save_data(data,path,verbose=False):
         print("Couldn't save data to %s" % path )
         raise
         
-def f2f_replace(incoming,outgoing,replace,verbose=False):
+def f2f_replace(incoming,outgoing,replace,verbose=True):
     """
     incoming: path to the "template" file that contains keywords
     outgoing: path to write new file
@@ -193,10 +193,11 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
     replace is ({"name":"Scott"})
     outgoing contains "My name is Scott."
     """
+    print("Hello! Wrote %s" % outgoing )
     try:
         with open(incoming,"r") as f:
             new_string = string.Template(f.read()).safe_substitute(replace)
-            #print new_string
+           # print new_string
             if verbose:
                 print("Read and replaced %s" % incoming )
             #check if there were $keywords that weren't replaced
@@ -204,6 +205,7 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
                 print("WARNING: keyword missed in %s -> %s" % (incoming,outgoing))
         with open(outgoing,"w") as f:
             f.write(new_string)
+            print("Jane here again!")
             if verbose:
                 print("Hello! Wrote %s" % outgoing )
     except IOError:
@@ -211,6 +213,9 @@ def f2f_replace(incoming,outgoing,replace,verbose=False):
         raise       
     except:
         raise
+    with open(outgoing,"w") as f:
+            f.write(new_string)
+            print("Jane Here")
     
 def run_process(my_args,output=PIPE,error=PIPE,input=PIPE,verbose=False):
     """
