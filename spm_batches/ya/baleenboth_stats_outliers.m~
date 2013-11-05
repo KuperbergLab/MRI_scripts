@@ -1,0 +1,6 @@
+matlabbatch{1}.spm.stats.fmri_spec.dir = {'/autofs/cluster/kuperberg/SemPrMM/MRI/functionals/$subject/BaleenHP/$stat_folder/swraboth'};
+matlabbatch{1}.spm.stats.fmri_spec.timing.units = 'secs';
+matlabbatch{1}.spm.stats.fmri_spec.timing.RT = 2;
+matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t = 36;
+matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t0 = 18;
+%%

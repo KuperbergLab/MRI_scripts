@@ -38,6 +38,9 @@ matlabbatch{3}.spm.stats.con.spmmat(1).src_output = substruct('.','spmmat');
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.name = '$contrast';
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.convec = 1;
 matlabbatch{3}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{3}.spm.stats.con.consess{2}.tcon.name = 'Reversed'
+matlabbatch{3}.spm.stats.con.consess{2}.tcon.convec = -1;
+matlabbatch{3}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
 matlabbatch{3}.spm.stats.con.delete = 1;
 
 warning off all;
